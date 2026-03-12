@@ -40,7 +40,7 @@ export default function BrandsPage() {
                     if (brandProducts.length === 0) return null; // Don't show empty brands
 
                     return (
-                        <div key={brand._id} className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-50">
+                        <div key={brand._id} id={brand._id} className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-50 scroll-mt-24">
                             {/* Brand Header */}
                             <div className="flex items-center gap-6 mb-8 pb-4 border-b border-gray-100">
                                 <div className="w-24 h-16 bg-white overflow-hidden shrink-0 flex items-center justify-center rounded-xl p-2 border border-gray-50 shadow-sm">

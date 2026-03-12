@@ -40,7 +40,7 @@ export default function CategoriesPage() {
                     if (categoryProducts.length === 0) return null; // Don't show empty categories
 
                     return (
-                        <div key={category._id} className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-50">
+                        <div key={category._id} id={category._id} className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-50 scroll-mt-24">
                             {/* Category Header */}
                             <div className="flex items-center gap-4 mb-8 pb-4 border-b border-gray-100">
                                 <div className="w-16 h-16 rounded-full overflow-hidden bg-white shadow-sm border border-gray-100 shrink-0 p-1">

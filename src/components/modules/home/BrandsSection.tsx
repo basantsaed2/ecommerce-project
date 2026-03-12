@@ -24,7 +24,7 @@ export default function BrandsSection() {
 
             <div className="flex flex-wrap justify-center gap-4 md:gap-8">
                 {brands.map((brand) => (
-                    <Link key={brand._id} href={`/brands/${brand._id}`} className="w-32 h-20 md:w-40 md:h-24 bg-white border border-gray-100 rounded-2xl flex items-center justify-center p-4 hover:shadow-lg hover:border-secondary/30 transition-all group grayscale hover:grayscale-0">
+                    <Link key={brand._id} href={`/brands#${brand._id}`} className="w-32 h-20 md:w-40 md:h-24 bg-white border border-gray-100 rounded-2xl flex items-center justify-center p-4 hover:shadow-lg hover:border-secondary/30 transition-all group grayscale hover:grayscale-0">
                         <img
                             src={brand.logo}
                             alt={brand.name || brand.ar_name}
