@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <QueryProvider>
                         <Toaster position="top-right" richColors />
                         <Navbar />
-                        <main>
+                        <main className="pt-20 pb-20 lg:pb-0">
                             {children}
                         </main>
                     </QueryProvider>

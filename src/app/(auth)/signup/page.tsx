@@ -1,67 +1,158 @@
 "use client";
 import Link from 'next/link';
-import { User, Mail, Lock, Phone, ArrowRight } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { User, Mail, Lock, Phone, ArrowRight, Loader2 } from 'lucide-react';
+import { usePost } from '@/hooks/usePost';
+import { useRouter } from 'next/navigation';
+
+const signupSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().min(8, "Phone number is too short"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 export default function SignupPage() {
+    const router = useRouter();
+
+    const { mutate: signup, isPending } = usePost(
+        '/api/store/auth/signup',
+        [],
+        () => 'Account created successfully! Please sign in.'
+    );
+
+    const { register, handleSubmit, formState: { errors } } = useForm({
+        resolver: zodResolver(signupSchema),
+    });
+
+    const onSubmit = (formData: any) => {
+        signup(formData, {
+            onSuccess: () => {
+                router.push('/login');
+            }
+        });
+    };
+
     return (
-        <div className="min-h-screen flex items-stretch">
-            {/* الجانب الأيمن: صورة جمالية (تظهر في الشاشات الكبيرة) */}
-            <div className="hidden lg:flex w-1/2 bg-primary relative overflow-hidden">
-                <img
-                    src="https://images.unsplash.com/photo-1540958483582-b7aae2ec4619?q=80&w=2000&auto=format&fit=crop"
-                    className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-50"
-                    alt="Fashion"
-                />
-                <div className="relative z-10 p-16 flex flex-col justify-between text-white">
-                    <div>
-                        <h2 className="text-5xl font-black tracking-tighter mb-4">JOIN THE <br /> REVOLUTION.</h2>
-                        <p className="text-xl opacity-80 max-w-md">Create an account and unlock a world of exclusive fashion and tech deals tailored just for you.</p>
+        <div className="min-h-screen flex bg-white">
+            <div className="hidden lg:flex lg:w-1/2 relative bg-primary items-center justify-center p-12 overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="https://images.unsplash.com/photo-1485230405346-71acb9518d9c?q=80&w=2097&auto=format&fit=crop"
+                        alt="Ecommerce Experience"
+                        className="w-full h-full object-cover opacity-60 mix-blend-overlay scale-105 hover:scale-100 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent" />
+                </div>
+
+                <div className="relative z-10 p-16 flex flex-col justify-between text-white h-full max-w-xl">
+                    <div className="mt-20">
+                        <h2 className="text-5xl font-black tracking-tighter mb-6 leading-tight">
+                            JOIN THE <br /> <span className="text-secondary italic">REVOLUTION.</span>
+                        </h2>
+                        <p className="text-lg opacity-80 leading-relaxed font-medium">
+                            Create an account and unlock a world of exclusive fashion and tech deals tailored just for you.
+                        </p>
                     </div>
-                    <div className="flex gap-8">
-                        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl">
-                            <p className="text-2xl font-bold">10k+</p>
-                            <p className="text-xs opacity-60 uppercase">Active Users</p>
+                    <div className="flex gap-8 mb-20">
+                        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10">
+                            <p className="text-3xl font-black mb-1">10k+</p>
+                            <p className="text-xs font-bold opacity-70 uppercase tracking-widest">Active Users</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl">
-                            <p className="text-2xl font-bold">500+</p>
-                            <p className="text-xs opacity-60 uppercase">Global Brands</p>
+                        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10">
+                            <p className="text-3xl font-black mb-1">500+</p>
+                            <p className="text-xs font-bold opacity-70 uppercase tracking-widest">Global Brands</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* الجانب الأيسر: الفورم */}
-            <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-8 md:p-16">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12">
                 <div className="w-full max-w-md">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Get Started</h1>
-                        <p className="text-gray-500 mt-2">Create your account in 30 seconds.</p>
+                    <div className="mb-10">
+                        <Link href="/" className="text-2xl font-black tracking-tighter text-primary mb-8 inline-block hover:opacity-80 transition">
+                            STORE<span className="text-secondary">.</span>
+                        </Link>
+                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Get Started</h1>
+                        <p className="text-gray-500 mt-3 font-medium">Create your account in seconds.</p>
                     </div>
 
-                    <form className="space-y-4">
-                        <div className="relative group">
-                            <User className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
-                            <input type="text" placeholder="Full Name" className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" />
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                        <div className="space-y-1.5">
+                            <div className="relative group">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
+                                <input
+                                    {...register("name")}
+                                    type="text"
+                                    placeholder="Full Name"
+                                    className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.name ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
+                                />
+                            </div>
+                            {errors.name && <p className="text-red-500 text-xs font-bold ml-1">{errors.name.message as string}</p>}
                         </div>
 
-                        <div className="relative group">
-                            <Mail className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
-                            <input type="email" placeholder="Email Address" className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" />
+                        <div className="space-y-1.5">
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
+                                <input
+                                    {...register("email")}
+                                    type="email"
+                                    placeholder="Email Address"
+                                    className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.email ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
+                                />
+                            </div>
+                            {errors.email && <p className="text-red-500 text-xs font-bold ml-1">{errors.email.message as string}</p>}
                         </div>
 
-                        <div className="relative group">
-                            <Lock className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
-                            <input type="password" placeholder="Password" className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" />
+                        <div className="space-y-1.5">
+                            <div className="relative group">
+                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
+                                <input
+                                    {...register("phone")}
+                                    type="tel"
+                                    placeholder="Phone Number"
+                                    className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.phone ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
+                                />
+                            </div>
+                            {errors.phone && <p className="text-red-500 text-xs font-bold ml-1">{errors.phone.message as string}</p>}
                         </div>
 
-                        <button className="w-full bg-primary text-white py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-lg shadow-primary/10 flex items-center justify-center gap-2">
-                            Create Account <ArrowRight size={20} />
+                        <div className="space-y-1.5">
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
+                                <input
+                                    {...register("password")}
+                                    type="password"
+                                    placeholder="Password"
+                                    className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.password ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
+                                />
+                            </div>
+                            {errors.password && <p className="text-red-500 text-xs font-bold ml-1">{errors.password.message as string}</p>}
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isPending}
+                            className="w-full bg-primary text-white py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-2 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed shadow-xl shadow-primary/20 mt-6"
+                        >
+                            {isPending ? (
+                                <Loader2 className="animate-spin" size={24} />
+                            ) : (
+                                <>Create Account <ArrowRight size={22} /></>
+                            )}
                         </button>
                     </form>
 
-                    <p className="mt-8 text-center text-gray-600">
-                        Already a member? <Link href="/login" className="text-secondary font-bold hover:underline">Sign In</Link>
-                    </p>
+                    <div className="mt-10 text-center border-t border-gray-100 pt-8">
+                        <p className="text-gray-500 font-semibold italic">
+                            Already a member?
+                            <Link href="/login" className="text-secondary font-black ml-2 hover:underline tracking-tighter">
+                                SIGN IN
+                            </Link>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
