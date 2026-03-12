@@ -16,7 +16,7 @@ const BANNERS = [
     },
     {
         id: 3,
-        image: "https://images.unsplash.com/photo-1490578474895-699bc4e3f44f?q=80&w=2071&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1509319117193-57bab727e09d?q=80&w=2070&auto=format&fit=crop", // Updated image
         title: "Accessories",
         subtitle: "TRENDING NOW"
     }

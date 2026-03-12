@@ -24,7 +24,7 @@ export default function CategoriesSection() {
 
             <div className="flex overflow-x-auto gap-6 pb-4 snap-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {categories.map((category) => (
-                    <Link key={category._id} href={`/category/${category._id}`} className="snap-start flex flex-col items-center gap-3 min-w-[100px] group">
+                    <Link key={category._id} href={`/categories#${category._id}`} className="snap-start flex flex-col items-center gap-3 min-w-[100px] group">
                         <div className="w-24 h-24 rounded-full overflow-hidden bg-white p-1 shadow-sm border-2 border-transparent group-hover:border-secondary transition-all">
                             <div className="w-full h-full rounded-full overflow-hidden shrink-0">
                                 <img
