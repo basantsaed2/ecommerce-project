@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+    --color-primary: #1a1a1a;
+    --color-secondary: #3b82f6;
+}
+
+/* في Tailwind v4، نستخدم التنسيق العادي أو @apply داخل طبقة base */
+@layer base {
+    body {
+        background-color: theme('colors.gray.50');
+        color: theme('colors.gray.900');
+        margin: 0;
+        padding: 0;
+    }
+}
