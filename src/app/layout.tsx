@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <body suppressHydrationWarning>
                 <StoreProvider>
                     <QueryProvider>
-                        <Toaster position="top-right" richColors />
+                        <Toaster position="top-right" richColors closeButton />
                         <Navbar />
                         <main className="pt-20 pb-20 lg:pb-0">
                             {children}
