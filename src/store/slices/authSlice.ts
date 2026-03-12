@@ -24,8 +24,6 @@ const authSlice = createSlice({
             state.token = action.payload.token;
             setCookie('token', action.payload.token);
             setCookie('user', JSON.stringify(action.payload.user));
-
-            console.log(state.user, state.token);
         },
         logout: (state) => {
             state.user = null;

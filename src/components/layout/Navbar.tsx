@@ -20,7 +20,6 @@ export default function Navbar() {
     const { token, user } = useSelector((state: RootState) => state.auth);
     const isLoggedIn = !!token; // إذا وجد التوكن يعني المستخدم مسجل دخول
 
-    console.log(user);
     const cartCount = useSelector((state: RootState) => state.cart.items.length);
 
     const navLinks = [
