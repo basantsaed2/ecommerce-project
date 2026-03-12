@@ -42,3 +42,11 @@ export interface ApiResponse<T> {
         data: T[];
     };
 }
+
+export interface SingleApiResponse<T> {
+    success: boolean;
+    data: {
+        message: string;
+        data: T;
+    };
+}
