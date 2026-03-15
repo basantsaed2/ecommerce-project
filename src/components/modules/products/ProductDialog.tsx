@@ -104,11 +104,11 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
                                 <div className="flex items-end gap-3 mb-8">
                                     <span className="text-4xl font-black text-secondary">
-                                        ${product.price?.toLocaleString()}
+                                        {product.price?.toLocaleString()} EGP
                                     </span>
                                     {product.cost && (
                                         <span className="text-lg font-bold text-gray-400 line-through mb-1">
-                                            ${(product.price * 1.25).toLocaleString()}
+                                            {(product.price * 1.25).toLocaleString()} EGP
                                         </span>
                                     )}
                                 </div>
@@ -140,7 +140,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     className="w-full bg-primary text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.98]"
                                 >
                                     <ShoppingCart size={22} />
-                                    Add To Cart • ${(product.price * quantity).toLocaleString()}
+                                    Add To Cart • {(product.price * quantity).toLocaleString()} EGP
                                 </button>
                             </div>
                         </div>

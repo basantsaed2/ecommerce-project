@@ -35,7 +35,7 @@ export default function BannersSection() {
     }, []);
 
     return (
-        <section className="w-full px-2 md:px-6 py-6">
+        <section className="w-full px-4 py-6">
             <div className="w-full h-[250px] md:h-[450px] lg:h-[550px] relative rounded-3xl overflow-hidden shadow-2xl group">
                 {BANNERS.map((banner, index) => (
                     <div

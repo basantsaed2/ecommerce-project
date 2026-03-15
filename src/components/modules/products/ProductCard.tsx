@@ -19,7 +19,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
     const handleAddToCart = (e: React.MouseEvent) => {
         e.stopPropagation();
-        
+
         if (token) {
             dispatch(addItemToCart({
                 productId: product._id,
@@ -46,57 +46,69 @@ export default function ProductCard({ product }: ProductCardProps) {
         <>
             <div
                 onClick={() => setIsDialogOpen(true)}
-                className="group flex flex-col bg-white rounded-3xl border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 overflow-hidden relative cursor-pointer"
+                className="group flex flex-col bg-white rounded-[32px] border border-gray-100 hover:shadow-2xl hover:shadow-gray-200/60 transition-all duration-500 overflow-hidden relative cursor-pointer"
             >
-                {/* Tags */}
-                {product.is_featured && (
-                    <div className="absolute top-4 left-4 z-10 bg-secondary text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider shadow-sm">
-                        Hot
-                    </div>
-                )}
-
+                {/* Wishlist Button */}
                 <div
-                    className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => { e.stopPropagation(); toast.success('Added to wishlist'); }}
+                    className="absolute top-4 right-4 z-20 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300"
+                    onClick={(e) => { e.stopPropagation(); toast.success('Saved to wishlist'); }}
                 >
-                    <button className="bg-white p-2 rounded-full shadow-md text-gray-400 hover:text-red-500 transition-colors">
+                    <button className="bg-white/80 backdrop-blur-md p-2.5 rounded-2xl shadow-sm text-gray-400 hover:text-red-500 hover:bg-white transition-all active:scale-90">
                         <Heart size={18} />
                     </button>
                 </div>
 
-                {/* Image */}
-                <div className="relative h-48 sm:h-56 bg-white p-4 flex items-center justify-center overflow-hidden border-b border-gray-50">
+                {/* Hot Badge */}
+                {product.is_featured && (
+                    <div className="absolute top-4 left-4 z-20">
+                        <div className="bg-secondary text-white text-[9px] font-black px-3 py-1.5 rounded-xl uppercase tracking-[0.1em] shadow-lg shadow-secondary/20">
+                            Hot
+                        </div>
+                    </div>
+                )}
+
+                {/* Image Section with Soft Background */}
+                <div className="relative h-56 sm:h-64 bg-gray-50/30 flex items-center justify-center overflow-hidden p-6">
+                    {/* Decorative Background Blob */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-secondary/5 rounded-full blur-[40px] group-hover:bg-secondary/10 transition-colors duration-700" />
+
                     <img
                         src={product.image}
                         alt={product.name || product.ar_name}
-                        className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                        className="max-w-full max-h-full object-contain relative z-10 group-hover:scale-110 group-hover:rotate-2 transition-transform duration-700 ease-out"
                     />
                 </div>
 
-                {/* Content */}
-                <div className="p-4 md:p-5 flex flex-col flex-1 bg-gray-50/50">
-                    <div className="flex-1">
-                        <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-2 group-hover:text-secondary transition-colors" title={product.name || product.ar_name}>
-                            {product.name || product.ar_name}
-                        </h3>
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-2 line-clamp-1">
-                            Product
-                        </p>
-                    </div>
-
-                    <div className="mt-4 flex items-end justify-between">
-                        <div>
-                            <p className="text-xs text-gray-400 font-medium mb-1">Price</p>
-                            <p className="font-black text-lg text-primary">
-                                ${product.price?.toLocaleString()}
-                                {product.cost && <span className="text-xs font-bold text-gray-400 line-through ml-1">${(product.price * 1.2).toLocaleString()}</span>}
+                {/* Content Area */}
+                <div className="p-5 flex flex-col flex-1 bg-white">
+                    <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="w-4 h-[2px] bg-secondary rounded-full" />
+                            <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">
+                                Premium Selection
                             </p>
                         </div>
+                        <h3 className="font-black text-primary text-sm line-clamp-2 leading-snug group-hover:text-secondary transition-colors duration-300" title={product.name || product.ar_name}>
+                            {product.name || product.ar_name}
+                        </h3>
+                    </div>
+
+                    <div className="mt-auto flex items-center justify-between gap-4">
+                        <div className="flex flex-col">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
+                            <div className="flex items-baseline gap-2">
+                                <span className="font-black text-xl text-primary tracking-tighter">
+                                    {product.price?.toLocaleString()}
+                                </span>
+                                <span className="text-[10px] font-black text-primary/40 uppercase">EGP</span>
+                            </div>
+                        </div>
+
                         <button
                             onClick={handleAddToCart}
-                            className="bg-primary text-white p-2.5 md:p-3 rounded-2xl hover:bg-secondary hover:shadow-lg hover:shadow-secondary/30 transition-all active:scale-95 z-20"
+                            className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-secondary hover:shadow-xl hover:shadow-secondary/40 transition-all active:scale-90 group/btn"
                         >
-                            <ShoppingCart size={18} />
+                            <ShoppingCart size={20} className="group-hover/btn:-translate-y-0.5 transition-transform" />
                         </button>
                     </div>
                 </div>

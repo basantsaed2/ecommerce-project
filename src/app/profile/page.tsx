@@ -32,7 +32,7 @@ export default function ProfilePage() {
     const router = useRouter();
     const currentUser = useSelector((state: RootState) => state.auth.user);
     const token = useSelector((state: RootState) => state.auth.token);
-    
+
     const [activeTab, setActiveTab] = useState<Tab>('profile');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [base64Image, setBase64Image] = useState<string | null>(null);
@@ -109,10 +109,10 @@ export default function ProfilePage() {
     if (!token) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50/50 py-6 px-4 md:px-8">
+        <div className="min-h-screen bg-gray-50/50 py-6 px-4">
             <div className="w-full">
                 {/* Header Section */}
-                <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="mb-10 flex flex-row items-end justify-between gap-6">
                     <div>
                         {/* <div className="flex items-center gap-2 text-secondary font-bold text-sm uppercase tracking-widest mb-2">
                             <ShieldCheck size={16} />
@@ -140,7 +140,7 @@ export default function ProfilePage() {
                         {/* Profile Summary Card */}
                         <div className="bg-white rounded-[40px] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden relative group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -mr-16 -mt-16 blur-3xl transition-all group-hover:bg-secondary/10" />
-                            
+
                             <div className="relative flex flex-col items-center text-center">
                                 {/* Avatar Upload */}
                                 <div className="relative mb-6">
@@ -183,14 +183,14 @@ export default function ProfilePage() {
                         <div className="bg-primary rounded-[30px] p-6 text-white shadow-xl shadow-primary/20">
                             <h3 className="font-black mb-4 uppercase text-xs tracking-widest opacity-60">Preferences</h3>
                             <div className="space-y-2">
-                                <button 
+                                <button
                                     onClick={() => setActiveTab('profile')}
                                     className={`w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 transition-colors group ${activeTab === 'profile' ? 'bg-white/10' : ''}`}
                                 >
                                     <span className="font-bold">Profile Info</span>
                                     <ChevronRight size={18} className={`opacity-40 transition-transform ${activeTab === 'profile' ? 'translate-x-1' : ''}`} />
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setActiveTab('addresses')}
                                     className={`w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 transition-colors group ${activeTab === 'addresses' ? 'bg-white/10' : ''}`}
                                 >

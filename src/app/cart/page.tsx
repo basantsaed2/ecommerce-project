@@ -79,7 +79,7 @@ export default function CartPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="flex items-center justify-between mb-10">
                 <div>
                     <h1 className="text-4xl font-black text-primary tracking-tight">Shopping Cart</h1>
@@ -113,7 +113,7 @@ export default function CartPage() {
                                     {item.product?.name || item.product?.ar_name || `Product (${item.product?._id?.slice(-4) || 'Unknown'})`}
                                 </h3>
                                 <p className="text-sm font-bold text-gray-400 mb-4 tracking-wider uppercase">
-                                    Price: ${item.price.toLocaleString()}
+                                    Price: {item.price.toLocaleString()} EGP
                                 </p>
 
                                 <div className="flex items-center justify-center sm:justify-start gap-4">
@@ -145,7 +145,7 @@ export default function CartPage() {
                             <div className="text-right sm:border-l border-gray-50 sm:pl-8 min-w-[120px]">
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Subtotal</p>
                                 <p className="text-xl font-black text-secondary">
-                                    ${(item.price * item.quantity).toLocaleString()}
+                                    {(item.price * item.quantity).toLocaleString()} EGP
                                 </p>
                             </div>
                         </div>
@@ -160,7 +160,7 @@ export default function CartPage() {
                         <div className="space-y-6 mb-10">
                             <div className="flex justify-between items-center text-primary-foreground/70">
                                 <span className="font-bold">Subtotal</span>
-                                <span className="font-black text-lg">${totalCartPrice.toLocaleString()}</span>
+                                <span className="font-black text-lg">{totalCartPrice.toLocaleString()} EGP</span>
                             </div>
                             <div className="flex justify-between items-center text-primary-foreground/70">
                                 <span className="font-bold">Shipping</span>
@@ -168,7 +168,7 @@ export default function CartPage() {
                             </div>
                             <div className="pt-6 border-t border-white/10 flex justify-between items-center">
                                 <span className="text-xl font-black italic">Total</span>
-                                <span className="text-3xl font-black tracking-tight">${totalCartPrice.toLocaleString()}</span>
+                                <span className="text-3xl font-black tracking-tight">{totalCartPrice.toLocaleString()} EGP</span>
                             </div>
                         </div>
 

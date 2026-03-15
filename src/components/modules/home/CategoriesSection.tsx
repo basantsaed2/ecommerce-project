@@ -16,7 +16,7 @@ export default function CategoriesSection() {
     if (categories.length === 0) return null;
 
     return (
-        <section className="w-full px-2 md:px-6 py-8">
+        <section className="w-full px-4 py-8">
             <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-black text-primary tracking-tight">Shop by <span className="text-secondary">Category</span></h2>
                 <Link href="/categories" className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">View All &rarr;</Link>

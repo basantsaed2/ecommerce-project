@@ -145,7 +145,7 @@ export default function AddressManager() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-0 items-start md:items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-secondary/10 text-secondary rounded-2xl flex items-center justify-center">
                         <MapPin size={24} />
