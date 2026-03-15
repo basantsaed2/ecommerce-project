@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // المسارات اللي محتاجة حماية
-    const protectedRoutes = ['/orders', '/checkout', '/favourite'];
+    const protectedRoutes = ['/orders', '/checkout', '/favourite', '/profile'];
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
     // لو المسار محمي ومفيش توكن، رجعه لصفحة اللوجن
@@ -21,5 +21,5 @@ export function middleware(request: NextRequest) {
 
 // 2. تحديد المسارات اللي الميدل وير يشتغل عليها (اختياري بس بيحسن الأداء)
 export const config = {
-    matcher: ['/orders/:path*', '/checkout/:path*', '/favourite/:path*'],
+    matcher: ['/orders/:path*', '/checkout/:path*', '/favourite/:path*', '/profile/:path*'],
 };

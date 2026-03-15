@@ -98,11 +98,15 @@ export default function Navbar() {
                         ) : (
                             <div className="flex items-center gap-3">
                                 <Link href="/profile" className="flex items-center gap-2 group">
-                                    <div className="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full text-primary font-bold border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all">
-                                        {user?.name?.charAt(0).toUpperCase() || <User size={18} />}
+                                    <div className="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full text-primary font-bold border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all overflow-hidden">
+                                        {user?.imagePath ? (
+                                            <img src={user.imagePath} alt={user.username} className="w-full h-full object-cover" />
+                                        ) : (
+                                            user?.username?.charAt(0).toUpperCase() || <User size={18} />
+                                        )}
                                     </div>
                                     <span className="text-sm font-bold text-gray-700 hidden lg:block uppercase tracking-tight">
-                                        {user?.name}
+                                        {user?.username}
                                     </span>
                                 </Link>
                                 <button onClick={handleLogout} className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
@@ -177,11 +181,15 @@ export default function Navbar() {
                         ) : (
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xl italic shadow-md">
-                                        {user?.name?.charAt(0).toUpperCase()}
+                                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xl italic shadow-md overflow-hidden">
+                                        {user?.imagePath ? (
+                                            <img src={user.imagePath} alt={user.username} className="w-full h-full object-cover" />
+                                        ) : (
+                                            user?.username?.charAt(0).toUpperCase()
+                                        )}
                                     </div>
                                     <div className="overflow-hidden">
-                                        <p className="font-black text-sm text-gray-900 truncate uppercase">{user?.name}</p>
+                                        <p className="font-black text-sm text-gray-900 truncate uppercase">{user?.username}</p>
                                         <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                                     </div>
                                 </div>

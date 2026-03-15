@@ -50,3 +50,12 @@ export interface CompleteProfileRequest {
 export interface ResendOtpRequest {
     identifier: string;
 }
+
+export interface UpdateProfileRequest {
+    userId: string;
+    username?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+    image?: string; // base64
+}
