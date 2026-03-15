@@ -124,7 +124,7 @@ export default function VerifyOtpPage() {
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                        <div className="space-y-2">
+                        <div className="flex flex-col gap-3">
                             <label className="text-sm font-bold text-gray-700 ml-1">6-Digit Code</label>
                             <div className="relative group">
                                 <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
