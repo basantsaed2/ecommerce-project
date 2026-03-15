@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { Product } from '@/types/api';
 import { ShoppingCart, Heart } from 'lucide-react';
-import { useDispatch } from 'react-redux';
-import { addToCart } from '@/store/slices/cartSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { addItemToCart, addToCartLocal } from '@/store/slices/cartSlice';
+import { RootState } from '@/store/store';
 import ProductDialog from './ProductDialog';
 import { toast } from 'sonner';
 
@@ -13,18 +14,32 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
     const dispatch = useDispatch();
+    const token = useSelector((state: RootState) => state.auth.token);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const handleAddToCart = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent opening the dialog when clicking the cart button
-        dispatch(addToCart({
-            id: product._id,
-            name: product.name || product.ar_name || 'Unknown',
-            price: product.price,
-            quantity: 1,
-            image: product.image
-        }));
-        toast.success(`Added ${product.name} to cart`);
+        e.stopPropagation();
+        
+        if (token) {
+            dispatch(addItemToCart({
+                productId: product._id,
+                quantity: 1
+            }) as any);
+        } else {
+            dispatch(addToCartLocal({
+                product: {
+                    _id: product._id,
+                    name: product.name,
+                    ar_name: product.ar_name,
+                    image: product.image,
+                    price: product.price
+                },
+                quantity: 1,
+                price: product.price
+            }));
+        }
+
+        toast.success(`Processing...`);
     };
 
     return (

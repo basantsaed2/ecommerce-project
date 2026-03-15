@@ -1,6 +1,6 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // ده بيستخدم LocalStorage تلقائياً
+import storage from './storage';
 import cartReducer from './slices/cartSlice';
 import authReducer from './slices/authSlice';
 

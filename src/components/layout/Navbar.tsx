@@ -18,7 +18,9 @@ export default function Navbar() {
     const [mounted, setMounted] = useState(false);
 
     // 1. قراءة البيانات من Redux
-    const { token, user } = useSelector((state: RootState) => state.auth);
+    // 1. قراءة البيانات من Redux بشكل منفصل لتقليل الـ Renders
+    const token = useSelector((state: RootState) => state.auth.token);
+    const user = useSelector((state: RootState) => state.auth.user);
     const cartCount = useSelector((state: RootState) => state.cart.items.length);
 
     // التأكد من تحميل المكون على الكلاينت لحل مشكلة الـ Hydration و null data

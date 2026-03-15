@@ -1,9 +1,9 @@
 import axios from 'axios';
+import { getCookie, deleteCookie } from 'cookies-next';
 
 const axiosInstance = axios.create({
-    // استخدام NEXT_PUBLIC لضمان وصول الفرونت إيند للرابط
     baseURL: process.env.NEXT_PUBLIC_API_URL,
-    timeout: 15000, // إضافة timeout مهم جداً لحالات ضعف الإنترنت
+    timeout: 15000,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -12,12 +12,9 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
     (config) => {
-        // حماية الـ LocalStorage من الـ Server-Side Error
-        if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('token');
-            if (token && config.headers) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+        const token = getCookie('token');
+        if (token && config.headers) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
@@ -29,9 +26,13 @@ axiosInstance.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             if (typeof window !== 'undefined') {
-                console.error('Session expired. Redirecting...');
-                localStorage.removeItem('token');
-                window.location.href = '/login';
+                const isLoginPage = window.location.pathname === '/login';
+                if (!isLoginPage) {
+                    console.error('Session expired. Redirecting...');
+                    deleteCookie('token');
+                    deleteCookie('user');
+                    window.location.href = '/login';
+                }
             }
         }
         return Promise.reject(error);

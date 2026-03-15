@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { useGet } from '@/hooks/useGet';
 import { Product, SingleApiResponse } from '@/types/api';
 import { Loader2, X, Plus, Minus, ShoppingCart } from 'lucide-react';
-import { useDispatch } from 'react-redux';
-import { addToCart } from '@/store/slices/cartSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { addItemToCart, addToCartLocal } from '@/store/slices/cartSlice';
+import { RootState } from '@/store/store';
 import { toast } from 'sonner';
 
 interface ProductDialogProps {
@@ -15,6 +16,7 @@ interface ProductDialogProps {
 
 export default function ProductDialog({ productId, isOpen, onClose }: ProductDialogProps) {
     const dispatch = useDispatch();
+    const token = useSelector((state: RootState) => state.auth.token);
     const [quantity, setQuantity] = useState(1);
 
     const { data, isLoading, error } = useGet<SingleApiResponse<Product>>(
@@ -30,19 +32,28 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
     const handleAddToCart = () => {
         if (!product) return;
 
-        // Add multiple items to cart by dispatching multiple times, or update your cart slice to accept quantity
-        // Since we don't want to modify cartSlice right now, we can loop, but it's better to add the item with its count.
-        // I will assume cartSlice addToCart accepts an altered payload or we can just loop dispatch.
-        for (let i = 0; i < quantity; i++) {
-            dispatch(addToCart({
-                id: product._id,
-                name: product.name || product.ar_name || 'Unknown',
-                price: product.price,
-                quantity: 1,
-                image: product.image
+        if (token) {
+            // If logged in, only dispatch the sync thunk
+            dispatch(addItemToCart({
+                productId: product._id,
+                quantity: quantity
+            }) as any);
+        } else {
+            // If guest, only update local state
+            dispatch(addToCartLocal({
+                product: {
+                    _id: product._id,
+                    name: product.name,
+                    ar_name: product.ar_name,
+                    image: product.image,
+                    price: product.price
+                },
+                quantity: quantity,
+                price: product.price
             }));
         }
-        toast.success(`Added ${quantity} ${product.name} to cart`);
+
+        toast.success(`Processing...`);
         onClose();
     };
 
