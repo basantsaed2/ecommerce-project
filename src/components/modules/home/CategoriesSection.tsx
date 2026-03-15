@@ -31,9 +31,6 @@ export default function CategoriesSection() {
                                     src={category.image}
                                     alt={category.name || category.ar_name}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1555529771-835f59bfc50c?auto=format&w=200&q=80';
-                                    }}
                                 />
                             </div>
                         </div>

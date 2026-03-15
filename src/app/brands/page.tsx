@@ -48,9 +48,6 @@ export default function BrandsPage() {
                                         src={brand.logo}
                                         alt={brand.name || brand.ar_name}
                                         className="max-w-full max-h-full object-contain"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&auto=format&fit=crop&q=80';
-                                        }}
                                     />
                                 </div>
                                 <div>

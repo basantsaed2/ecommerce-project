@@ -26,7 +26,9 @@ export const usePost = <TVariables = any, TData = any>(
             }
         },
         onError: (error: any) => {
-            const message = error.response?.data?.message || 'Something went wrong';
+            const data = error.response?.data;
+            // Robust extractor for message from different backend structures
+            const message = data?.error?.message || data?.message || error.message || 'Something went wrong';
             toast.error(message);
         },
     });

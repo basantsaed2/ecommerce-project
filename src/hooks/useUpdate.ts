@@ -31,7 +31,9 @@ export const useUpdate = <TVariables = any, TData = any>(
             }
         },
         onError: (error: any) => {
-            const message = error.response?.data?.message || 'Update failed';
+            const data = error.response?.data;
+            // Robust extractor for message from different backend structures
+            const message = data?.error?.message || data?.message || error.message || 'Update failed';
             toast.error(message);
         },
     });

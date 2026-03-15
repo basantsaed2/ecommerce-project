@@ -18,7 +18,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
     const [quantity, setQuantity] = useState(1);
 
     const { data, isLoading, error } = useGet<SingleApiResponse<Product>>(
-        ['product', productId], 
+        ['product', productId],
         `/api/store/product/${productId}`,
         { enabled: isOpen } // Only fetch when dialog is open
     );
@@ -29,11 +29,11 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
     const handleAddToCart = () => {
         if (!product) return;
-        
+
         // Add multiple items to cart by dispatching multiple times, or update your cart slice to accept quantity
         // Since we don't want to modify cartSlice right now, we can loop, but it's better to add the item with its count.
         // I will assume cartSlice addToCart accepts an altered payload or we can just loop dispatch.
-        for(let i = 0; i < quantity; i++) {
+        for (let i = 0; i < quantity; i++) {
             dispatch(addToCart({
                 id: product._id,
                 name: product.name || product.ar_name || 'Unknown',
@@ -48,12 +48,12 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div 
+            <div
                 className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden relative flex flex-col md:flex-row transform transition-all"
-                onClick={(e) => e.stopPropagation()}    
+                onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button */}
-                <button 
+                <button
                     onClick={onClose}
                     className="absolute top-4 right-4 z-10 p-2 bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-500 rounded-full transition-colors"
                 >
@@ -68,13 +68,10 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                     <>
                         {/* Image Section */}
                         <div className="md:w-1/2 md:border-r border-gray-100 bg-gray-50 flex items-center justify-center p-8 lg:p-12 min-h-[300px]">
-                            <img 
-                                src={product.image} 
-                                alt={product.name} 
+                            <img
+                                src={product.image}
+                                alt={product.name}
                                 className="max-w-full max-h-[400px] object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&w=800&q=80';
-                                }}
                             />
                         </div>
 
@@ -89,11 +86,11 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                 <h2 className="text-3xl font-black text-primary mb-2 leading-tight">
                                     {product.name || product.ar_name}
                                 </h2>
-                                
+
                                 <p className="text-gray-500 text-sm mb-6 leading-relaxed">
                                     {product.description || product.ar_description || "No description provided for this product. High quality and verified."}
                                 </p>
-                                
+
                                 <div className="flex items-end gap-3 mb-8">
                                     <span className="text-4xl font-black text-secondary">
                                         ${product.price?.toLocaleString()}
@@ -105,20 +102,20 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     )}
                                 </div>
                             </div>
-                            
+
                             <div className="space-y-6">
                                 {/* Quantity Counter */}
                                 <div>
                                     <label className="text-sm font-bold text-gray-700 block mb-3">Quantity</label>
                                     <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 w-fit rounded-2xl p-2">
-                                        <button 
+                                        <button
                                             onClick={() => setQuantity(q => Math.max(1, q - 1))}
                                             className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-secondary hover:border-secondary transition-colors"
                                         >
                                             <Minus size={18} />
                                         </button>
                                         <span className="w-8 text-center font-black text-lg">{quantity}</span>
-                                        <button 
+                                        <button
                                             onClick={() => setQuantity(q => q + 1)}
                                             className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-secondary hover:border-secondary transition-colors"
                                         >
@@ -127,7 +124,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     </div>
                                 </div>
 
-                                <button 
+                                <button
                                     onClick={handleAddToCart}
                                     className="w-full bg-primary text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.98]"
                                 >

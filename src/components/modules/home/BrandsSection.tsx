@@ -29,9 +29,6 @@ export default function BrandsSection() {
                             src={brand.logo}
                             alt={brand.name || brand.ar_name}
                             className="max-w-full max-h-full object-contain opacity-60 group-hover:opacity-100 transition-opacity duration-300 group-hover:scale-110"
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&auto=format&fit=crop&q=80';
-                            }}
                         />
                     </Link>
                 ))}

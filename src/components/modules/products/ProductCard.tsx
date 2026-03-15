@@ -29,7 +29,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
     return (
         <>
-            <div 
+            <div
                 onClick={() => setIsDialogOpen(true)}
                 className="group flex flex-col bg-white rounded-3xl border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 overflow-hidden relative cursor-pointer"
             >
@@ -39,8 +39,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                         Hot
                     </div>
                 )}
-                
-                <div 
+
+                <div
                     className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={(e) => { e.stopPropagation(); toast.success('Added to wishlist'); }}
                 >
@@ -51,13 +51,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
                 {/* Image */}
                 <div className="relative h-48 sm:h-56 bg-white p-4 flex items-center justify-center overflow-hidden border-b border-gray-50">
-                    <img 
-                        src={product.image} 
-                        alt={product.name || product.ar_name} 
+                    <img
+                        src={product.image}
+                        alt={product.name || product.ar_name}
                         className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&w=400&q=80';
-                        }}
                     />
                 </div>
 
@@ -76,11 +73,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                         <div>
                             <p className="text-xs text-gray-400 font-medium mb-1">Price</p>
                             <p className="font-black text-lg text-primary">
-                                ${product.price?.toLocaleString()} 
+                                ${product.price?.toLocaleString()}
                                 {product.cost && <span className="text-xs font-bold text-gray-400 line-through ml-1">${(product.price * 1.2).toLocaleString()}</span>}
                             </p>
                         </div>
-                        <button 
+                        <button
                             onClick={handleAddToCart}
                             className="bg-primary text-white p-2.5 md:p-3 rounded-2xl hover:bg-secondary hover:shadow-lg hover:shadow-secondary/30 transition-all active:scale-95 z-20"
                         >
@@ -92,10 +89,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             {/* Render the Details Dialog conditionally */}
             {isDialogOpen && (
-                <ProductDialog 
-                    productId={product._id} 
-                    isOpen={isDialogOpen} 
-                    onClose={() => setIsDialogOpen(false)} 
+                <ProductDialog
+                    productId={product._id}
+                    isOpen={isDialogOpen}
+                    onClose={() => setIsDialogOpen(false)}
                 />
             )}
         </>

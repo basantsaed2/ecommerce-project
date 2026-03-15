@@ -1,48 +1,81 @@
 "use client";
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, Phone } from 'lucide-react';
 import { usePost } from '@/hooks/usePost';
 import { useDispatch } from 'react-redux';
-import { setCredentials } from '@/store/slices/authSlice';
+import { setCredentials, setIncompleteUser } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 
 const loginSchema = z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    identifier: z.string().min(1, "Email or phone number is required"),
+    password: z.string().optional(),
 });
 
 export default function LoginPage() {
     const dispatch = useDispatch();
     const router = useRouter();
+    const [showPassword, setShowPassword] = useState(false);
 
     const { mutate: login, isPending } = usePost(
         '/api/store/auth/login',
         ['user'],
-        (response: any) => `Welcome back, ${response.data.user.name}! 👋`
+        (response: any) => response?.data?.requires_otp ? 'Verification code sent!' : 'Welcome back!'
     );
 
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const { register, handleSubmit, formState: { errors }, watch } = useForm({
         resolver: zodResolver(loginSchema),
     });
+
+    const identifier = watch("identifier");
 
     const onSubmit = (formData: any) => {
         login(formData, {
             onSuccess: (response: any) => {
-                const userData = response.data.user;
-                const token = response.data.token;
+                // Handle both flat and nested 'data' structures from SuccessResponse
+                const data = response.data || response;
+                const action = data.action_required;
 
-                if (token) {
+                if (action === "GO_TO_OTP_SCREEN" || data.requires_otp) {
+                    dispatch(setIncompleteUser({
+                        identifier: formData.identifier,
+                        status: data.status
+                    } as any));
+                    router.push('/verify-otp');
+                    return;
+                }
+
+                if (action === "SHOW_PASSWORD_FIELD") {
+                    setShowPassword(true);
+                    return;
+                }
+
+                if (action === "GO_TO_HOME" || data.token) {
                     dispatch(setCredentials({
-                        user: userData,
-                        token: token
+                        user: data.user,
+                        token: data.token
                     }));
-
                     router.push('/');
-                } else {
-                    console.error("Token missing in API response structure");
+                }
+            },
+            onError: (error: any) => {
+                const data = error.response?.data;
+                // Check all possible places for the action and message
+                const action = data?.action_required || data?.details?.action_required ||
+                    data?.error?.action_required || data?.error?.details?.action_required;
+                const errorMsg = data?.message || data?.error?.message || "";
+
+                if (action === "GO_TO_SIGNUP" || errorMsg.toLowerCase().includes("not found")) {
+                    router.push(`/signup?identifier=${encodeURIComponent(identifier || '')}`);
+                    return;
+                }
+
+                if (action === "SHOW_PASSWORD_FIELD") {
+                    setShowPassword(true);
+                    return;
                 }
             }
         });
@@ -81,36 +114,49 @@ export default function LoginPage() {
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Email Address</label>
+                        <div className="flex flex-col gap-3">
+                            <label className="text-sm font-bold text-gray-700 ml-1">Email or Phone Number</label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                 <input
-                                    {...register("email")}
-                                    type="email"
-                                    placeholder="name@company.com"
-                                    className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.email ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
+                                    {...register("identifier")}
+                                    type="text"
+                                    disabled={showPassword}
+                                    placeholder="email or phone number"
+                                    className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.identifier ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium ${showPassword ? 'opacity-50' : ''}`}
                                 />
+                                {showPassword && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(false)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-secondary hover:underline"
+                                    >
+                                        Change
+                                    </button>
+                                )}
                             </div>
-                            {errors.email && <p className="text-red-500 text-xs font-bold ml-1">{errors.email.message as string}</p>}
+                            {errors.identifier && <p className="text-red-500 text-xs font-bold ml-1">{errors.identifier.message as string}</p>}
                         </div>
 
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center ml-1">
-                                <label className="text-sm font-bold text-gray-700">Password</label>
-                                <Link href="/forgot-password" className="text-xs font-black text-secondary hover:text-primary transition-colors">FORGOT PASSWORD?</Link>
+                        {showPassword && (
+                            <div className="space-y-2 animate-in fade-in slide-in-from-top-4 duration-300">
+                                <div className="flex justify-between items-center ml-1">
+                                    <label className="text-sm font-bold text-gray-700">Password</label>
+                                    <Link href="/forgot-password" className="text-xs font-black text-secondary hover:text-primary transition-colors">FORGOT PASSWORD?</Link>
+                                </div>
+                                <div className="relative group">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
+                                    <input
+                                        {...register("password")}
+                                        type="password"
+                                        autoFocus
+                                        placeholder="••••••••"
+                                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.password ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
+                                    />
+                                </div>
+                                {errors.password && <p className="text-red-500 text-xs font-bold ml-1">{errors.password.message as string}</p>}
                             </div>
-                            <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
-                                <input
-                                    {...register("password")}
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.password ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
-                                />
-                            </div>
-                            {errors.password && <p className="text-red-500 text-xs font-bold ml-1">{errors.password.message as string}</p>}
-                        </div>
+                        )}
 
                         <button
                             type="submit"
@@ -120,7 +166,7 @@ export default function LoginPage() {
                             {isPending ? (
                                 <Loader2 className="animate-spin" size={24} />
                             ) : (
-                                <>Sign In <ArrowRight size={22} /></>
+                                <>{showPassword ? 'Sign In' : 'Continue'} <ArrowRight size={22} /></>
                             )}
                         </button>
                     </form>
