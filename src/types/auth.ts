@@ -1,6 +1,6 @@
 export interface User {
     _id: string;
-    username: string;
+    name: string;
     email?: string;
     phone_number: string;
     imagePath?: string;
@@ -21,12 +21,12 @@ export interface AuthResponse {
 }
 
 export interface LoginRequest {
-    identifier: string; // email, phone or username
+    identifier: string; // email, phone or name
     password?: string;
 }
 
 export interface SignupRequest {
-    username: string;
+    name: string;
     email: string;
     phone: string;
     password?: string;
@@ -40,7 +40,7 @@ export interface VerifyOtpRequest {
 
 export interface CompleteProfileRequest {
     userId: string;
-    username?: string;
+    name?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
@@ -53,7 +53,7 @@ export interface ResendOtpRequest {
 
 export interface UpdateProfileRequest {
     userId: string;
-    username?: string;
+    name?: string;
     email?: string;
     phone?: string;
     password?: string;

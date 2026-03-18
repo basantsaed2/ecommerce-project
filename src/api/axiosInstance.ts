@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getCookie, deleteCookie } from 'cookies-next';
 
 const axiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api/store`,
     timeout: 15000,
     headers: {
         'Content-Type': 'application/json',

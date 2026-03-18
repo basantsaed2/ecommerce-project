@@ -11,7 +11,7 @@ import { setCredentials } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 
 const completeProfileSchema = z.object({
-    username: z.string().min(2, "Username must be at least 2 characters"),
+    name: z.string().min(2, "name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm password is required"),
@@ -32,7 +32,7 @@ export default function CompleteProfilePage() {
     }, [incompleteUser, router]);
 
     const { mutate: completeProfile, isPending } = usePost(
-        '/api/store/auth/complete-profile',
+        '/auth/complete-profile',
         ['user'],
         'Profile activated successfully! Welcome to STORE.'
     );
@@ -40,7 +40,7 @@ export default function CompleteProfilePage() {
     const { register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(completeProfileSchema),
         defaultValues: {
-            username: incompleteUser?.username || '',
+            name: incompleteUser?.name || '',
             email: incompleteUser?.email || '',
         }
     });
@@ -102,17 +102,17 @@ export default function CompleteProfilePage() {
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Username</label>
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">name</label>
                             <div className="relative group">
                                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                 <input
-                                    {...register("username")}
+                                    {...register("name")}
                                     type="text"
-                                    placeholder="Choose a username"
-                                    className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.username ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
+                                    placeholder="Choose a name"
+                                    className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.name ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
                                 />
                             </div>
-                            {errors.username && <p className="text-red-500 text-xs font-bold ml-1">{errors.username.message as string}</p>}
+                            {errors.name && <p className="text-red-500 text-xs font-bold ml-1">{errors.name.message as string}</p>}
                         </div>
 
                         <div className="space-y-1.5">

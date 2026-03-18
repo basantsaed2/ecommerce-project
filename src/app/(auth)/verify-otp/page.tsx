@@ -35,13 +35,13 @@ export default function VerifyOtpPage() {
     }, [timer]);
 
     const { mutate: verifyOtp, isPending: isVerifying } = usePost(
-        '/api/store/auth/verify-otp',
+        '/auth/verify-otp',
         ['user'],
         'OTP Verified Successfully!'
     );
 
     const { mutate: resendOtp, isPending: isResending } = usePost(
-        '/api/store/auth/resend-otp',
+        '/auth/resend-otp',
         [],
         'New OTP sent to your email/phone'
     );
@@ -66,7 +66,7 @@ export default function VerifyOtpPage() {
                         userId: userData.id || userData.userId || userData._id,
                         email: userData.email,
                         phone_number: userData.phone_number,
-                        username: userData.username,
+                        name: userData.name,
                         imagePath: userData.imagePath
                     }));
                     router.push('/complete-profile');

@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CategoriesSection() {
-    const { data, isLoading, error } = useGet<ApiResponse<Category>>(['categories'], '/api/store/category');
+    const { data, isLoading, error } = useGet<ApiResponse<Category>>(['categories'], '/category');
 
     if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="animate-spin text-secondary" /></div>;
     if (error) return null;

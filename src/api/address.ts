@@ -2,10 +2,10 @@ import axiosInstance from './axiosInstance';
 import { AddressRequest } from '@/types/address';
 
 export const addressApi = {
-    getLists: () => axiosInstance.get('/api/store/address/lists'),
-    getAddresses: () => axiosInstance.get('/api/store/address'),
-    addAddress: (data: AddressRequest) => axiosInstance.post('/api/store/address', data),
+    getLists: () => axiosInstance.get('/address/lists'),
+    getAddresses: () => axiosInstance.get('/address'),
+    addAddress: (data: AddressRequest) => axiosInstance.post('/address', data),
     updateAddress: (id: string, data: Partial<AddressRequest>) => 
-        axiosInstance.put(`/api/store/address/${id}`, data),
-    deleteAddress: (id: string) => axiosInstance.delete(`/api/store/address/${id}`),
+        axiosInstance.put(`/address/${id}`, data),
+    deleteAddress: (id: string) => axiosInstance.delete(`/address/${id}`),
 };

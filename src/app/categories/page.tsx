@@ -4,10 +4,12 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Category, Product } from '@/types/api';
 import { Loader2, Grid } from 'lucide-react';
 import ProductCard from '@/components/modules/products/ProductCard';
+import { useSelector } from 'react-redux';
 
 export default function CategoriesPage() {
-    const { data: categoriesData, isLoading: isLoadingCats } = useGet<ApiResponse<Category>>(['categories'], '/api/store/category');
-    const { data: productsData, isLoading: isLoadingProds } = useGet<ApiResponse<Product>>(['products'], '/api/store/product');
+    const { data: categoriesData, isLoading: isLoadingCats } = useGet<ApiResponse<Category>>(['categories'], '/category');
+    const { data: productsData, isLoading: isLoadingProds } = useGet<ApiResponse<Product>>(['products'], '/product');
+    const user = useSelector((state: any) => state.auth);
 
     if (isLoadingCats || isLoadingProds) {
         return (
@@ -64,7 +66,7 @@ export default function CategoriesPage() {
                 <div className="absolute -top-24 -left-24 w-64 h-64 bg-white/5 rounded-full blur-[80px]" />
             </section>
 
-            <div className="w-full p-4 md:p-8 lg:p-12 py-4">
+            <div className="container py-4">
                 <div className="flex flex-col gap-20">
                     {categories.map((category) => {
                         const categoryProducts = products.filter(p => p.categoryId.includes(category._id));

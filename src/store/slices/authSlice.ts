@@ -9,7 +9,7 @@ interface AuthState {
         userId?: string;
         email?: string;
         phone_number?: string;
-        username?: string;
+        name?: string;
     } | null;
 }
 

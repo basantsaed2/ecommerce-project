@@ -35,28 +35,28 @@ export default function AddressManager() {
 
     const { data: addressesData, isLoading: isFetching, refetch } = useGet<any>(
         ['addresses'],
-        '/api/store/address'
+        '/address'
     );
 
     const { data: listsData } = useGet<any>(
         ['address-lists'],
-        '/api/store/address/lists'
+        '/address/lists'
     );
 
     const { mutate: addAddress, isPending: isAdding } = usePost(
-        '/api/store/address',
+        '/address',
         ['addresses'],
         'Address added successfully'
     );
 
     const { mutate: updateAddress, isPending: isUpdating } = useUpdate(
-        '/api/store/address',
+        '/address',
         ['addresses'],
         'Address updated successfully'
     );
 
     const { mutate: deleteAddress, isPending: isDeleting } = useDelete(
-        '/api/store/address',
+        '/address',
         ['addresses'],
         'Address deleted successfully'
     );

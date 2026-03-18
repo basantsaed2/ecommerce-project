@@ -21,7 +21,7 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
 
     const { mutate: login, isPending } = usePost(
-        '/api/store/auth/login',
+        '/auth/login',
         ['user'],
         (response: any) => response?.data?.requires_otp ? 'Verification code sent!' : 'Welcome back!'
     );

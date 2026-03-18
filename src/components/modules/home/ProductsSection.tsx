@@ -7,7 +7,7 @@ import Link from 'next/link';
 import ProductCard from '../products/ProductCard';
 
 export default function ProductsSection() {
-    const { data, isLoading, error } = useGet<ApiResponse<Product>>(['products'], '/api/store/product');
+    const { data, isLoading, error } = useGet<ApiResponse<Product>>(['products'], '/product');
 
     if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-secondary" size={32} /></div>;
     if (error) return null;

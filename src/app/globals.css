@@ -5,12 +5,17 @@
     --color-secondary: #3b82f6;
 }
 
-/* في Tailwind v4، نستخدم التنسيق العادي أو @apply داخل طبقة base */
 @layer base {
     body {
         background-color: theme('colors.gray.50');
         color: theme('colors.gray.900');
         margin: 0;
         padding: 0;
+    }
+}
+
+@layer components {
+    .container {
+        @apply w-full px-6 md:px-12 xl:px-16 py-5;
     }
 }

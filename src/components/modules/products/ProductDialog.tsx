@@ -21,7 +21,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
     const { data, isLoading, error } = useGet<SingleApiResponse<Product>>(
         ['product', productId],
-        `/api/store/product/${productId}`,
+        `/product/${productId}`,
         { enabled: isOpen } // Only fetch when dialog is open
     );
 

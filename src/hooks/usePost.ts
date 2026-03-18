@@ -15,11 +15,18 @@ export const usePost = <TVariables = any, TData = any>(
             const { data } = await axiosInstance.post<TData>(url, newData);
             return data;
         },
-        onSuccess: (data) => {
-            const msg = typeof successMessage === 'function'
-                ? successMessage(data)
-                : successMessage || 'Created successfully';
-            toast.success(msg);
+        onSuccess: (data: any) => {
+            const apiMessage = data?.message || data?.data?.message;
+            let msg = apiMessage;
+            
+            if (!msg) {
+                msg = typeof successMessage === 'function'
+                    ? successMessage(data)
+                    : successMessage || 'Created successfully';
+            }
+            
+            // Only show toast if msg is truthy (some components might pass null intentionally to suppress)
+            if (msg) toast.success(msg);
 
             if (queryKeyToInvalidate) {
                 queryClient.invalidateQueries({ queryKey: queryKeyToInvalidate });

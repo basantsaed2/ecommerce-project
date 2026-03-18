@@ -17,8 +17,6 @@ export default function Navbar() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    // 1. قراءة البيانات من Redux
-    // 1. قراءة البيانات من Redux بشكل منفصل لتقليل الـ Renders
     const token = useSelector((state: RootState) => state.auth.token);
     const user = useSelector((state: RootState) => state.auth.user);
     const cartCount = useSelector((state: RootState) => state.cart.items.length);
@@ -100,13 +98,13 @@ export default function Navbar() {
                                 <Link href="/profile" className="flex items-center gap-2 group">
                                     <div className="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full text-primary font-bold border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all overflow-hidden">
                                         {user?.imagePath ? (
-                                            <img src={user.imagePath} alt={user.username} className="w-full h-full object-cover" />
+                                            <img src={user.imagePath} alt={user.name} className="w-full h-full object-cover" />
                                         ) : (
-                                            user?.username?.charAt(0).toUpperCase() || <User size={18} />
+                                            user?.name?.charAt(0).toUpperCase() || <User size={18} />
                                         )}
                                     </div>
                                     <span className="text-sm font-bold text-gray-700 hidden lg:block uppercase tracking-tight">
-                                        {user?.username}
+                                        {user?.name}
                                     </span>
                                 </Link>
                                 <button onClick={handleLogout} className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
@@ -141,10 +139,12 @@ export default function Navbar() {
                         </span>
                     )}
                 </Link>
-                <Link href="/favourite" className={`flex flex-col items-center gap-1 ${pathname === '/favourite' ? 'text-secondary' : 'text-gray-400'}`}>
-                    <Heart size={22} />
-                    <span className="text-[10px] font-bold">Wishlist</span>
-                </Link>
+                {isLoggedIn && (
+                    <Link href="/favourite" className={`flex flex-col items-center gap-1 ${pathname === '/favourite' ? 'text-secondary' : 'text-gray-400'}`}>
+                        <Heart size={22} />
+                        <span className="text-[10px] font-bold">Wishlist</span>
+                    </Link>
+                )}
                 <Link href={isLoggedIn ? "/profile" : "/login"} className={`flex flex-col items-center gap-1 ${pathname === '/profile' || pathname === '/login' ? 'text-secondary' : 'text-gray-400'}`}>
                     <User size={22} />
                     <span className="text-[10px] font-bold">{isLoggedIn ? "Profile" : "Account"}</span>
@@ -183,13 +183,13 @@ export default function Navbar() {
                                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                                     <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xl italic shadow-md overflow-hidden">
                                         {user?.imagePath ? (
-                                            <img src={user.imagePath} alt={user.username} className="w-full h-full object-cover" />
+                                            <img src={user.imagePath} alt={user.name} className="w-full h-full object-cover" />
                                         ) : (
-                                            user?.username?.charAt(0).toUpperCase()
+                                            user?.name?.charAt(0).toUpperCase()
                                         )}
                                     </div>
                                     <div className="overflow-hidden">
-                                        <p className="font-black text-sm text-gray-900 truncate uppercase">{user?.username}</p>
+                                        <p className="font-black text-sm text-gray-900 truncate uppercase">{user?.name}</p>
                                         <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                                     </div>
                                 </div>

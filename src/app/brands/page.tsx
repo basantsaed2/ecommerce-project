@@ -6,8 +6,8 @@ import { Loader2, Briefcase, Award, Star } from 'lucide-react';
 import ProductCard from '@/components/modules/products/ProductCard';
 
 export default function BrandsPage() {
-    const { data: brandsData, isLoading: isLoadingBrands } = useGet<ApiResponse<Brand>>(['brands'], '/api/store/brand');
-    const { data: productsData, isLoading: isLoadingProds } = useGet<ApiResponse<Product>>(['products'], '/api/store/product');
+    const { data: brandsData, isLoading: isLoadingBrands } = useGet<ApiResponse<Brand>>(['brands'], '/brand');
+    const { data: productsData, isLoading: isLoadingProds } = useGet<ApiResponse<Product>>(['products'], '/product');
 
     if (isLoadingBrands || isLoadingProds) {
         return (
@@ -76,7 +76,7 @@ export default function BrandsPage() {
                 </div>
             </section>
 
-            <div className="w-full p-4 md:p-8 lg:p-12 py-4">
+            <div className="container py-4">
                 <div className="flex flex-col gap-24">
                     {brands.map((brand) => {
                         const brandProducts = products.filter(p => p.brandId === brand._id);

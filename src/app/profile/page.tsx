@@ -19,7 +19,7 @@ import { useRouter } from 'next/navigation';
 import AddressManager from '@/components/modules/profile/AddressManager';
 
 const profileSchema = z.object({
-    username: z.string().min(3, "Username must be at least 3 characters"),
+    name: z.string().min(3, "name must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
     phone: z.string().min(5, "Invalid phone number"),
     password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal('')),
@@ -46,12 +46,12 @@ export default function ProfilePage() {
 
     const { data: profileResponse, isLoading: isFetching } = useGet<any>(
         ['profile'],
-        '/api/store/auth/get-profile',
+        '/auth/get-profile',
         { enabled: !!token && activeTab === 'profile' }
     );
 
     const { mutate: updateProfile, isPending: isUpdating } = useUpdate(
-        '/api/store/auth/edit-profile',
+        '/auth/edit-profile',
         ['profile'],
         'Profile updated successfully'
     );
@@ -65,7 +65,7 @@ export default function ProfilePage() {
     useEffect(() => {
         if (user && activeTab === 'profile') {
             reset({
-                username: user.username || '',
+                name: user.name || '',
                 email: user.email || '',
                 phone: user.phone || user.phone_number || '',
             });
@@ -109,7 +109,7 @@ export default function ProfilePage() {
     if (!token) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50/50 py-6 px-4">
+        <div className="container min-h-screen bg-gray-50/50 py-6">
             <div className="w-full">
                 {/* Header Section */}
                 <div className="mb-10 flex flex-row items-end justify-between gap-6">
@@ -158,7 +158,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 <h2 className="text-2xl font-black text-primary tracking-tight mb-1">
-                                    {user?.username || 'User'}
+                                    {user?.name || 'User'}
                                 </h2>
                                 <p className="text-gray-400 font-medium text-sm mb-6 flex items-center gap-2 justify-center">
                                     <Calendar size={14} />
@@ -220,16 +220,16 @@ export default function ProfilePage() {
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
-                                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Username</label>
+                                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">name</label>
                                                 <div className="relative group">
                                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                                     <input
-                                                        {...register("username")}
+                                                        {...register("name")}
                                                         type="text"
-                                                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.username ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
+                                                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.name ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
                                                     />
                                                 </div>
-                                                {errors.username && <p className="text-red-500 text-xs font-bold ml-1">{errors.username.message as string}</p>}
+                                                {errors.name && <p className="text-red-500 text-xs font-bold ml-1">{errors.name.message as string}</p>}
                                             </div>
 
                                             <div className="space-y-2">

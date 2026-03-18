@@ -7,6 +7,7 @@ import { addItemToCart, addToCartLocal } from '@/store/slices/cartSlice';
 import { RootState } from '@/store/store';
 import ProductDialog from './ProductDialog';
 import { toast } from 'sonner';
+import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 
 interface ProductCardProps {
     product: Product;
@@ -16,6 +17,29 @@ export default function ProductCard({ product }: ProductCardProps) {
     const dispatch = useDispatch();
     const token = useSelector((state: RootState) => state.auth.token);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    // Wishlist
+    const { data: wishlistData } = useGetWishlist(!!token);
+    const { mutate: toggleWishlist, isPending: isTogglingWishlist } = useToggleWishlist();
+
+    const isInWishlist = wishlistData?.data?.data?.some(
+        (item) => item._id === product._id
+    ) ?? false;
+
+    const handleWishlistToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!token) {
+            toast.error('Please login to save to wishlist');
+            return;
+        }
+        toggleWishlist(
+            { productId: product._id },
+            {
+                onSuccess: () =>
+                    toast.success(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist'),
+            }
+        );
+    };
 
     const handleAddToCart = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -48,15 +72,27 @@ export default function ProductCard({ product }: ProductCardProps) {
                 onClick={() => setIsDialogOpen(true)}
                 className="group flex flex-col bg-white rounded-[32px] border border-gray-100 hover:shadow-2xl hover:shadow-gray-200/60 transition-all duration-500 overflow-hidden relative cursor-pointer"
             >
-                {/* Wishlist Button */}
-                <div
-                    className="absolute top-4 right-4 z-20 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300"
-                    onClick={(e) => { e.stopPropagation(); toast.success('Saved to wishlist'); }}
-                >
-                    <button className="bg-white/80 backdrop-blur-md p-2.5 rounded-2xl shadow-sm text-gray-400 hover:text-red-500 hover:bg-white transition-all active:scale-90">
-                        <Heart size={18} />
-                    </button>
-                </div>
+                {/* Wishlist Button — only shown when logged in */}
+                {token && (
+                    <div
+                        className="absolute top-4 right-4 z-20"
+                        onClick={handleWishlistToggle}
+                    >
+                        <button
+                            disabled={isTogglingWishlist}
+                            className={`bg-white/80 backdrop-blur-md p-2.5 rounded-2xl shadow-sm transition-all active:scale-90 ${
+                                isInWishlist
+                                    ? 'text-red-500'
+                                    : 'text-gray-400 hover:text-red-500'
+                            } hover:bg-white disabled:opacity-50`}
+                        >
+                            <Heart
+                                size={18}
+                                className={isInWishlist ? 'fill-red-500' : ''}
+                            />
+                        </button>
+                    </div>
+                )}
 
                 {/* Hot Badge */}
                 {product.is_featured && (
