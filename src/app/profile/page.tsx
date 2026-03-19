@@ -17,6 +17,7 @@ import { setCredentials, logout } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 
 import AddressManager from '@/components/modules/profile/AddressManager';
+import OrdersManager from '@/components/modules/profile/OrdersManager';
 
 const profileSchema = z.object({
     name: z.string().min(3, "name must be at least 3 characters"),
@@ -25,7 +26,7 @@ const profileSchema = z.object({
     password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal('')),
 });
 
-type Tab = 'profile' | 'addresses';
+type Tab = 'profile' | 'addresses' | 'orders';
 
 export default function ProfilePage() {
     const dispatch = useDispatch();
@@ -109,7 +110,7 @@ export default function ProfilePage() {
     if (!token) return null;
 
     return (
-        <div className="container min-h-screen bg-gray-50/50 py-6">
+        <div className="w-full px-4 md:px-12 min-h-screen bg-gray-50/50 py-6">
             <div className="w-full">
                 {/* Header Section */}
                 <div className="mb-10 flex flex-row items-end justify-between gap-6">
@@ -197,10 +198,17 @@ export default function ProfilePage() {
                                     <span className="font-bold">Shipping Addresses</span>
                                     <ChevronRight size={18} className={`opacity-40 transition-transform ${activeTab === 'addresses' ? 'translate-x-1' : ''}`} />
                                 </button>
-                                <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 opacity-50 cursor-not-allowed">
+                                <button
+                                    onClick={() => setActiveTab('orders')}
+                                    className={`w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 transition-colors group ${activeTab === 'orders' ? 'bg-white/10' : ''}`}
+                                >
+                                    <span className="font-bold">My Orders</span>
+                                    <ChevronRight size={18} className={`opacity-40 transition-transform ${activeTab === 'orders' ? 'translate-x-1' : ''}`} />
+                                </button>
+                                {/* <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 opacity-50 cursor-not-allowed">
                                     <span className="font-bold">Payment Methods</span>
                                     <ChevronRight size={18} className="opacity-0" />
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     </div>
@@ -304,8 +312,10 @@ export default function ProfilePage() {
                                         </button>
                                     </div>
                                 </form>
-                            ) : (
+                            ) : activeTab === 'addresses' ? (
                                 <AddressManager />
+                            ) : (
+                                <OrdersManager />
                             )}
                         </div>
                     </div>

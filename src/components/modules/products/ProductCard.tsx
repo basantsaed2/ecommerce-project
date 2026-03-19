@@ -44,6 +44,11 @@ export default function ProductCard({ product }: ProductCardProps) {
     const handleAddToCart = (e: React.MouseEvent) => {
         e.stopPropagation();
 
+        if (product.quantity <= 0) {
+            toast.error('This product is currently sold out');
+            return;
+        }
+
         if (token) {
             dispatch(addItemToCart({
                 productId: product._id,
@@ -111,8 +116,17 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <img
                         src={product.image}
                         alt={product.name || product.ar_name}
-                        className="max-w-full max-h-full object-contain relative z-10 group-hover:scale-110 group-hover:rotate-2 transition-transform duration-700 ease-out"
+                        className={`max-w-full max-h-full object-contain relative z-10 transition-transform duration-700 ease-out ${product.quantity > 0 ? 'group-hover:scale-110 group-hover:rotate-2' : ''}`}
                     />
+
+                    {/* Sold Out Overlay on Image */}
+                    {product.quantity <= 0 && (
+                        <div className="absolute inset-0 z-20 bg-white/50 backdrop-blur-[2px] flex items-center justify-center">
+                            <div className="bg-red-500 text-white font-black px-6 py-2 rounded-2xl transform -rotate-12 absolute shadow-xl shadow-red-500/20 text-lg tracking-widest uppercase border-4 border-white">
+                                Sold Out
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Content Area */}
@@ -142,9 +156,14 @@ export default function ProductCard({ product }: ProductCardProps) {
 
                         <button
                             onClick={handleAddToCart}
-                            className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-secondary hover:shadow-xl hover:shadow-secondary/40 transition-all active:scale-90 group/btn"
+                            disabled={product.quantity <= 0}
+                            className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                                product.quantity > 0
+                                    ? 'bg-primary text-white hover:bg-secondary hover:shadow-xl hover:shadow-secondary/40 active:scale-90 group/btn'
+                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            }`}
                         >
-                            <ShoppingCart size={20} className="group-hover/btn:-translate-y-0.5 transition-transform" />
+                            <ShoppingCart size={20} className={product.quantity > 0 ? "group-hover/btn:-translate-y-0.5 transition-transform" : ""} />
                         </button>
                     </div>
                 </div>

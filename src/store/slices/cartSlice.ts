@@ -22,6 +22,12 @@ const initialState: CartState = {
 const getCartFromResponse = (response: any) => {
     // Backend returns { success: true, data: { cart: { ... } } } or { success: true, data: { cart: [ ... ] } }
     let cartData = response.data?.data?.cart || response.data?.cart || response.data;
+    
+    // If cart is explicitly an empty array, return an empty cart structure
+    if (Array.isArray(cartData) && cartData.length === 0) {
+        return { cartItems: [], totalCartPrice: 0 };
+    }
+    
     if (Array.isArray(cartData)) {
         return cartData[0];
     }
@@ -54,12 +60,13 @@ export const fetchCart = createAsyncThunk(
 
 export const addItemToCart = createAsyncThunk(
     'cart/addItemToCart',
-    async (payload: { productId: string; quantity: number }, { getState, rejectWithValue }) => {
+    async (payload: { productId: string; quantity: number }, { dispatch, getState, rejectWithValue }) => {
         try {
             const state = getState() as RootState;
             if (!state.auth.token) return null;
 
             const response = await cartApi.addToCart(payload);
+            dispatch(fetchCart());
             return getCartFromResponse(response);
         } catch (error: any) {
             console.log(error);
@@ -72,12 +79,13 @@ export const addItemToCart = createAsyncThunk(
 
 export const updateItemQuantity = createAsyncThunk(
     'cart/updateItemQuantity',
-    async (payload: { productId: string; quantity: number }, { getState, rejectWithValue }) => {
+    async (payload: { productId: string; quantity: number }, { dispatch, getState, rejectWithValue }) => {
         try {
             const state = getState() as RootState;
             if (!state.auth.token) return null;
 
             const response = await cartApi.updateQuantity(payload);
+            dispatch(fetchCart());
             return getCartFromResponse(response);
         } catch (error: any) {
             const msg = extractError(error);
@@ -89,12 +97,13 @@ export const updateItemQuantity = createAsyncThunk(
 
 export const removeItemFromCart = createAsyncThunk(
     'cart/removeItemFromCart',
-    async (productId: string, { getState, rejectWithValue }) => {
+    async (productId: string, { dispatch, getState, rejectWithValue }) => {
         try {
             const state = getState() as RootState;
             if (!state.auth.token) return null;
 
             const response = await cartApi.removeFromCart(productId);
+            dispatch(fetchCart());
             return getCartFromResponse(response);
         } catch (error: any) {
             const msg = extractError(error);
@@ -147,6 +156,25 @@ export const cartSlice = createSlice({
         clearCartLocal: (state) => {
             state.items = [];
             state.totalCartPrice = 0;
+        },
+        setCartState: (state, action: PayloadAction<any>) => {
+            let cartData = action.payload;
+            if (Array.isArray(cartData)) {
+                cartData = cartData[0];
+            }
+            if (cartData) {
+                state.items = (cartData.cartItems || []).map((item: any) => ({
+                    ...item,
+                    product: typeof item.product === 'string' 
+                        ? { _id: item.product, price: item.price } 
+                        : item.product
+                }));
+                state.totalCartPrice = cartData.totalCartPrice || 
+                    state.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+            } else {
+                state.items = [];
+                state.totalCartPrice = 0;
+            }
         }
     },
     extraReducers: (builder) => {
@@ -205,5 +233,5 @@ export const cartSlice = createSlice({
     },
 });
 
-export const { addToCartLocal, updateQuantityLocal, removeFromCartLocal, clearCartLocal } = cartSlice.actions;
+export const { addToCartLocal, updateQuantityLocal, removeFromCartLocal, clearCartLocal, setCartState } = cartSlice.actions;
 export default cartSlice.reducer;

@@ -31,6 +31,11 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
     const handleAddToCart = () => {
         if (!product) return;
+        
+        if (product.quantity <= 0) {
+            toast.error('This product is currently sold out');
+            return;
+        }
 
         if (token) {
             // If logged in, only dispatch the sync thunk
@@ -78,12 +83,19 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                 ) : (
                     <>
                         {/* Image Section */}
-                        <div className="md:w-1/2 md:border-r border-gray-100 bg-gray-50 flex items-center justify-center p-8 lg:p-12 min-h-[300px]">
+                        <div className="md:w-1/2 md:border-r border-gray-100 bg-gray-50 flex items-center justify-center p-8 lg:p-12 min-h-[300px] relative">
                             <img
                                 src={product.image}
                                 alt={product.name}
-                                className="max-w-full max-h-[400px] object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500"
+                                className={`max-w-full max-h-[400px] object-contain drop-shadow-xl transition-transform duration-500 ${product.quantity > 0 ? 'hover:scale-105' : 'grayscale opacity-80'}`}
                             />
+                            {product.quantity <= 0 && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-sm">
+                                    <div className="bg-red-500 text-white font-black px-8 py-3 rounded-2xl transform -rotate-12 shadow-2xl shadow-red-500/30 text-2xl tracking-widest uppercase border-[6px] border-white">
+                                        Sold Out
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Content Section */}
@@ -116,31 +128,46 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
                             <div className="space-y-6">
                                 {/* Quantity Counter */}
-                                <div>
+                                <div className={product.quantity <= 0 ? 'opacity-50 pointer-events-none' : ''}>
                                     <label className="text-sm font-bold text-gray-700 block mb-3">Quantity</label>
                                     <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 w-fit rounded-2xl p-2">
                                         <button
                                             onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-secondary hover:border-secondary transition-colors"
+                                            disabled={product.quantity <= 0}
+                                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-secondary hover:border-secondary transition-colors disabled:opacity-50"
                                         >
                                             <Minus size={18} />
                                         </button>
                                         <span className="w-8 text-center font-black text-lg">{quantity}</span>
                                         <button
-                                            onClick={() => setQuantity(q => q + 1)}
-                                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-secondary hover:border-secondary transition-colors"
+                                            onClick={() => setQuantity(q => Math.min(product.quantity, q + 1))}
+                                            disabled={product.quantity <= 0}
+                                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-secondary hover:border-secondary transition-colors disabled:opacity-50"
                                         >
                                             <Plus size={18} />
                                         </button>
                                     </div>
+                                    {product.quantity > 0 && product.quantity <= 10 && (
+                                        <p className="text-secondary text-xs font-bold mt-2">
+                                            Only {product.quantity} left in stock!
+                                        </p>
+                                    )}
                                 </div>
 
                                 <button
                                     onClick={handleAddToCart}
-                                    className="w-full bg-primary text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.98]"
+                                    disabled={product.quantity <= 0}
+                                    className={`w-full py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all shadow-lg ${
+                                        product.quantity > 0
+                                            ? 'bg-primary text-white hover:bg-black active:scale-[0.98] shadow-primary/20'
+                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                                    }`}
                                 >
                                     <ShoppingCart size={22} />
-                                    Add To Cart • {(product.price * quantity).toLocaleString()} EGP
+                                    {product.quantity > 0 
+                                        ? `Add To Cart • ${(product.price * quantity).toLocaleString()} EGP`
+                                        : 'Currently Unavailable'
+                                    }
                                 </button>
                             </div>
                         </div>

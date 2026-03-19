@@ -8,7 +8,8 @@ import {
     clearCartSync,
     updateQuantityLocal,
     removeFromCartLocal,
-    clearCartLocal
+    clearCartLocal,
+    setCartState
 } from '@/store/slices/cartSlice';
 import {
     ShoppingBag,
@@ -21,10 +22,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useGet } from '@/hooks/useGet';
 
 export default function CartPage() {
     const dispatch = useDispatch<AppDispatch>();
-    const { items, totalCartPrice, loading } = useSelector((state: RootState) => state.cart);
+    const { items: reduxItems, totalCartPrice: reduxTotalPrice, loading: reduxLoading } = useSelector((state: RootState) => state.cart);
     const { token } = useSelector((state: RootState) => state.auth);
     const [mounted, setMounted] = useState(false);
 
@@ -32,13 +34,35 @@ export default function CartPage() {
         setMounted(true);
     }, []);
 
+    // Fetch directly from API
+    const { data: cartResponse, isLoading: isFetchingCart, refetch } = useGet<any>(
+        ['cart-page'],
+        '/cart',
+        { enabled: !!token }
+    );
+
+    const backendCart = cartResponse?.data?.cart || cartResponse?.cart;
+
+    // Sync API data with Redux
+    useEffect(() => {
+        if (token && cartResponse && backendCart) {
+            dispatch(setCartState(backendCart));
+        }
+    }, [token, cartResponse, backendCart, dispatch]);
+
     if (!mounted) return null;
+
+    const items = token ? (backendCart?.cartItems || []) : reduxItems;
+    const totalCartPrice = token ? (backendCart?.totalCartPrice || 0) : reduxTotalPrice;
+    const shippingCost = token ? (cartResponse?.data?.shippingCost || 0) : 0;
+    const finalTotal = totalCartPrice + shippingCost;
+    const isLoading = token ? isFetchingCart : reduxLoading;
 
     const handleUpdateQuantity = (productId: string, newQty: number) => {
         if (newQty < 1) return;
 
         if (token) {
-            dispatch(updateItemQuantity({ productId, quantity: newQty }));
+            dispatch(updateItemQuantity({ productId, quantity: newQty })).unwrap().finally(() => refetch());
         } else {
             dispatch(updateQuantityLocal({ productId, quantity: newQty }));
         }
@@ -46,7 +70,7 @@ export default function CartPage() {
 
     const handleRemove = (productId: string) => {
         if (token) {
-            dispatch(removeItemFromCart(productId));
+            dispatch(removeItemFromCart(productId)).unwrap().finally(() => refetch());
         } else {
             dispatch(removeFromCartLocal(productId));
         }
@@ -54,11 +78,20 @@ export default function CartPage() {
 
     const handleClear = () => {
         if (token) {
-            dispatch(clearCartSync());
+            dispatch(clearCartSync()).unwrap().finally(() => refetch());
         } else {
             dispatch(clearCartLocal());
         }
     };
+
+    if (isLoading && items.length === 0) {
+        return (
+            <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
+                <Loader2 className="animate-spin text-primary w-12 h-12 mb-4" />
+                <p className="text-gray-500 font-bold">Loading your cart...</p>
+            </div>
+        );
+    }
 
     if (items.length === 0) {
         return (
@@ -79,7 +112,7 @@ export default function CartPage() {
     }
 
     return (
-        <div className="container py-12">
+        <div className="w-full px-4 md:px-12 py-12">
             <div className="flex items-center justify-between mb-10">
                 <div>
                     <h1 className="text-4xl font-black text-primary tracking-tight">Shopping Cart</h1>
@@ -96,12 +129,12 @@ export default function CartPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 {/* Items List */}
                 <div className="lg:col-span-2 space-y-6">
-                    {items.map((item) => (
+                    {items.map((item: any) => (
                         <div key={item.product._id} className="group flex flex-col sm:flex-row items-center gap-6 bg-white p-6 rounded-3xl border border-gray-100 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300 relative">
                             {/* Product Image */}
                             <div className="w-32 h-32 bg-gray-50 rounded-2xl p-4 flex items-center justify-center shrink-0">
-                                <img 
-                                    src={item.product?.image || '/placeholder-product.png'} 
+                                <img
+                                    src={item.product?.image || '/placeholder-product.png'}
                                     alt={item.product?.name || 'Product'}
                                     className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500"
                                 />
@@ -164,11 +197,13 @@ export default function CartPage() {
                             </div>
                             <div className="flex justify-between items-center text-primary-foreground/70">
                                 <span className="font-bold">Shipping</span>
-                                <span className="font-black text-lg">FREE</span>
+                                <span className="font-black text-lg text-secondary uppercase tracking-widest bg-white/10 px-3 py-1 rounded-lg">
+                                    {shippingCost === 0 ? 'FREE' : `${shippingCost} EGP`}
+                                </span>
                             </div>
                             <div className="pt-6 border-t border-white/10 flex justify-between items-center">
                                 <span className="text-xl font-black italic">Total</span>
-                                <span className="text-3xl font-black tracking-tight">{totalCartPrice.toLocaleString()} EGP</span>
+                                <span className="text-3xl font-black tracking-tight">{finalTotal.toLocaleString()} EGP</span>
                             </div>
                         </div>
 
