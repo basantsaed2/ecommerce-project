@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Product } from '@/types/api';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addItemToCart, addToCartLocal } from '@/store/slices/cartSlice';
+import { addItemToCart } from '@/store/slices/cartSlice';
 import { RootState } from '@/store/store';
 import ProductDialog from './ProductDialog';
 import { toast } from 'sonner';
@@ -49,24 +49,10 @@ export default function ProductCard({ product }: ProductCardProps) {
             return;
         }
 
-        if (token) {
-            dispatch(addItemToCart({
-                productId: product._id,
-                quantity: 1
-            }) as any);
-        } else {
-            dispatch(addToCartLocal({
-                product: {
-                    _id: product._id,
-                    name: product.name,
-                    ar_name: product.ar_name,
-                    image: product.image,
-                    price: product.price
-                },
-                quantity: 1,
-                price: product.price
-            }));
-        }
+        dispatch(addItemToCart({
+            productId: product._id,
+            quantity: 1
+        }) as any);
 
         toast.success(`Processing...`);
     };

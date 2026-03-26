@@ -9,6 +9,8 @@ import { usePost } from '@/hooks/usePost';
 import DynamicBanner from '@/components/common/DynamicBanner';
 import { useDispatch } from 'react-redux';
 import { setCredentials, setIncompleteUser } from '@/store/slices/authSlice';
+import { fetchCart } from '@/store/slices/cartSlice';
+import { AppDispatch } from '@/store/store';
 import { useRouter } from 'next/navigation';
 
 const loginSchema = z.object({
@@ -17,7 +19,7 @@ const loginSchema = z.object({
 });
 
 export default function LoginPage() {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
 
@@ -59,6 +61,8 @@ export default function LoginPage() {
                         user: data.user,
                         token: data.token
                     }));
+                    // Sync the guest cart with the newly logged-in user
+                    dispatch(fetchCart());
                     router.push('/');
                 }
             },

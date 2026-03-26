@@ -9,6 +9,7 @@ import { MapPin, CreditCard, Banknote, ShieldCheck, ArrowRight, Loader2, CheckCi
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Address } from '@/types/address';
+import SearchableSelect from '@/components/ui/SearchableSelect';
 
 export default function CheckoutPage() {
     const dispatch = useDispatch<AppDispatch>();
@@ -17,6 +18,14 @@ export default function CheckoutPage() {
     const { token } = useSelector((state: RootState) => state.auth);
 
     const [selectedAddress, setSelectedAddress] = useState<string>('');
+    const [guestCountry, setGuestCountry] = useState('');
+    const [guestCity, setGuestCity] = useState('');
+    const [guestZone, setGuestZone] = useState('');
+    const [guestStreet, setGuestStreet] = useState('');
+    const [guestBuildingNumber, setGuestBuildingNumber] = useState('');
+    const [guestFloorNumber, setGuestFloorNumber] = useState('');
+    const [guestApartmentNumber, setGuestApartmentNumber] = useState('');
+    const [guestLandmark, setGuestLandmark] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<string>('');
     const [proofImage, setProofImage] = useState<string | null>(null);
     const [proofFileName, setProofFileName] = useState<string>('');
@@ -25,31 +34,27 @@ export default function CheckoutPage() {
     // Fetch directly from API
     const { data: cartResponse, isLoading: isFetchingCart } = useGet<any>(
         ['checkout-cart'],
-        '/cart',
-        { enabled: !!token }
+        '/cart'
     );
     const backendCart = cartResponse?.data?.cart || cartResponse?.cart;
-    const items = token ? (backendCart?.cartItems || []) : reduxItems;
-    const totalCartPrice = token ? (backendCart?.totalCartPrice || 0) : reduxTotalPrice;
-    const shippingCost = token ? (cartResponse?.data?.shippingCost || 0) : 0;
+    const items = backendCart?.cartItems || reduxItems;
+    const totalCartPrice = backendCart?.totalCartPrice ?? reduxTotalPrice ?? 0;
+    const shippingCost = cartResponse?.data?.shippingCost || 0;
     const finalTotal = totalCartPrice + shippingCost;
 
     // Sync API data with Redux
     useEffect(() => {
-        if (token && cartResponse && backendCart) {
+        if (cartResponse && backendCart) {
             dispatch(setCartState(backendCart));
         }
-    }, [token, cartResponse, backendCart, dispatch]);
+    }, [cartResponse, backendCart, dispatch]);
 
-    // Redirect guests
+    // Redirect empty cart
     useEffect(() => {
-        if (!token) {
-            toast.error("Please login to checkout");
-            router.push('/login');
-        } else if (!isFetchingCart && items.length === 0 && !isSuccess) {
+        if (!isFetchingCart && items.length === 0 && !isSuccess) {
             router.push('/cart');
         }
-    }, [token, items.length, router, isSuccess, isFetchingCart]);
+    }, [items.length, router, isSuccess, isFetchingCart]);
 
     // Fetch addresses
     const { data: addressesData, isLoading: isFetchingAddresses } = useGet<any>(
@@ -58,6 +63,15 @@ export default function CheckoutPage() {
         { enabled: !!token }
     );
     const addresses: Address[] = addressesData?.data?.addresses || addressesData?.addresses || [];
+
+    // Fetch address lists for guest
+    const { data: listsData } = useGet<any>(
+        ['address-lists'],
+        '/address/lists'
+    );
+    const lists: any = listsData?.data || listsData || { countries: [], cities: [], zones: [] };
+    const filteredCities = lists.cities?.filter((c: any) => c.country === guestCountry || !c.country) || [];
+    const filteredZones = lists.zones?.filter((z: any) => z.cityId === guestCity || !z.cityId) || [];
 
     // Fetch payment methods
     const { data: pmData, isLoading: isFetchingPm } = useGet<any>(
@@ -92,13 +106,27 @@ export default function CheckoutPage() {
     );
 
     const handleCheckout = () => {
-        if (!selectedAddress) {
+        if (!token && (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber)) {
+            toast.error("Please fill in all required delivery details (Country, City, Zone, Street, Building)");
+            return;
+        }
+
+        if (token && !selectedAddress) {
             toast.error("Please select a shipping address");
             return;
         }
 
         const payload: any = {
-            shippingAddress: selectedAddress,
+            shippingAddress: token ? selectedAddress : { 
+                country: guestCountry, 
+                city: guestCity, 
+                zone: guestZone, 
+                street: guestStreet,
+                buildingNumber: guestBuildingNumber,
+                floorNumber: guestFloorNumber,
+                apartmentNumber: guestApartmentNumber,
+                uniqueIdentifier: guestLandmark
+            },
             paymentMethod: paymentMethod
         };
 
@@ -107,7 +135,12 @@ export default function CheckoutPage() {
         }
 
         placeOrder(payload, {
-            onSuccess: () => {
+            onSuccess: (res: any) => {
+                const iframeUrl = res?.data?.payment?.iframeUrl || res?.payment?.iframeUrl || res?.data?.order?.payment?.iframeUrl;
+                if (iframeUrl) {
+                    window.open(iframeUrl, '_blank', 'noopener,noreferrer');
+                }
+
                 dispatch(clearCartLocal());
                 setIsSuccess(true);
             }
@@ -151,7 +184,7 @@ export default function CheckoutPage() {
         );
     }
 
-    if (!token || items.length === 0) return null;
+    if (items.length === 0 && !isSuccess) return null;
 
     return (
         <div className="w-full px-4 md:px-12 py-6 pb-24">
@@ -166,7 +199,60 @@ export default function CheckoutPage() {
                             <h2 className="text-2xl font-black text-primary">Shipping Address</h2>
                         </div>
 
-                        {isFetchingAddresses ? (
+                        {!token ? (
+                            <div className="bg-gray-50/50 p-6 sm:p-8 rounded-[32px] border-2 border-gray-100 mb-6">
+                                <h3 className="text-2xl font-black text-primary mb-6">Delivery Details</h3>
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <SearchableSelect
+                                            label="Country"
+                                            options={lists.countries || []}
+                                            value={guestCountry}
+                                            onChange={(val) => { setGuestCountry(val); setGuestCity(''); setGuestZone(''); }}
+                                            placeholder="Pick Country"
+                                        />
+                                        <SearchableSelect
+                                            label="City"
+                                            options={filteredCities}
+                                            value={guestCity}
+                                            onChange={(val) => { setGuestCity(val); setGuestZone(''); }}
+                                            placeholder="Pick City"
+                                            disabled={!guestCountry}
+                                        />
+                                        <SearchableSelect
+                                            label="Zone"
+                                            options={filteredZones}
+                                            value={guestZone}
+                                            onChange={(val) => setGuestZone(val)}
+                                            placeholder="Pick Zone"
+                                            disabled={!guestCity}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5 md:col-span-2">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Street Name</label>
+                                            <input type="text" placeholder="e.g. Al-Hamra St." value={guestStreet} onChange={(e) => setGuestStreet(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Building Number</label>
+                                            <input type="text" placeholder="e.g. 42" value={guestBuildingNumber} onChange={(e) => setGuestBuildingNumber(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Floor</label>
+                                            <input type="number" placeholder="e.g. 12" value={guestFloorNumber} onChange={(e) => setGuestFloorNumber(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Apartment</label>
+                                            <input type="number" placeholder="e.g. 1" value={guestApartmentNumber} onChange={(e) => setGuestApartmentNumber(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Landmark</label>
+                                            <input type="text" placeholder="e.g. Near Mosque" value={guestLandmark} onChange={(e) => setGuestLandmark(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : isFetchingAddresses ? (
                             <div className="flex justify-center p-8"><Loader2 className="animate-spin text-gray-400" /></div>
                         ) : addresses.length === 0 ? (
                             <div className="p-12 border-2 border-dashed border-gray-200 rounded-3xl text-center bg-gray-50/50">
@@ -345,7 +431,9 @@ export default function CheckoutPage() {
                                 {shippingCost > 0 ? (
                                     <span className="font-black text-lg text-white">{shippingCost} EGP</span>
                                 ) : (
-                                    <span className="font-black text-sm text-white uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-lg">FREE</span>
+                                    <span className="font-black text-[10px] text-white uppercase tracking-widest bg-white/20 px-2 py-1 rounded-lg">
+                                        {!token ? 'Calculated at checkout' : 'FREE'}
+                                    </span>
                                 )}
                             </div>
                             <div className="pt-6 flex justify-between items-center border-t border-white/10">
@@ -356,7 +444,7 @@ export default function CheckoutPage() {
 
                         <button
                             onClick={handleCheckout}
-                            disabled={isPlacingOrder || !selectedAddress}
+                            disabled={isPlacingOrder || (token ? !selectedAddress : (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber))}
                             className="w-full bg-secondary text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-white hover:text-secondary transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-secondary/20 border-2 border-secondary hover:border-white"
                         >
                             {isPlacingOrder ? <Loader2 className="animate-spin" size={24} /> : (

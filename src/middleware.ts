@@ -5,15 +5,23 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
     // جلب التوكن من الكوكيز (لأن الميدل وير بيشتغل سيرفر مش لوكال ستورج)
     const token = request.cookies.get('token')?.value;
+    const sessionId = request.cookies.get('sessionId')?.value;
     const { pathname } = request.nextUrl;
 
-    // المسارات اللي محتاجة حماية
-    const protectedRoutes = ['/orders', '/checkout', '/favourite', '/profile'];
-    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+    // المسارات اللي محتاجة حماية كاملة بتوكن
+    const strictProtectedRoutes = ['/orders', '/favourite', '/profile'];
+    const isStrictProtected = strictProtectedRoutes.some(route => pathname.startsWith(route));
 
-    // لو المسار محمي ومفيش توكن، رجعه لصفحة اللوجن
-    if (isProtectedRoute && !token) {
+    // مسارات يسمح للجيست (session id) والمسجل (token)
+    const guestAllowedRoutes = ['/checkout'];
+    const isGuestAllowed = guestAllowedRoutes.some(route => pathname.startsWith(route));
+
+    if (isStrictProtected && !token) {
         return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    if (isGuestAllowed && !token && !sessionId) {
+        return NextResponse.redirect(new URL('/cart', request.url));
     }
 
     return NextResponse.next();

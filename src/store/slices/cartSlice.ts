@@ -47,8 +47,7 @@ export const fetchCart = createAsyncThunk(
     'cart/fetchCart',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const state = getState() as RootState;
-            if (!state.auth.token) return null;
+            // Guest support: backend handles session via x-session-id
 
             const response = await cartApi.getCart();
             return getCartFromResponse(response);
@@ -62,8 +61,7 @@ export const addItemToCart = createAsyncThunk(
     'cart/addItemToCart',
     async (payload: { productId: string; quantity: number }, { dispatch, getState, rejectWithValue }) => {
         try {
-            const state = getState() as RootState;
-            if (!state.auth.token) return null;
+            // Guest support: backend handles session via x-session-id
 
             const response = await cartApi.addToCart(payload);
             dispatch(fetchCart());
@@ -81,8 +79,7 @@ export const updateItemQuantity = createAsyncThunk(
     'cart/updateItemQuantity',
     async (payload: { productId: string; quantity: number }, { dispatch, getState, rejectWithValue }) => {
         try {
-            const state = getState() as RootState;
-            if (!state.auth.token) return null;
+            // Guest support: backend handles session via x-session-id
 
             const response = await cartApi.updateQuantity(payload);
             dispatch(fetchCart());
@@ -99,8 +96,7 @@ export const removeItemFromCart = createAsyncThunk(
     'cart/removeItemFromCart',
     async (productId: string, { dispatch, getState, rejectWithValue }) => {
         try {
-            const state = getState() as RootState;
-            if (!state.auth.token) return null;
+            // Guest support: backend handles session via x-session-id
 
             const response = await cartApi.removeFromCart(productId);
             dispatch(fetchCart());
@@ -117,8 +113,7 @@ export const clearCartSync = createAsyncThunk(
     'cart/clearCartSync',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const state = getState() as RootState;
-            if (!state.auth.token) return null;
+            // Guest support: backend handles session via x-session-id
 
             await cartApi.clearCart();
             return null;

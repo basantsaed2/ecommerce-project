@@ -37,51 +37,37 @@ export default function CartPage() {
     // Fetch directly from API
     const { data: cartResponse, isLoading: isFetchingCart, refetch } = useGet<any>(
         ['cart-page'],
-        '/cart',
-        { enabled: !!token }
+        '/cart'
     );
 
     const backendCart = cartResponse?.data?.cart || cartResponse?.cart;
 
     // Sync API data with Redux
     useEffect(() => {
-        if (token && cartResponse && backendCart) {
+        if (cartResponse && backendCart) {
             dispatch(setCartState(backendCart));
         }
-    }, [token, cartResponse, backendCart, dispatch]);
+    }, [cartResponse, backendCart, dispatch]);
 
     if (!mounted) return null;
 
-    const items = token ? (backendCart?.cartItems || []) : reduxItems;
-    const totalCartPrice = token ? (backendCart?.totalCartPrice || 0) : reduxTotalPrice;
-    const shippingCost = token ? (cartResponse?.data?.shippingCost || 0) : 0;
+    const items = backendCart?.cartItems || reduxItems;
+    const totalCartPrice = backendCart?.totalCartPrice ?? reduxTotalPrice ?? 0;
+    const shippingCost = cartResponse?.data?.shippingCost || 0;
     const finalTotal = totalCartPrice + shippingCost;
-    const isLoading = token ? isFetchingCart : reduxLoading;
+    const isLoading = isFetchingCart || reduxLoading;
 
     const handleUpdateQuantity = (productId: string, newQty: number) => {
         if (newQty < 1) return;
-
-        if (token) {
-            dispatch(updateItemQuantity({ productId, quantity: newQty })).unwrap().finally(() => refetch());
-        } else {
-            dispatch(updateQuantityLocal({ productId, quantity: newQty }));
-        }
+        dispatch(updateItemQuantity({ productId, quantity: newQty })).unwrap().finally(() => refetch());
     };
 
     const handleRemove = (productId: string) => {
-        if (token) {
-            dispatch(removeItemFromCart(productId)).unwrap().finally(() => refetch());
-        } else {
-            dispatch(removeFromCartLocal(productId));
-        }
+        dispatch(removeItemFromCart(productId)).unwrap().finally(() => refetch());
     };
 
     const handleClear = () => {
-        if (token) {
-            dispatch(clearCartSync()).unwrap().finally(() => refetch());
-        } else {
-            dispatch(clearCartLocal());
-        }
+        dispatch(clearCartSync()).unwrap().finally(() => refetch());
     };
 
     if (isLoading && items.length === 0) {
@@ -198,7 +184,7 @@ export default function CartPage() {
                             <div className="flex justify-between items-center text-primary-foreground/70">
                                 <span className="font-bold">Shipping</span>
                                 <span className="font-black text-lg text-secondary uppercase tracking-widest bg-white/10 px-3 py-1 rounded-lg">
-                                    {shippingCost === 0 ? 'FREE' : `${shippingCost} EGP`}
+                                    {shippingCost === 0 ? (!token ? 'Calculated at checkout' : 'FREE') : `${shippingCost} EGP`}
                                 </span>
                             </div>
                             <div className="pt-6 border-t border-white/10 flex justify-between items-center">

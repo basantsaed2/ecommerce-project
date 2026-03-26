@@ -4,7 +4,7 @@ import { useGet } from '@/hooks/useGet';
 import { Product, SingleApiResponse } from '@/types/api';
 import { Loader2, X, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addItemToCart, addToCartLocal } from '@/store/slices/cartSlice';
+import { addItemToCart } from '@/store/slices/cartSlice';
 import { RootState } from '@/store/store';
 import { toast } from 'sonner';
 
@@ -37,26 +37,10 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
             return;
         }
 
-        if (token) {
-            // If logged in, only dispatch the sync thunk
-            dispatch(addItemToCart({
-                productId: product._id,
-                quantity: quantity
-            }) as any);
-        } else {
-            // If guest, only update local state
-            dispatch(addToCartLocal({
-                product: {
-                    _id: product._id,
-                    name: product.name,
-                    ar_name: product.ar_name,
-                    image: product.image,
-                    price: product.price
-                },
-                quantity: quantity,
-                price: product.price
-            }));
-        }
+        dispatch(addItemToCart({
+            productId: product._id,
+            quantity: quantity
+        }) as any);
 
         toast.success(`Processing...`);
         onClose();

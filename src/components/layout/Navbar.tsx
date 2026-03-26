@@ -70,21 +70,21 @@ export default function Navbar() {
 
                 <div className="flex items-center gap-3">
                     {/* Icons (Desktop/Tablet) */}
-                    {isLoggedIn && (
-                        <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1">
+                    <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1">
+                        {isLoggedIn && (
                             <Link href="/favourite" className="p-2 text-gray-500 hover:text-red-500 transition-colors hidden md:block">
                                 <Heart size={20} />
                             </Link>
-                            <Link href="/cart" className="relative p-2 bg-white rounded-xl shadow-sm text-primary transition-all hover:scale-105">
-                                <ShoppingCart size={20} />
-                                {cartCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 bg-secondary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">
-                                        {cartCount}
-                                    </span>
-                                )}
-                            </Link>
-                        </div>
-                    )}
+                        )}
+                        <Link href="/cart" className="relative p-2 bg-white rounded-xl shadow-sm text-primary transition-all hover:scale-105">
+                            <ShoppingCart size={20} />
+                            {cartCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-secondary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </Link>
+                    </div>
 
                     {/* Auth Buttons (Desktop) */}
                     <div className="hidden md:flex items-center gap-3 ml-2">
