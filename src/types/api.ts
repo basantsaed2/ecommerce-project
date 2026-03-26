@@ -1,3 +1,12 @@
+export interface Banner {
+    _id: string;
+    name: string[];
+    images: string[];
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface Category {
     _id: string;
     name: string;

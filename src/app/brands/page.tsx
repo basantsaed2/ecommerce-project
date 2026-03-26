@@ -2,6 +2,7 @@
 import React from 'react';
 import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Brand, Product } from '@/types/api';
+import DynamicBanner from '@/components/common/DynamicBanner';
 import { Loader2, Briefcase, Award, Star } from 'lucide-react';
 import ProductCard from '@/components/modules/products/ProductCard';
 
@@ -38,8 +39,9 @@ export default function BrandsPage() {
             {/* Elite Brand Hub Hero */}
             <section className="relative h-[450px] md:h-[550px] flex items-center overflow-hidden mb-8 bg-black">
                 <div className="absolute inset-0 z-0">
-                    <img
-                        src="https://images.unsplash.com/photo-1534452203294-49c8ad1bc00c?q=80&w=2070&auto=format&fit=crop"
+                    <DynamicBanner
+                        pageName="brand"
+                        fallbackImage="https://images.unsplash.com/photo-1534452203294-49c8ad1bc00c?q=80&w=2070&auto=format&fit=crop"
                         alt="Brands Hub"
                         className="w-full h-full object-cover opacity-40 scale-105"
                     />

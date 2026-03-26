@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { User, Mail, Lock, Phone, ArrowRight, Loader2 } from 'lucide-react';
 import { usePost } from '@/hooks/usePost';
+import DynamicBanner from '@/components/common/DynamicBanner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -67,8 +68,9 @@ export default function SignupPage() {
         <div className="min-h-screen flex bg-white">
             <div className="hidden lg:flex lg:w-1/2 relative bg-primary items-center justify-center p-12 overflow-hidden">
                 <div className="absolute inset-0 z-0">
-                    <img
-                        src="https://images.unsplash.com/photo-1485230405346-71acb9518d9c?q=80&w=2097&auto=format&fit=crop"
+                    <DynamicBanner
+                        pageName="signup"
+                        fallbackImage="https://images.unsplash.com/photo-1485230405346-71acb9518d9c?q=80&w=2097&auto=format&fit=crop"
                         alt="Ecommerce Experience"
                         className="w-full h-full object-cover opacity-60 mix-blend-overlay scale-105 hover:scale-100 transition-transform duration-700"
                     />

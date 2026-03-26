@@ -2,6 +2,7 @@
 import React from 'react';
 import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Category, Product } from '@/types/api';
+import DynamicBanner from '@/components/common/DynamicBanner';
 import { Loader2, Grid } from 'lucide-react';
 import ProductCard from '@/components/modules/products/ProductCard';
 import { useSelector } from 'react-redux';
@@ -41,8 +42,9 @@ export default function CategoriesPage() {
             <section className="relative h-[400px] md:h-[500px] flex items-center justify-center overflow-hidden mb-8 bg-primary">
                 <div className="absolute inset-0 z-0">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-transparent z-10" />
-                    <img
-                        src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop"
+                    <DynamicBanner
+                        pageName="category"
+                        fallbackImage="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop"
                         alt="Categories"
                         className="w-full h-full object-cover scale-110 blur-sm opacity-50"
                     />

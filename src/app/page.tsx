@@ -6,7 +6,7 @@ import BrandsSection from "@/components/modules/home/BrandsSection";
 
 export default function Home() {
     return (
-        <div className="w-full px-6 md:px-12 xl:px-16 flex flex-col gap-6">
+        <div className="w-full px-4 md:px-8 xl:px-12 flex flex-col gap-6">
             <BannersSection />
             <CategoriesSection />
             <ProductsSection />
