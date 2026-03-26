@@ -136,13 +136,22 @@ export default function CheckoutPage() {
 
         placeOrder(payload, {
             onSuccess: (res: any) => {
-                const iframeUrl = res?.data?.payment?.iframeUrl || res?.payment?.iframeUrl || res?.data?.order?.payment?.iframeUrl;
-                if (iframeUrl) {
-                    window.open(iframeUrl, '_blank', 'noopener,noreferrer');
-                }
-
+                const iframeUrl = res?.iframeUrl || res?.data?.iframeUrl || res?.data?.payment?.iframeUrl || res?.payment?.iframeUrl || res?.data?.order?.payment?.iframeUrl;
+                
                 dispatch(clearCartLocal());
-                setIsSuccess(true);
+
+                if (iframeUrl) {
+                    const newWindow = window.open(iframeUrl, '_blank', 'noopener,noreferrer');
+                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                        // If popup blocker blocked the new tab, fallback to redirecting the current tab
+                        window.location.href = iframeUrl;
+                    } else {
+                        // Success shown in original tab if new tab opened successfully
+                        setIsSuccess(true);
+                    }
+                } else {
+                    setIsSuccess(true);
+                }
             }
         });
     };
