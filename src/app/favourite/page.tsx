@@ -32,7 +32,7 @@ export default function FavouritePage() {
     }
 
     return (
-        <div className="container min-h-screen pb-24">
+        <div className="w-full px-4 md:px-12 lg:px-24 py-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-10">
                 <div>
@@ -81,7 +81,7 @@ export default function FavouritePage() {
 
             {/* Items Grid — reuse ProductCard */}
             {!isLoading && wishlistItems.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     {wishlistItems.map((item) => (
                         <ProductCard key={item._id} product={item as unknown as Product} />
                     ))}

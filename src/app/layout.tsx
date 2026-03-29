@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <QueryProvider>
                         <TenantGuard>
                             <CartInitializer>
-                                <Toaster position="top-right" richColors closeButton />
+                                <Toaster position="top-right" richColors closeButton duration={1000} />
                                 <Navbar />
                                 <main className="pt-20 pb-20 lg:pb-0">
                                     {children}

@@ -141,14 +141,7 @@ export default function CheckoutPage() {
                 dispatch(clearCartLocal());
 
                 if (iframeUrl) {
-                    const newWindow = window.open(iframeUrl, '_blank', 'noopener,noreferrer');
-                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-                        // If popup blocker blocked the new tab, fallback to redirecting the current tab
-                        window.location.href = iframeUrl;
-                    } else {
-                        // Success shown in original tab if new tab opened successfully
-                        setIsSuccess(true);
-                    }
+                    window.location.href = iframeUrl;
                 } else {
                     setIsSuccess(true);
                 }

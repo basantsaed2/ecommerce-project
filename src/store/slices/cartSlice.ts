@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 interface CartState {
     items: PopulatedCartItem[];
     totalCartPrice: number;
+    shippingCost: number;
     loading: boolean;
     error: string | null;
 }
@@ -14,24 +15,29 @@ interface CartState {
 const initialState: CartState = {
     items: [],
     totalCartPrice: 0,
+    shippingCost: 0,
     loading: false,
     error: null,
 };
 
 // Helper to safely extract cart data from SuccessResponse
 const getCartFromResponse = (response: any) => {
-    // Backend returns { success: true, data: { cart: { ... } } } or { success: true, data: { cart: [ ... ] } }
-    let cartData = response.data?.data?.cart || response.data?.cart || response.data;
+    // Backend returns { success: true, data: { cart: { ... }, shippingCost: ... } } 
+    // or { success: true, data: { cart: [ ... ], shippingCost: ... } }
+    const data = response.data?.data || response.data;
+    let cartData = data?.cart || data;
+    const shippingCost = data?.shippingCost || 0;
     
     // If cart is explicitly an empty array, return an empty cart structure
     if (Array.isArray(cartData) && cartData.length === 0) {
-        return { cartItems: [], totalCartPrice: 0 };
+        return { cart: { cartItems: [], totalCartPrice: 0 }, shippingCost };
     }
     
     if (Array.isArray(cartData)) {
-        return cartData[0];
+        cartData = cartData[0];
     }
-    return cartData;
+
+    return { cart: cartData, shippingCost };
 };
 
 // Helper to extract error message safely
@@ -175,7 +181,10 @@ export const cartSlice = createSlice({
     extraReducers: (builder) => {
         const handleCartUpdate = (state: any, action: PayloadAction<any>) => {
             state.loading = false;
-            let cartData = action.payload;
+            if (!action.payload) return;
+
+            const { cart, shippingCost } = action.payload;
+            let cartData = cart;
 
             // Handle if backend returns array [cartObject] or just cartObject
             if (Array.isArray(cartData)) {
@@ -193,6 +202,8 @@ export const cartSlice = createSlice({
                 // Calculate total price if missing from backend
                 state.totalCartPrice = cartData.totalCartPrice || 
                     state.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+                
+                state.shippingCost = shippingCost || 0;
             }
         };
 

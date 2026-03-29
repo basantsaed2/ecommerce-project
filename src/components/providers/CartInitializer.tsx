@@ -9,9 +9,7 @@ export default function CartInitializer({ children }: { children: React.ReactNod
     const { token } = useSelector((state: RootState) => state.auth);
 
     useEffect(() => {
-        if (token) {
-            dispatch(fetchCart());
-        }
+        dispatch(fetchCart());
     }, [token, dispatch]);
 
     return <>{children}</>;

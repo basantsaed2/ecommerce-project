@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
 import {
+    fetchCart,
     updateItemQuantity,
     removeItemFromCart,
     clearCartSync,
@@ -11,63 +12,43 @@ import {
     clearCartLocal,
     setCartState
 } from '@/store/slices/cartSlice';
-import {
-    ShoppingBag,
-    Trash2,
-    Plus,
-    Minus,
-    ArrowRight,
-    ShoppingBasket,
-    Loader2
-} from 'lucide-react';
+import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingBasket, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useGet } from '@/hooks/useGet';
 
 export default function CartPage() {
     const dispatch = useDispatch<AppDispatch>();
-    const { items: reduxItems, totalCartPrice: reduxTotalPrice, loading: reduxLoading } = useSelector((state: RootState) => state.cart);
+    const { 
+        items, 
+        totalCartPrice, 
+        shippingCost, 
+        loading: isLoading 
+    } = useSelector((state: RootState) => state.cart);
+    
     const { token } = useSelector((state: RootState) => state.auth);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
-    }, []);
-
-    // Fetch directly from API
-    const { data: cartResponse, isLoading: isFetchingCart, refetch } = useGet<any>(
-        ['cart-page'],
-        '/cart'
-    );
-
-    const backendCart = cartResponse?.data?.cart || cartResponse?.cart;
-
-    // Sync API data with Redux
-    useEffect(() => {
-        if (cartResponse && backendCart) {
-            dispatch(setCartState(backendCart));
-        }
-    }, [cartResponse, backendCart, dispatch]);
+        // Ensure fresh data on mount without relying on React Query cache
+        dispatch(fetchCart());
+    }, [dispatch]);
 
     if (!mounted) return null;
 
-    const items = backendCart?.cartItems || reduxItems;
-    const totalCartPrice = backendCart?.totalCartPrice ?? reduxTotalPrice ?? 0;
-    const shippingCost = cartResponse?.data?.shippingCost || 0;
-    const finalTotal = totalCartPrice + shippingCost;
-    const isLoading = isFetchingCart || reduxLoading;
+    const finalTotal = totalCartPrice + (shippingCost || 0);
 
     const handleUpdateQuantity = (productId: string, newQty: number) => {
         if (newQty < 1) return;
-        dispatch(updateItemQuantity({ productId, quantity: newQty })).unwrap().finally(() => refetch());
+        dispatch(updateItemQuantity({ productId, quantity: newQty }));
     };
 
     const handleRemove = (productId: string) => {
-        dispatch(removeItemFromCart(productId)).unwrap().finally(() => refetch());
+        dispatch(removeItemFromCart(productId));
     };
 
     const handleClear = () => {
-        dispatch(clearCartSync()).unwrap().finally(() => refetch());
+        dispatch(clearCartSync());
     };
 
     if (isLoading && items.length === 0) {
