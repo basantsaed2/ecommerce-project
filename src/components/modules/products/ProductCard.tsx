@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { Product } from '@/types/api';
-import { ShoppingCart, Heart } from 'lucide-react';
+import { ShoppingCart, Heart, Eye } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addItemToCart } from '@/store/slices/cartSlice';
 import { RootState } from '@/store/store';
@@ -18,7 +18,6 @@ export default function ProductCard({ product }: ProductCardProps) {
     const token = useSelector((state: RootState) => state.auth.token);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-    // Wishlist
     const { data: wishlistData } = useGetWishlist(!!token);
     const { mutate: toggleWishlist, isPending: isTogglingWishlist } = useToggleWishlist();
 
@@ -32,130 +31,142 @@ export default function ProductCard({ product }: ProductCardProps) {
             toast.error('Please login to save to wishlist');
             return;
         }
-        toggleWishlist(
-            { productId: product._id },
-            {
-                onSuccess: () =>
-                    toast.success(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist'),
-            }
-        );
+        toggleWishlist({ productId: product._id });
     };
 
     const handleAddToCart = (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (product.quantity <= 0) return;
 
-        if (product.quantity <= 0) {
-            toast.error('This product is currently sold out');
-            return;
-        }
-
-        dispatch(addItemToCart({
-            productId: product._id,
-            quantity: 1
-        }) as any);
-
-        toast.success(`Processing...`);
+        dispatch(addItemToCart({ productId: product._id, quantity: 1 }) as any);
+        toast.success(`${product.name} added to cart`);
     };
 
     return (
         <>
             <div
                 onClick={() => setIsDialogOpen(true)}
-                className="group flex flex-col bg-white rounded-[32px] border border-gray-100 hover:shadow-2xl hover:shadow-gray-200/60 transition-all duration-500 overflow-hidden relative cursor-pointer"
+                className="group relative flex flex-col bg-white rounded-[24px] border border-gray-100 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden cursor-pointer"
             >
-                {/* Wishlist Button — only shown when logged in */}
-                {token && (
-                    <div
-                        className="absolute top-4 right-4 z-20"
-                        onClick={handleWishlistToggle}
-                    >
+                {/* Badges & Actions Overlay */}
+                <div className="absolute top-3 inset-x-3 z-20 flex justify-between items-start pointer-events-none">
+                    <div className="flex flex-col gap-2">
+                        {product.is_featured && (
+                            <span className="bg-orange-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
+                                Hot
+                            </span>
+                        )}
+                        {product.quantity > 0 && product.quantity < 5 && (
+                            <span className="bg-red-50 text-red-600 text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase border border-red-100">
+                                Low Stock
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-2 pointer-events-auto">
                         <button
+                            onClick={handleWishlistToggle}
                             disabled={isTogglingWishlist}
-                            className={`bg-white/80 backdrop-blur-md p-2.5 rounded-2xl shadow-sm transition-all active:scale-90 ${
-                                isInWishlist
-                                    ? 'text-red-500'
-                                    : 'text-gray-400 hover:text-red-500'
-                            } hover:bg-white disabled:opacity-50`}
+                            aria-label="Add to wishlist"
+                            className={`p-2.5 rounded-xl transition-all active:scale-90 shadow-sm border ${
+                                isInWishlist 
+                                ? 'bg-red-50 border-red-100 text-red-500' 
+                                : 'bg-white border-gray-100 text-gray-400 hover:text-red-500'
+                            }`}
                         >
-                            <Heart
-                                size={18}
-                                className={isInWishlist ? 'fill-red-500' : ''}
-                            />
+                            <Heart size={18} className={isInWishlist ? 'fill-current animate-pulse' : ''} />
                         </button>
                     </div>
-                )}
+                </div>
 
-                {/* Hot Badge */}
-                {product.is_featured && (
-                    <div className="absolute top-4 left-4 z-20">
-                        <div className="bg-secondary text-white text-[9px] font-black px-3 py-1.5 rounded-xl uppercase tracking-[0.1em] shadow-lg shadow-secondary/20">
-                            Hot
+                {/* Image Container */}
+                <div className="relative aspect-square bg-[#F9FAFB] overflow-hidden flex items-center justify-center p-8">
+                    {/* Hover Quick View Icon */}
+                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
+                        <div className="bg-white/90 backdrop-blur-sm p-3 rounded-full translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                            <Eye size={20} className="text-gray-700" />
                         </div>
                     </div>
-                )}
-
-                {/* Image Section with Soft Background */}
-                <div className="relative h-56 sm:h-64 bg-gray-50/30 flex items-center justify-center overflow-hidden p-6">
-                    {/* Decorative Background Blob */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-secondary/5 rounded-full blur-[40px] group-hover:bg-secondary/10 transition-colors duration-700" />
 
                     <img
                         src={product.image}
-                        alt={product.name || product.ar_name}
-                        className={`max-w-full max-h-full object-contain relative z-10 transition-transform duration-700 ease-out ${product.quantity > 0 ? 'group-hover:scale-110 group-hover:rotate-2' : ''}`}
+                        alt={product.name}
+                        loading="lazy"
+                        className={`max-w-full max-h-full object-contain transition-transform duration-700 ease-in-out ${
+                            product.quantity > 0 
+                            ? 'group-hover:scale-110' 
+                            : 'grayscale opacity-50'
+                        }`}
                     />
 
-                    {/* Sold Out Overlay on Image */}
                     {product.quantity <= 0 && (
-                        <div className="absolute inset-0 z-20 bg-white/50 backdrop-blur-[2px] flex items-center justify-center">
-                            <div className="bg-red-500 text-white font-black px-6 py-2 rounded-2xl transform -rotate-12 absolute shadow-xl shadow-red-500/20 text-lg tracking-widest uppercase border-4 border-white">
-                                Sold Out
-                            </div>
+                        <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] flex items-center justify-center z-20">
+                            <span className="bg-gray-900 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
+                                Out of Stock
+                            </span>
                         </div>
                     )}
                 </div>
 
-                {/* Content Area */}
-                <div className="p-5 flex flex-col flex-1 bg-white">
-                    <div className="mb-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="w-4 h-[2px] bg-secondary rounded-full" />
-                            <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">
-                                Premium Selection
-                            </p>
+                {/* Content */}
+                <div className="p-2 md:p-5 flex flex-col flex-1">
+                    <div className="mb-3">
+                        <div className="flex flex-wrap gap-1 mb-1.5">
+                            {product.category ? (
+                                <span className="text-[9px] font-bold text-secondary bg-secondary/5 px-2 py-0.5 rounded-md uppercase tracking-wider border border-secondary/10">
+                                    {product.category.name}
+                                </span>
+                            ) : product.categoryId && product.categoryId.length > 0 ? (
+                                <>
+                                    {product.categoryId.slice(0, 2).map((cat) => (
+                                        <span key={cat._id} className="text-[9px] font-bold text-secondary bg-secondary/5 px-2 py-0.5 rounded-md uppercase tracking-wider border border-secondary/10">
+                                            {cat.name}
+                                        </span>
+                                    ))}
+                                    {product.categoryId.length > 2 && (
+                                        <span className="text-[9px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md uppercase tracking-wider border border-gray-100">
+                                            +{product.categoryId.length - 2} More
+                                        </span>
+                                    )}
+                                </>
+                            ) : (
+                                <span className="text-[9px] font-bold text-secondary uppercase tracking-[0.15em] opacity-70">
+                                    Collection
+                                </span>
+                            )}
                         </div>
-                        <h3 className="font-black text-primary text-sm line-clamp-2 leading-snug group-hover:text-secondary transition-colors duration-300" title={product.name || product.ar_name}>
-                            {product.name || product.ar_name}
+                        <h3 className="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-secondary transition-colors">
+                            {product.name}
                         </h3>
                     </div>
 
-                    <div className="mt-auto flex items-center justify-between gap-4">
-                        <div className="flex flex-col">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
-                            <div className="flex items-baseline gap-2">
-                                <span className="font-black text-xl text-primary tracking-tighter">
+                    <div className="mt-auto flex items-center justify-between">
+                        <div>
+                            <span className="block text-[10px] text-gray-400 font-bold uppercase mb-0.5">Price</span>
+                            <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-lg text-gray-900">
                                     {product.price?.toLocaleString()}
                                 </span>
-                                <span className="text-[10px] font-black text-primary/40 uppercase">EGP</span>
+                                <span className="text-[11px] font-bold text-gray-400">EGP</span>
                             </div>
                         </div>
 
                         <button
                             onClick={handleAddToCart}
                             disabled={product.quantity <= 0}
-                            className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                            aria-label="Add to cart"
+                            className={`relative overflow-hidden w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 ${
                                 product.quantity > 0
-                                    ? 'bg-primary text-white hover:bg-secondary hover:shadow-xl hover:shadow-secondary/40 active:scale-90 group/btn'
-                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    ? 'bg-gray-900 text-white hover:bg-secondary hover:shadow-lg active:scale-95'
+                                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                             }`}
                         >
-                            <ShoppingCart size={20} className={product.quantity > 0 ? "group-hover/btn:-translate-y-0.5 transition-transform" : ""} />
+                            <ShoppingCart size={18} />
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Render the Details Dialog conditionally */}
             {isDialogOpen && (
                 <ProductDialog
                     productId={product._id}

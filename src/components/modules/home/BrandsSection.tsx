@@ -16,7 +16,7 @@ export default function BrandsSection() {
     if (brands.length === 0) return null;
 
     return (
-        <section className="w-full px-4 py-12">
+        <section className="w-full px-4 py-6">
             <div className="flex flex-col items-center text-center mb-10">
                 <h2 className="text-3xl font-black text-primary tracking-tight">Top <span className="text-secondary">Brands</span></h2>
                 <p className="text-gray-500 text-sm mt-2 font-medium">Discover products from your favorite and trusted brands.</p>

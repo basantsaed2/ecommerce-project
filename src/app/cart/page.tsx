@@ -79,7 +79,7 @@ export default function CartPage() {
     }
 
     return (
-        <div className="w-full px-4 md:px-12 py-12">
+        <div className="w-full px-4 md:px-12 py-6">
             <div className="flex items-center justify-between mb-10">
                 <div>
                     <h1 className="text-4xl font-black text-primary tracking-tight">Shopping Cart</h1>

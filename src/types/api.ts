@@ -25,7 +25,9 @@ export interface Product {
     description?: string;
     ar_description?: string;
     image: string;
-    categoryId: string[];
+    gallery_product?: string[];
+    categoryId?: Category[];
+    category?: Category;
     brandId: string;
     price: number;
     quantity: number;

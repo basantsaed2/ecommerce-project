@@ -71,7 +71,15 @@ export default function CategoriesPage() {
             <div className="container py-4">
                 <div className="flex flex-col gap-20">
                     {categories.map((category) => {
-                        const categoryProducts = products.filter(p => p.categoryId.includes(category._id));
+                        const categoryProducts = products.filter(p => {
+                            // Check for categoryId array (old/other schema)
+                            const matchesIdArray = p.categoryId?.some(cat => cat._id === category._id);
+                            // Check for category object (new schema seen in logs)
+                            const matchesCategoryObj = p.category?._id === category._id;
+                            
+                            return matchesIdArray || matchesCategoryObj;
+                        });
+                        
                         if (categoryProducts.length === 0) return null;
 
                         return (
