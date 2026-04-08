@@ -28,6 +28,11 @@ export default function Navbar() {
 
     const isLoggedIn = !!token;
 
+    const isActive = (path: string) => {
+        if (path === '/') return pathname === '/';
+        return pathname?.startsWith(path);
+    };
+
     const navLinks = [
         { name: 'Home', href: '/', icon: Home },
         { name: 'Category', href: '/categories', icon: Grid },
@@ -60,10 +65,10 @@ export default function Navbar() {
                         <Link
                             key={link.href}
                             href={link.href}
-                            className={`${pathname === link.href ? 'text-secondary' : 'text-gray-500'} hover:text-secondary transition relative group`}
+                            className={`${isActive(link.href) ? 'text-secondary' : 'text-gray-500'} hover:text-secondary transition relative group`}
                         >
                             {link.name}
-                            <span className={`absolute -bottom-1 left-0 h-0.5 bg-secondary transition-all ${pathname === link.href ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+                            <span className={`absolute -bottom-1 left-0 h-0.5 bg-secondary transition-all ${isActive(link.href) ? 'w-full' : 'w-0 group-hover:w-full'}`} />
                         </Link>
                     ))}
                 </div>
@@ -122,15 +127,15 @@ export default function Navbar() {
 
             {/* --- 2. Mobile Bottom Navigation (PWA Style) --- */}
             <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 px-4 py-3 z-50 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                <Link href="/" className={`flex flex-col items-center gap-1 ${pathname === '/' ? 'text-secondary' : 'text-gray-400'}`}>
+                <Link href="/" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/') ? 'text-secondary' : 'text-gray-400'}`}>
                     <Home size={22} />
                     <span className="text-[10px] font-bold">Home</span>
                 </Link>
-                <Link href="/categories" className={`flex flex-col items-center gap-1 ${pathname === '/categories' ? 'text-secondary' : 'text-gray-400'}`}>
+                <Link href="/categories" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/categories') ? 'text-secondary' : 'text-gray-400'}`}>
                     <Grid size={22} />
                     <span className="text-[10px] font-bold">Menu</span>
                 </Link>
-                <Link href="/cart" className={`relative flex flex-col items-center gap-1 ${pathname === '/cart' ? 'text-secondary' : 'text-gray-400'}`}>
+                <Link href="/cart" className={`relative flex flex-col items-center gap-1 transition-colors ${isActive('/cart') || isActive('/checkout') ? 'text-secondary' : 'text-gray-400'}`}>
                     <ShoppingCart size={22} />
                     <span className="text-[10px] font-bold">Cart</span>
                     {cartCount > 0 && (
@@ -140,12 +145,12 @@ export default function Navbar() {
                     )}
                 </Link>
                 {isLoggedIn && (
-                    <Link href="/favourite" className={`flex flex-col items-center gap-1 ${pathname === '/favourite' ? 'text-secondary' : 'text-gray-400'}`}>
+                    <Link href="/favourite" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/favourite') ? 'text-secondary' : 'text-gray-400'}`}>
                         <Heart size={22} />
                         <span className="text-[10px] font-bold">Wishlist</span>
                     </Link>
                 )}
-                <Link href={isLoggedIn ? "/profile" : "/login"} className={`flex flex-col items-center gap-1 ${pathname === '/profile' || pathname === '/login' ? 'text-secondary' : 'text-gray-400'}`}>
+                <Link href={isLoggedIn ? "/profile" : "/login"} className={`flex flex-col items-center gap-1 transition-colors ${isActive('/profile') || isActive('/login') ? 'text-secondary' : 'text-gray-400'}`}>
                     <User size={22} />
                     <span className="text-[10px] font-bold">{isLoggedIn ? "Profile" : "Account"}</span>
                 </Link>
@@ -161,9 +166,9 @@ export default function Navbar() {
 
                     <div className="flex flex-col gap-6">
                         {navLinks.map((link) => (
-                            <Link key={link.href} href={link.href} onClick={() => setSidebarOpen(false)} className="flex items-center gap-4 text-lg font-bold text-gray-700 hover:text-secondary transition group">
-                                <div className="p-2 bg-gray-50 rounded-xl group-hover:bg-secondary/10 transition-colors">
-                                    <link.icon size={20} className="text-gray-400 group-hover:text-secondary" />
+                            <Link key={link.href} href={link.href} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 text-lg font-bold transition group ${isActive(link.href) ? 'text-secondary' : 'text-gray-700 hover:text-secondary'}`}>
+                                <div className={`p-2 rounded-xl transition-colors ${isActive(link.href) ? 'bg-secondary/10' : 'bg-gray-50 group-hover:bg-secondary/10'}`}>
+                                    <link.icon size={20} className={`${isActive(link.href) ? 'text-secondary' : 'text-gray-400 group-hover:text-secondary'}`} />
                                 </div>
                                 {link.name}
                             </Link>
