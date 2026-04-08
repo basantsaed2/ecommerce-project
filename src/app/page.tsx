@@ -10,7 +10,7 @@ export default function Home() {
     const [searchQuery, setSearchQuery] = useState("");
 
     return (
-        <div className="w-full px-4 md:px-8 xl:px-12 flex flex-col gap-6">
+        <div className="w-full px-4 md:px-8 xl:px-12 flex flex-col gap-3">
             <BannersSection />
             <div className="py-4">
                 <SearchBar onSearch={setSearchQuery} />

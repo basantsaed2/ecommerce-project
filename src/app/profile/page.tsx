@@ -57,7 +57,18 @@ export default function ProfilePage() {
         'Profile updated successfully'
     );
 
-    const user = profileResponse?.data?.data || currentUser;
+    const user = profileResponse?.data?.data || profileResponse?.data?.user || profileResponse?.user || currentUser;
+
+    // Sync latest profile data to Redux to ensure components like Navbar update
+    useEffect(() => {
+        const fetchedUser = profileResponse?.data?.data || profileResponse?.data?.user || profileResponse?.user;
+        if (fetchedUser && token) {
+            dispatch(setCredentials({
+                user: fetchedUser,
+                token: token
+            }));
+        }
+    }, [profileResponse, token, dispatch]);
 
     const { register, handleSubmit, formState: { errors }, reset } = useForm({
         resolver: zodResolver(profileSchema),
@@ -97,9 +108,10 @@ export default function ProfilePage() {
             updatedData: payload
         }, {
             onSuccess: (response: any) => {
-                if (response?.data?.user) {
+                const updatedUser = response?.data?.data || response?.data?.user || response?.user;
+                if (updatedUser) {
                     dispatch(setCredentials({
-                        user: response.data.user,
+                        user: updatedUser,
                         token: token!
                     }));
                 }

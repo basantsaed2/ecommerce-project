@@ -67,7 +67,7 @@ export default function FavouritePage() {
 
             {/* Empty State */}
             {!isLoading && wishlistItems.length === 0 && (
-                <div className="flex flex-col items-center justify-center gap-6 py-32 text-center">
+                <div className="flex flex-col items-center justify-center gap-6 py-12 text-center">
                     <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
                         <HeartOff size={40} className="text-gray-300" />
                     </div>
