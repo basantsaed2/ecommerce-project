@@ -57,7 +57,7 @@ export default function ProfilePage() {
         'Profile updated successfully'
     );
 
-    const user = profileResponse?.data?.user || currentUser;
+    const user = profileResponse?.data?.data || currentUser;
 
     const { register, handleSubmit, formState: { errors }, reset } = useForm({
         resolver: zodResolver(profileSchema),

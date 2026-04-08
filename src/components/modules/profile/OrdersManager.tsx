@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useGet } from '@/hooks/useGet';
-import { Loader2, Package, ChevronRight, FileText, X, CheckCircle2, Clock, MapPin, CreditCard } from 'lucide-react';
+import { Loader2, Package, ChevronRight, FileText, X, CheckCircle2, Clock, MapPin, CreditCard, Store, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function OrdersManager() {
@@ -65,13 +65,25 @@ export default function OrdersManager() {
                                 <div className="mt-1 flex items-center gap-2">
                                     <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center gap-1 ${
                                         order.status === 'delivered' ? 'bg-green-100 text-green-600' :
-                                        order.status === 'cancelled' ? 'bg-red-100 text-red-600' :
+                                        ['cancelled', 'rejected'].includes(order.status) ? 'bg-red-100 text-red-600' :
                                         'bg-blue-100 text-blue-600'
                                     }`}>
                                         {order.status === 'pending' && <Clock size={10} />}
                                         {order.status === 'delivered' && <CheckCircle2 size={10} />}
                                         {order.status || 'Processing'}
                                     </span>
+                                    <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg ${
+                                        order.paymentStatus === 'paid' ? 'bg-green-100 text-green-600' :
+                                        ['failed', 'unpaid'].includes(order.paymentStatus) ? 'bg-red-100 text-red-600' :
+                                        'bg-yellow-100 text-yellow-600'
+                                    }`}>
+                                        {order.paymentStatus || 'Pending'}
+                                    </span>
+                                    {order.orderType === 'pickup' && order.warehouse && (
+                                        <span className="px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg bg-gray-100 text-gray-600 flex items-center gap-1">
+                                            <Store size={10} /> {order.warehouse.name}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <ChevronRight className="text-gray-300 group-hover:text-secondary transition-colors" />
@@ -140,9 +152,14 @@ export default function OrdersManager() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-3xl mb-8">
                                         <div>
                                             <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
-                                                <MapPin size={12} /> Shipping details
+                                                {orderDetails.orderType === 'pickup' ? <Store size={12} /> : <MapPin size={12} />} 
+                                                {orderDetails.orderType === 'pickup' ? 'Pickup Branch' : 'Shipping details'}
                                             </p>
-                                            {orderDetails.shippingAddress ? (
+                                            {orderDetails.orderType === 'pickup' ? (
+                                                <div className="text-sm font-bold text-primary">
+                                                    <p>{orderDetails.warehouse?.name || 'Unknown Branch'}</p>
+                                                </div>
+                                            ) : orderDetails.shippingAddress ? (
                                                 <div className="text-sm font-bold text-primary">
                                                     <p>{orderDetails.shippingAddress.details || orderDetails.shippingAddress.street}</p>
                                                     <p className="text-gray-500 uppercase text-[10px] mt-1 font-black">
@@ -156,15 +173,24 @@ export default function OrdersManager() {
                                         </div>
                                         <div>
                                             <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
-                                                <CreditCard size={12} /> Payment Method
+                                                <CreditCard size={12} /> Payment
                                             </p>
-                                            {orderDetails.paymentMethod ? (
-                                                <div className="text-sm font-bold text-primary uppercase">
-                                                    {typeof orderDetails.paymentMethod === 'string' ? orderDetails.paymentMethod : orderDetails.paymentMethod.name || 'Manual'}
-                                                </div>
-                                            ) : (
-                                                <p className="text-sm font-bold text-gray-500">Not specified</p>
-                                            )}
+                                            <div className="space-y-1">
+                                                {orderDetails.paymentMethod ? (
+                                                    <p className="text-sm font-bold text-primary uppercase inline-block mr-3">
+                                                        {typeof orderDetails.paymentMethod === 'string' ? orderDetails.paymentMethod : orderDetails.paymentMethod.name || 'Manual'}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-sm font-bold text-gray-500 inline-block mr-3">Not specified</p>
+                                                )}
+                                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded inline-block align-middle ${
+                                                    orderDetails.paymentStatus === 'paid' ? 'bg-green-100 text-green-600' :
+                                                    ['failed'].includes(orderDetails.paymentStatus) ? 'bg-red-100 text-red-600' :
+                                                    'bg-yellow-100 text-yellow-600'
+                                                }`}>
+                                                    {orderDetails.paymentStatus || 'Pending'}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 

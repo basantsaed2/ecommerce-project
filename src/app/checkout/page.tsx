@@ -5,7 +5,7 @@ import { RootState, AppDispatch } from '@/store/store';
 import { useGet } from '@/hooks/useGet';
 import { usePost } from '@/hooks/usePost';
 import { clearCartLocal, setCartState } from '@/store/slices/cartSlice';
-import { MapPin, CreditCard, Banknote, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Plus } from 'lucide-react';
+import { MapPin, CreditCard, Banknote, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Plus, Store, Truck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Address } from '@/types/address';
@@ -18,6 +18,8 @@ export default function CheckoutPage() {
     const { token } = useSelector((state: RootState) => state.auth);
 
     const [selectedAddress, setSelectedAddress] = useState<string>('');
+    const [selectedOrderType, setSelectedOrderType] = useState<string>('');
+    const [selectedWarehouse, setSelectedWarehouse] = useState<string>('');
     const [guestCountry, setGuestCountry] = useState('');
     const [guestCity, setGuestCity] = useState('');
     const [guestZone, setGuestZone] = useState('');
@@ -82,6 +84,24 @@ export default function CheckoutPage() {
         ? pmData.data.data
         : Array.isArray(pmData?.data) ? pmData.data : [];
 
+    // Fetch order types
+    const { data: otData, isLoading: isFetchingOt } = useGet<any>(
+        ['order-types'],
+        '/order-type'
+    );
+    const orderTypesList = Array.isArray(otData?.data?.data)
+        ? otData.data.data
+        : Array.isArray(otData?.data) ? otData.data : [];
+
+    // Fetch warehouses
+    const { data: wData, isLoading: isFetchingW } = useGet<any>(
+        ['warehouses'],
+        '/warehouse'
+    );
+    const warehousesList = Array.isArray(wData?.data?.data)
+        ? wData.data.data
+        : Array.isArray(wData?.data) ? wData.data : [];
+
     // Auto-select first address
     useEffect(() => {
         if (addresses.length > 0 && !selectedAddress) {
@@ -98,6 +118,21 @@ export default function CheckoutPage() {
         }
     }, [paymentMethodsList, paymentMethod]);
 
+    // Auto-select first order type
+    useEffect(() => {
+        if (orderTypesList.length > 0 && !selectedOrderType) {
+            const deliveryType = orderTypesList.find((t: any) => t.type === 'delivery');
+            setSelectedOrderType(deliveryType ? deliveryType.type : orderTypesList[0].type);
+        }
+    }, [orderTypesList, selectedOrderType]);
+
+    // Auto-select warehouse
+    useEffect(() => {
+        if (warehousesList.length > 0 && !selectedWarehouse) {
+            setSelectedWarehouse(warehousesList[0]._id);
+        }
+    }, [warehousesList, selectedWarehouse]);
+
     // Checkout Mutation
     const { mutate: placeOrder, isPending: isPlacingOrder } = usePost(
         '/order/checkout',
@@ -106,18 +141,32 @@ export default function CheckoutPage() {
     );
 
     const handleCheckout = () => {
-        if (!token && (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber)) {
-            toast.error("Please fill in all required delivery details (Country, City, Zone, Street, Building)");
-            return;
-        }
+        if (selectedOrderType === 'pickup') {
+            if (!selectedWarehouse) {
+                toast.error("Please select a pick up branch");
+                return;
+            }
+        } else {
+            if (!token && (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber)) {
+                toast.error("Please fill in all required delivery details (Country, City, Zone, Street, Building)");
+                return;
+            }
 
-        if (token && !selectedAddress) {
-            toast.error("Please select a shipping address");
-            return;
+            if (token && !selectedAddress) {
+                toast.error("Please select a shipping address");
+                return;
+            }
         }
 
         const payload: any = {
-            shippingAddress: token ? selectedAddress : { 
+            orderType: selectedOrderType || 'delivery',
+            paymentMethod: paymentMethod
+        };
+
+        if (selectedOrderType === 'pickup') {
+            payload.warehouseId = selectedWarehouse;
+        } else {
+            payload.shippingAddress = token ? selectedAddress : { 
                 country: guestCountry, 
                 city: guestCity, 
                 zone: guestZone, 
@@ -126,9 +175,8 @@ export default function CheckoutPage() {
                 floorNumber: guestFloorNumber,
                 apartmentNumber: guestApartmentNumber,
                 uniqueIdentifier: guestLandmark
-            },
-            paymentMethod: paymentMethod
-        };
+            };
+        }
 
         if (proofImage) {
             payload.proofImage = proofImage;
@@ -194,14 +242,95 @@ export default function CheckoutPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <div className="lg:col-span-2 space-y-10">
-                    {/* Address Selection */}
+                    {/* Order Type Selection */}
                     <section>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center font-black">1</div>
-                            <h2 className="text-2xl font-black text-primary">Shipping Address</h2>
+                            <h2 className="text-2xl font-black text-primary">Order Type</h2>
+                        </div>
+                        {isFetchingOt ? (
+                            <div className="flex justify-center p-6"><Loader2 className="animate-spin text-gray-400" /></div>
+                        ) : orderTypesList.length === 0 ? (
+                            <div className="p-6 border border-dashed border-gray-200 rounded-2xl text-center">
+                                <p className="text-gray-400 font-medium">No order types available.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {orderTypesList.map((ot: any) => {
+                                    const typeName = ot.type;
+                                    const isPickup = typeName === 'pickup';
+                                    return (
+                                        <div
+                                            key={ot._id}
+                                            onClick={() => setSelectedOrderType(typeName)}
+                                            className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-5 ${selectedOrderType === typeName ? 'border-primary bg-primary/5 shadow-xl shadow-primary/5' : 'border-gray-100 bg-white hover:border-gray-300'
+                                                }`}
+                                        >
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${selectedOrderType === typeName ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'}`}>
+                                                {isPickup ? <Store size={28} /> : <Truck size={28} />}
+                                            </div>
+                                            <div>
+                                                <p className="font-black text-primary text-lg capitalize">{typeName}</p>
+                                                <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wider">
+                                                    {isPickup ? 'Pick up from branch' : 'Deliver to your door'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Address / Branch Selection */}
+                    <section>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center font-black">2</div>
+                            <h2 className="text-2xl font-black text-primary">
+                                {selectedOrderType === 'pickup' ? 'Select Branch' : 'Shipping Address'}
+                            </h2>
                         </div>
 
-                        {!token ? (
+                        {selectedOrderType === 'pickup' ? (
+                            isFetchingW ? (
+                                <div className="flex justify-center p-8"><Loader2 className="animate-spin text-gray-400" /></div>
+                            ) : warehousesList.length === 0 ? (
+                                <div className="p-12 border-2 border-dashed border-gray-200 rounded-3xl text-center bg-gray-50/50">
+                                    <Store className="mx-auto text-gray-300 mb-4" size={40} />
+                                    <p className="text-gray-500 font-black text-lg mb-2">No Branches Available</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {warehousesList.map((wh: any) => (
+                                        <div
+                                            key={wh._id}
+                                            onClick={() => setSelectedWarehouse(wh._id)}
+                                            className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all ${selectedWarehouse === wh._id
+                                                ? 'border-secondary bg-secondary/5 shadow-xl shadow-secondary/10'
+                                                : 'border-gray-100 bg-white hover:border-gray-300'
+                                                }`}
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <div className={`mt-1 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedWarehouse === wh._id ? 'border-secondary' : 'border-gray-300'}`}>
+                                                    <div className={`w-3 h-3 rounded-full transition-transform ${selectedWarehouse === wh._id ? 'bg-secondary scale-100' : 'scale-0'}`} />
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-primary text-lg">{wh.name || 'Branch'}</p>
+                                                    <p className="text-sm font-bold text-gray-500 mt-1">{wh.address || 'No address'}</p>
+                                                    {wh.phone && (
+                                                        <div className="mt-3 flex gap-2 flex-wrap">
+                                                            <span className="px-2.5 py-1 bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400 rounded-lg">
+                                                                📞 {wh.phone}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                        ) : !token ? (
                             <div className="bg-gray-50/50 p-6 sm:p-8 rounded-[32px] border-2 border-gray-100 mb-6">
                                 <h3 className="text-2xl font-black text-primary mb-6">Delivery Details</h3>
                                 <div className="space-y-6">
@@ -314,7 +443,7 @@ export default function CheckoutPage() {
                     {/* Payment Method */}
                     <section>
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center font-black">2</div>
+                            <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center font-black">3</div>
                             <h2 className="text-2xl font-black text-primary">Payment Method</h2>
                         </div>
 
@@ -434,7 +563,7 @@ export default function CheckoutPage() {
                                     <span className="font-black text-lg text-white">{shippingCost} EGP</span>
                                 ) : (
                                     <span className="font-black text-[10px] text-white uppercase tracking-widest bg-white/20 px-2 py-1 rounded-lg">
-                                        {!token ? 'Calculated at checkout' : 'FREE'}
+                                        {!token && selectedOrderType !== 'pickup' ? 'Calculated at checkout' : 'FREE'}
                                     </span>
                                 )}
                             </div>
@@ -446,7 +575,7 @@ export default function CheckoutPage() {
 
                         <button
                             onClick={handleCheckout}
-                            disabled={isPlacingOrder || (token ? !selectedAddress : (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber))}
+                            disabled={isPlacingOrder || (selectedOrderType === 'pickup' ? !selectedWarehouse : (token ? !selectedAddress : (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber)))}
                             className="w-full bg-secondary text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-white hover:text-secondary transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-secondary/20 border-2 border-secondary hover:border-white"
                         >
                             {isPlacingOrder ? <Loader2 className="animate-spin" size={24} /> : (
