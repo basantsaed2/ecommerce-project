@@ -8,6 +8,7 @@ interface CartState {
     items: PopulatedCartItem[];
     totalCartPrice: number;
     shippingCost: number;
+    orderType: 'delivery' | 'pickup';
     loading: boolean;
     error: string | null;
 }
@@ -16,6 +17,7 @@ const initialState: CartState = {
     items: [],
     totalCartPrice: 0,
     shippingCost: 0,
+    orderType: 'delivery',
     loading: false,
     error: null,
 };
@@ -176,6 +178,9 @@ export const cartSlice = createSlice({
                 state.items = [];
                 state.totalCartPrice = 0;
             }
+        },
+        setOrderType: (state, action: PayloadAction<'delivery' | 'pickup'>) => {
+            state.orderType = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -239,5 +244,5 @@ export const cartSlice = createSlice({
     },
 });
 
-export const { addToCartLocal, updateQuantityLocal, removeFromCartLocal, clearCartLocal, setCartState } = cartSlice.actions;
+export const { addToCartLocal, updateQuantityLocal, removeFromCartLocal, clearCartLocal, setCartState, setOrderType } = cartSlice.actions;
 export default cartSlice.reducer;

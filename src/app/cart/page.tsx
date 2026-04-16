@@ -10,9 +10,10 @@ import {
     updateQuantityLocal,
     removeFromCartLocal,
     clearCartLocal,
-    setCartState
+    setCartState,
+    setOrderType
 } from '@/store/slices/cartSlice';
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingBasket, Loader2 } from 'lucide-react';
+import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingBasket, Loader2, Store, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -22,6 +23,7 @@ export default function CartPage() {
         items, 
         totalCartPrice, 
         shippingCost, 
+        orderType,
         loading: isLoading 
     } = useSelector((state: RootState) => state.cart);
     
@@ -36,7 +38,8 @@ export default function CartPage() {
 
     if (!mounted) return null;
 
-    const finalTotal = totalCartPrice + (shippingCost || 0);
+    const currentShippingCost = orderType === 'pickup' ? 0 : (shippingCost || 0);
+    const finalTotal = totalCartPrice + currentShippingCost;
 
     const handleUpdateQuantity = (productId: string, newQty: number) => {
         if (newQty < 1) return;
@@ -157,15 +160,33 @@ export default function CartPage() {
                     <div className="bg-primary text-white rounded-[40px] p-10 sticky top-32 shadow-2xl shadow-primary/30">
                         <h2 className="text-2xl font-black mb-8 italic tracking-tighter">Order Summary</h2>
 
+                        {/* Order Type Selection in Cart */}
+                        <div className="mb-8 p-1 bg-white/10 rounded-2xl flex">
+                            <button
+                                onClick={() => dispatch(setOrderType('delivery'))}
+                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all ${orderType === 'delivery' ? 'bg-secondary text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                            >
+                                <Truck size={18} />
+                                <span className="text-xs font-black uppercase tracking-widest">Delivery</span>
+                            </button>
+                            <button
+                                onClick={() => dispatch(setOrderType('pickup'))}
+                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all ${orderType === 'pickup' ? 'bg-secondary text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                            >
+                                <Store size={18} />
+                                <span className="text-xs font-black uppercase tracking-widest">Pickup</span>
+                            </button>
+                        </div>
+
                         <div className="space-y-6 mb-10">
                             <div className="flex justify-between items-center text-primary-foreground/70">
                                 <span className="font-bold">Subtotal</span>
                                 <span className="font-black text-lg">{totalCartPrice.toLocaleString()} EGP</span>
                             </div>
-                            <div className="flex justify-between items-center text-primary-foreground/70">
+                            <div className="flex gap-2 justify-between items-center text-primary-foreground/70">
                                 <span className="font-bold">Shipping</span>
-                                <span className="font-black text-lg text-secondary uppercase tracking-widest bg-white/10 px-3 py-1 rounded-lg">
-                                    {shippingCost === 0 ? (!token ? 'Calculated at checkout' : 'FREE') : `${shippingCost} EGP`}
+                                <span className="font-black text-sm text-secondary uppercase text-center tracking-widest bg-white/10 px-3 py-1 rounded-lg">
+                                    {orderType === 'pickup' ? 'FREE' : (shippingCost === 0 ? (!token ? 'Calculated at checkout' : 'FREE') : `${shippingCost} EGP`)}
                                 </span>
                             </div>
                             <div className="pt-6 border-t border-white/10 flex justify-between items-center">
