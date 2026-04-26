@@ -88,8 +88,16 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
     const displayPriceAfterDiscount = currentPriceObj?.price_after_discount;
     const isOutOfStock = currentPriceObj ? currentPriceObj.quantity <= 0 : (product?.quantity || 0) <= 0;
 
-    // Check if an option is available given current selections of other variations
-    const isOptionAvailable = (vName: string, oName: string) => {
+    // Check if an option exists in any price object
+    const optionExists = (vName: string, oName: string) => {
+        if (!product?.prices) return true;
+        return product.prices.some(p => {
+            return p.variations.some(v => v.name === vName && v.options.some(opt => opt.name === oName));
+        });
+    };
+
+    // Check if an option is specifically out of stock for the current selection
+    const isOptionInStock = (vName: string, oName: string) => {
         if (!product?.prices) return true;
         return product.prices.some(p => {
             if (p.quantity <= 0) return false;
@@ -238,20 +246,21 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                                 </label>
                                                 <div className="flex flex-wrap gap-2">
                                                     {variationsMap[vName].map(oName => {
-                                                        const isAvailable = isOptionAvailable(vName, oName);
+                                                        const inStock = isOptionInStock(vName, oName);
+                                                        const isSelected = selectedOptions[vName] === oName;
                                                         return (
                                                             <button
                                                                 key={oName}
-                                                                disabled={!isAvailable}
                                                                 onClick={() => setSelectedOptions(prev => ({ ...prev, [vName]: oName }))}
-                                                                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 ${selectedOptions[vName] === oName
+                                                                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 flex flex-col items-center ${isSelected
                                                                     ? 'bg-secondary border-secondary text-white shadow-md'
-                                                                    : !isAvailable
-                                                                        ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 line-through'
+                                                                    : !inStock
+                                                                        ? 'bg-gray-50 border-gray-100 text-gray-400 opacity-70'
                                                                         : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300'
                                                                     }`}
                                                             >
-                                                                {oName}
+                                                                <span>{oName}</span>
+                                                                {!inStock && <span className="text-[10px] opacity-70">Sold Out</span>}
                                                             </button>
                                                         );
                                                     })}
@@ -293,14 +302,14 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     {/* Add to Cart */}
                                     <button
                                         onClick={handleAddToCart}
-                                        disabled={product.quantity <= 0}
-                                        className={`w-full py-4 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all shadow-lg active:scale-[0.98] border-2 ${product.quantity > 0
+                                        disabled={isOutOfStock}
+                                        className={`w-full py-4 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all shadow-lg active:scale-[0.98] border-2 ${!isOutOfStock
                                             ? 'bg-white text-primary border-primary hover:bg-primary hover:text-white hover:shadow-primary/20'
                                             : 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-100 shadow-none'
                                             }`}
                                     >
                                         <ShoppingCart size={20} strokeWidth={2.5} />
-                                        {product.quantity > 0
+                                        {!isOutOfStock
                                             ? `ADD TO CART • ${((displayPriceAfterDiscount || displayPrice || 0) * quantity).toLocaleString()} EGP`
                                             : 'OUT OF STOCK'
                                         }
@@ -309,8 +318,8 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     {/* Buy Now */}
                                     <button
                                         onClick={handleBuyNow}
-                                        disabled={product.quantity <= 0 || isBuyingNow}
-                                        className={`w-full py-4 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all shadow-xl active:scale-[0.98] ${product.quantity > 0
+                                        disabled={isOutOfStock || isBuyingNow}
+                                        className={`w-full py-4 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all shadow-xl active:scale-[0.98] ${!isOutOfStock
                                             ? 'bg-secondary text-white hover:bg-primary shadow-secondary/20 hover:shadow-primary/30'
                                             : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                                             }`}
@@ -319,7 +328,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                             ? <Loader2 size={20} className="animate-spin" />
                                             : <Zap size={20} strokeWidth={2.5} />
                                         }
-                                        {isBuyingNow ? 'Processing...' : 'BUY NOW'}
+                                        {isBuyingNow ? 'Processing...' : (isOutOfStock ? 'OUT OF STOCK' : 'BUY NOW')}
                                     </button>
                                 </div>
                             </div>

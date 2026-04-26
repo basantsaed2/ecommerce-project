@@ -94,8 +94,8 @@ export default function ProductDetailClient() {
     const displayPriceAfterDiscount = currentPriceObj?.price_after_discount;
     const isOutOfStock = currentPriceObj ? currentPriceObj.quantity <= 0 : (product?.quantity || 0) <= 0;
 
-    // Check if an option is available given current selections of other variations
-    const isOptionAvailable = (vName: string, oName: string) => {
+    // Check if an option is specifically out of stock for the current selection
+    const isOptionInStock = (vName: string, oName: string) => {
         if (!product?.prices) return true;
         return product.prices.some(p => {
             if (p.quantity <= 0) return false;
@@ -353,20 +353,21 @@ export default function ProductDetailClient() {
                                         </label>
                                         <div className="flex flex-wrap gap-3">
                                             {variationsMap[vName].map(oName => {
-                                                const isAvailable = isOptionAvailable(vName, oName);
+                                                const inStock = isOptionInStock(vName, oName);
+                                                const isSelected = selectedOptions[vName] === oName;
                                                 return (
                                                     <button
                                                         key={oName}
-                                                        disabled={!isAvailable}
                                                         onClick={() => setSelectedOptions(prev => ({ ...prev, [vName]: oName }))}
-                                                        className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all border-2 ${selectedOptions[vName] === oName
-                                                            ? 'bg-primary border-primary text-white shadow-md'
-                                                            : !isAvailable
-                                                                ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 line-through'
+                                                        className={`px-5 py-3 rounded-xl text-sm font-black transition-all border-2 flex flex-col items-center min-w-[70px] ${isSelected
+                                                            ? 'bg-secondary border-secondary text-white shadow-md scale-105'
+                                                            : !inStock
+                                                                ? 'bg-gray-50 border-gray-100 text-gray-400 opacity-70'
                                                                 : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300'
                                                             }`}
                                                     >
-                                                        {oName}
+                                                        <span>{oName}</span>
+                                                        {!inStock && <span className="text-[9px] opacity-70 mt-0.5">Sold Out</span>}
                                                     </button>
                                                 );
                                             })}
@@ -440,7 +441,7 @@ export default function ProductDetailClient() {
                                     ? <Loader2 size={20} className="animate-spin" />
                                     : <ShoppingCart size={20} strokeWidth={2.5} />
                                 }
-                                {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+                                {isAddingToCart ? 'Adding...' : (!inStock ? 'OUT OF STOCK' : 'Add to Cart')}
                             </button>
 
                             {/* Buy Now */}
@@ -457,7 +458,7 @@ export default function ProductDetailClient() {
                                     ? <Loader2 size={20} className="animate-spin" />
                                     : <Zap size={20} strokeWidth={2.5} />
                                 }
-                                {isBuyingNow ? 'Processing...' : 'Buy Now'}
+                                {isBuyingNow ? 'Processing...' : (!inStock ? 'SOLD OUT' : 'Buy Now')}
                             </button>
                         </div>
 

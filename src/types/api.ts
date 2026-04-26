@@ -2,6 +2,8 @@ export interface Banner {
     _id: string;
     name: string[];
     images: string[];
+    title?: string;
+    description?: string;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;

@@ -63,6 +63,9 @@ export default function BannersSection() {
             <div className="w-full h-[250px] md:h-[450px] lg:h-[550px] relative rounded-3xl overflow-hidden shadow-2xl group">
                 {displayImages.map((image, index) => {
                     const fallbackData = BANNERS[index] || { title: "", subtitle: "" };
+                    const displayTitle = homeBanner?.title || fallbackData.title;
+                    const displaySubtitle = homeBanner?.description || fallbackData.subtitle;
+
                     return (
                     <div
                         key={index}
@@ -82,14 +85,14 @@ export default function BannersSection() {
                         {/* Overlay and Text */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 pb-12 md:p-16">
                             <div className="max-w-3xl transform translate-y-2 md:translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                                {fallbackData.subtitle && (
+                                {displaySubtitle && (
                                     <span className="text-secondary font-black tracking-widest text-[10px] md:text-sm bg-white/10 px-3 py-1 md:px-4 md:py-1.5 rounded-full backdrop-blur-md border border-white/20 mb-2 md:mb-4 inline-block uppercase">
-                                        {fallbackData.subtitle}
+                                        {displaySubtitle}
                                     </span>
                                 )}
-                                {fallbackData.title && (
+                                {displayTitle && (
                                     <h2 className="text-white text-2xl sm:text-3xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-tight drop-shadow-xl">
-                                        {fallbackData.title}
+                                        {displayTitle}
                                     </h2>
                                 )}
                                 <button className="mt-3 md:mt-6 bg-secondary text-white px-5 py-2 md:px-8 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl font-bold hover:bg-white hover:text-black transition-colors duration-300 shadow-lg shadow-secondary/30">
