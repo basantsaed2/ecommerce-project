@@ -3,10 +3,8 @@ import { AddToCartRequest, UpdateQuantityRequest } from '@/types/cart';
 
 export const cartApi = {
     getCart: () => axiosInstance.get('/cart'),
-    addToCart: (data: AddToCartRequest) => axiosInstance.post('/cart/add', data),
-    updateQuantity: (data: UpdateQuantityRequest) => axiosInstance.put('/cart/update-quantity', data),
-    removeFromCart: (productId: string) => axiosInstance.delete(`/cart/remove/${productId}`),
+    syncCart: (items: any[]) => axiosInstance.post('/cart/sync-cart', { items }),
     clearCart: () => axiosInstance.delete('/cart/clear'),
     applyCoupon: (couponCode: string) => axiosInstance.post('/cart/apply-coupon', { couponCode }),
-    removeCoupon: () => axiosInstance.post('/cart/remove-coupon'),
+    removeCoupon: () => axiosInstance.post('/cart/apply-coupon', { couponCode: "" }),
 };

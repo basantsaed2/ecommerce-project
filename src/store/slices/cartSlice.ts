@@ -71,48 +71,20 @@ export const fetchCart = createAsyncThunk(
     }
 );
 
-export const addItemToCart = createAsyncThunk(
-    'cart/addItemToCart',
-    async (payload: { productId: string; quantity: number; productPriceId?: string }, { dispatch, rejectWithValue }) => {
+export const syncCart = createAsyncThunk(
+    'cart/syncCart',
+    async (_, { getState, rejectWithValue }) => {
         try {
-            await cartApi.addToCart(payload);
-            const fetchResult = await dispatch(fetchCart()).unwrap();
-            return fetchResult;
+            const state = getState() as RootState;
+            const items = state.cart.items.map(item => ({
+                productId: item.product._id,
+                productVariantId: item.variant?._id || item.productVariantId,
+                quantity: item.quantity
+            }));
+            const response = await cartApi.syncCart(items);
+            return getCartFromResponse(response);
         } catch (error: any) {
-            console.log(error);
-            const msg = extractError(error);
-            toast.error(msg);
-            return rejectWithValue(msg);
-        }
-    }
-);
-
-export const updateItemQuantity = createAsyncThunk(
-    'cart/updateItemQuantity',
-    async (payload: { productId: string; quantity: number }, { dispatch, rejectWithValue }) => {
-        try {
-            await cartApi.updateQuantity(payload);
-            const fetchResult = await dispatch(fetchCart()).unwrap();
-            return fetchResult;
-        } catch (error: any) {
-            const msg = extractError(error);
-            toast.error(msg);
-            return rejectWithValue(msg);
-        }
-    }
-);
-
-export const removeItemFromCart = createAsyncThunk(
-    'cart/removeItemFromCart',
-    async (productId: string, { dispatch, rejectWithValue }) => {
-        try {
-            await cartApi.removeFromCart(productId);
-            const fetchResult = await dispatch(fetchCart()).unwrap();
-            return fetchResult;
-        } catch (error: any) {
-            const msg = extractError(error);
-            toast.error(msg);
-            return rejectWithValue(msg);
+            return rejectWithValue(extractError(error));
         }
     }
 );
@@ -133,12 +105,11 @@ export const clearCartSync = createAsyncThunk(
 
 export const applyCoupon = createAsyncThunk(
     'cart/applyCoupon',
-    async (couponCode: string, { dispatch, rejectWithValue }) => {
+    async (couponCode: string, { rejectWithValue }) => {
         try {
-            await cartApi.applyCoupon(couponCode);
-            const fetchResult = await dispatch(fetchCart()).unwrap();
+            const response = await cartApi.applyCoupon(couponCode);
             toast.success('Coupon applied successfully');
-            return fetchResult;
+            return getCartFromResponse(response);
         } catch (error: any) {
             const msg = extractError(error);
             toast.error(msg);
@@ -149,12 +120,11 @@ export const applyCoupon = createAsyncThunk(
 
 export const removeCoupon = createAsyncThunk(
     'cart/removeCoupon',
-    async (_, { dispatch, rejectWithValue }) => {
+    async (_, { rejectWithValue }) => {
         try {
-            await cartApi.removeCoupon();
-            const fetchResult = await dispatch(fetchCart()).unwrap();
+            const response = await cartApi.removeCoupon();
             toast.success('Coupon removed');
-            return fetchResult;
+            return getCartFromResponse(response);
         } catch (error: any) {
             const msg = extractError(error);
             toast.error(msg);
@@ -168,29 +138,49 @@ export const cartSlice = createSlice({
     initialState,
     reducers: {
         // Guest Reducers (Local Only)
-        addToCartLocal: (state, action: PayloadAction<PopulatedCartItem>) => {
-            const existing = state.items.find(item => item.product._id === action.payload.product._id);
+        addItem: (state, action: PayloadAction<{ product: any; variant?: any; quantity: number }>) => {
+            const { product, variant, quantity } = action.payload;
+            const existing = state.items.find(item => 
+                item.product._id === product._id && 
+                (variant ? (item.variant?._id === variant._id) : !item.variant)
+            );
+
             if (existing) {
-                existing.quantity += action.payload.quantity;
+                existing.quantity += quantity;
             } else {
-                state.items.push(action.payload);
+                state.items.push({
+                    product,
+                    variant,
+                    quantity,
+                    price: variant ? variant.price : (product.price_after_discount || product.price || 0)
+                } as any);
             }
             state.totalCartPrice = state.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         },
-        updateQuantityLocal: (state, action: PayloadAction<{ productId: string; quantity: number }>) => {
-            const item = state.items.find(item => item.product._id === action.payload.productId);
+        updateQuantity: (state, action: PayloadAction<{ productId: string; variantId?: string; quantity: number }>) => {
+            const { productId, variantId, quantity } = action.payload;
+            const item = state.items.find(item => 
+                item.product._id === productId && 
+                (variantId ? (item.variant?._id === variantId) : !item.variant)
+            );
             if (item) {
-                item.quantity = action.payload.quantity;
+                item.quantity = quantity;
             }
             state.totalCartPrice = state.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         },
-        removeFromCartLocal: (state, action: PayloadAction<string>) => {
-            state.items = state.items.filter(item => item.product._id !== action.payload);
+        removeItem: (state, action: PayloadAction<{ productId: string; variantId?: string }>) => {
+            const { productId, variantId } = action.payload;
+            state.items = state.items.filter(item => 
+                !(item.product._id === productId && (variantId ? (item.variant?._id === variantId) : !item.variant))
+            );
             state.totalCartPrice = state.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         },
         clearCartLocal: (state) => {
             state.items = [];
             state.totalCartPrice = 0;
+            state.couponDiscount = 0;
+            state.taxAmount = 0;
+            state.serviceFee = 0;
         },
         setCartState: (state, action: PayloadAction<any>) => {
             let cartData = action.payload;
@@ -261,20 +251,16 @@ export const cartSlice = createSlice({
             .addCase(fetchCart.fulfilled, (state, action) => {
                 handleCartUpdate(state, action);
             })
-            // Add Item Sync
-            .addCase(addItemToCart.fulfilled, (state, action) => {
-                handleCartUpdate(state, action);
-                if (action.payload) toast.success('Added to your account cart');
+            // Sync Cart
+            .addCase(syncCart.pending, (state) => {
+                state.loading = true;
             })
-            // Update Quantity Sync
-            .addCase(updateItemQuantity.fulfilled, (state, action) => {
+            .addCase(syncCart.fulfilled, (state, action) => {
                 handleCartUpdate(state, action);
-                if (action.payload) toast.success('Quantity updated successfully');
             })
-            // Remove Item Sync
-            .addCase(removeItemFromCart.fulfilled, (state, action) => {
-                handleCartUpdate(state, action);
-                toast.success('Removed from your account');
+            .addCase(syncCart.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
             })
             // Clear Cart Sync
             .addCase(clearCartSync.fulfilled, (state) => {
@@ -293,5 +279,5 @@ export const cartSlice = createSlice({
     },
 });
 
-export const { addToCartLocal, updateQuantityLocal, removeFromCartLocal, clearCartLocal, setCartState, setOrderType } = cartSlice.actions;
+export const { addItem, updateQuantity, removeItem, clearCartLocal, setCartState, setOrderType } = cartSlice.actions;
 export default cartSlice.reducer;

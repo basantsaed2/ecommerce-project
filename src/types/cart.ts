@@ -1,5 +1,6 @@
 export interface CartItem {
     product: string; // Product ID
+    variant?: string; // Variant ID
     quantity: number;
     price: number;
 }
@@ -12,6 +13,12 @@ export interface PopulatedCartItem {
         image?: string;
         price: number;
     };
+    variant?: {
+        _id: string;
+        price: number;
+        [key: string]: any;
+    };
+    productVariantId?: string; // For syncing purposes
     quantity: number;
     price: number;
 }

@@ -3,24 +3,24 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
 import {
-    fetchCart,
-    updateItemQuantity,
-    removeItemFromCart,
+    updateQuantity,
+    removeItem,
     clearCartSync,
-    updateQuantityLocal,
-    removeFromCartLocal,
     clearCartLocal,
     setCartState,
     setOrderType,
     applyCoupon,
-    removeCoupon
+    removeCoupon,
+    syncCart
 } from '@/store/slices/cartSlice';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingBasket, Loader2, Store, Truck, Ticket, Percent } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
 export default function CartPage() {
     const dispatch = useDispatch<AppDispatch>();
+    const router = useRouter();
     const { 
         items, 
         totalCartPrice, 
@@ -39,8 +39,17 @@ export default function CartPage() {
 
     useEffect(() => {
         setMounted(true);
-        // Ensure fresh data on mount without relying on React Query cache
-        dispatch(fetchCart());
+        // Initial fetch to sync with server if needed
+        dispatch(syncCart());
+    }, [dispatch]);
+
+    // Handle window close or visibility change to sync
+    useEffect(() => {
+        const handleSync = () => {
+            dispatch(syncCart());
+        };
+        window.addEventListener('beforeunload', handleSync);
+        return () => window.removeEventListener('beforeunload', handleSync);
     }, [dispatch]);
 
     if (!mounted) return null;
@@ -64,17 +73,25 @@ export default function CartPage() {
         setIsApplyingCoupon(false);
     };
 
-    const handleUpdateQuantity = (productId: string, newQty: number) => {
+    const handleUpdateQuantity = async (productId: string, variantId: string | undefined, newQty: number) => {
         if (newQty < 1) return;
-        dispatch(updateItemQuantity({ productId, quantity: newQty }));
+        dispatch(updateQuantity({ productId, variantId, quantity: newQty }));
+        dispatch(syncCart());
     };
 
-    const handleRemove = (productId: string) => {
-        dispatch(removeItemFromCart(productId));
+    const handleRemove = async (productId: string, variantId?: string) => {
+        dispatch(removeItem({ productId, variantId }));
+        dispatch(syncCart());
     };
 
     const handleClear = () => {
         dispatch(clearCartSync());
+    };
+
+    const handleCheckout = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        await dispatch(syncCart());
+        router.push('/checkout');
     };
 
     if (isLoading && items.length === 0) {
@@ -123,7 +140,7 @@ export default function CartPage() {
                 {/* Items List */}
                 <div className="lg:col-span-2 space-y-6">
                     {items.map((item: any) => (
-                        <div key={item.product._id} className="group flex flex-col sm:flex-row items-center gap-6 bg-white p-6 rounded-3xl border border-gray-100 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300 relative">
+                        <div key={`${item.product._id}-${item.variant?._id || 'no-variant'}`} className="group flex flex-col sm:flex-row items-center gap-6 bg-white p-6 rounded-3xl border border-gray-100 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300 relative">
                             {/* Product Image */}
                             <div className="w-32 h-32 bg-gray-50 rounded-2xl p-4 flex items-center justify-center shrink-0">
                                 <img
@@ -145,21 +162,21 @@ export default function CartPage() {
                                 <div className="flex items-center justify-center sm:justify-start gap-4">
                                     <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl p-1.5">
                                         <button
-                                            onClick={() => handleUpdateQuantity(item.product._id, item.quantity - 1)}
+                                            onClick={() => handleUpdateQuantity(item.product._id, item.variant?._id, item.quantity - 1)}
                                             className="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:text-secondary hover:shadow-sm transition-all"
                                         >
                                             <Minus size={14} />
                                         </button>
                                         <span className="w-6 text-center font-black text-primary">{item.quantity}</span>
                                         <button
-                                            onClick={() => handleUpdateQuantity(item.product._id, item.quantity + 1)}
+                                            onClick={() => handleUpdateQuantity(item.product._id, item.variant?._id, item.quantity + 1)}
                                             className="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:text-secondary hover:shadow-sm transition-all"
                                         >
                                             <Plus size={14} />
                                         </button>
                                     </div>
                                     <button
-                                        onClick={() => handleRemove(item.product._id)}
+                                        onClick={() => handleRemove(item.product._id, item.variant?._id)}
                                         className="p-2 text-gray-300 hover:text-red-500 transition-colors"
                                     >
                                         <Trash2 size={18} />
@@ -276,12 +293,12 @@ export default function CartPage() {
                             </div>
                         </div>
 
-                        <Link
-                            href="/checkout"
+                        <button
+                            onClick={handleCheckout}
                             className="w-full bg-secondary text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-white hover:text-secondary transition-all active:scale-[0.98] shadow-xl shadow-black/10"
                         >
                             Checkout Now <ArrowRight size={20} />
-                        </Link>
+                        </button>
 
                         <div className="mt-8 flex items-center justify-center gap-4 text-white/50">
                             <ShoppingBag size={16} />

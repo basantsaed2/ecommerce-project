@@ -4,8 +4,8 @@ import { useGet } from '@/hooks/useGet';
 import { Product, SingleApiResponse } from '@/types/api';
 import { Loader2, X, Plus, Minus, ShoppingCart, Zap } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addItemToCart } from '@/store/slices/cartSlice';
-import { RootState } from '@/store/store';
+import { addItem, syncCart } from '@/store/slices/cartSlice';
+import { RootState, AppDispatch } from '@/store/store';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -16,7 +16,7 @@ interface ProductDialogProps {
 }
 
 export default function ProductDialog({ productId, isOpen, onClose }: ProductDialogProps) {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const token = useSelector((state: RootState) => state.auth.token);
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
@@ -110,30 +110,33 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
             return;
         }
 
-        dispatch(addItemToCart({
-            productId: product._id,
-            quantity: quantity,
-            productPriceId: currentPriceObj?._id
-        }) as any);
+        dispatch(addItem({
+            product: product,
+            variant: currentPriceObj || undefined,
+            quantity: quantity
+        }));
 
-        toast.success(`Processing...`);
+        dispatch(syncCart());
+        toast.success(`Added to cart`);
         onClose();
     };
 
     const handleBuyNow = async () => {
         if (!product) return;
 
-        if (product.quantity <= 0) {
-            toast.error('This product is currently sold out');
+        if (isOutOfStock) {
+            toast.error('This combination is currently sold out');
             return;
         }
 
         setIsBuyingNow(true);
-        await dispatch(addItemToCart({
-            productId: product._id,
-            quantity: quantity,
-            productPriceId: currentPriceObj?._id
-        }) as any);
+        dispatch(addItem({
+            product: product,
+            variant: currentPriceObj || undefined,
+            quantity: quantity
+        }));
+        
+        await dispatch(syncCart());
         setIsBuyingNow(false);
         onClose();
         router.push('/cart');

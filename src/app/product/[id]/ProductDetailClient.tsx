@@ -8,8 +8,8 @@ import {
     Share2, Shield, Truck, RotateCcw, Star, Package
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addItemToCart } from '@/store/slices/cartSlice';
-import { RootState } from '@/store/store';
+import { addItem, syncCart } from '@/store/slices/cartSlice';
+import { RootState, AppDispatch } from '@/store/store';
 import { toast } from 'sonner';
 import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ import Link from 'next/link';
 export default function ProductDetailClient() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const token = useSelector((state: RootState) => state.auth.token);
 
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
@@ -116,22 +116,24 @@ export default function ProductDetailClient() {
     const handleAddToCart = async () => {
         if (!product || isOutOfStock) return;
         setIsAddingToCart(true);
-        await dispatch(addItemToCart({
-            productId: product._id,
-            quantity,
-            productPriceId: currentPriceObj?._id
-        }) as any);
+        dispatch(addItem({
+            product: product,
+            variant: currentPriceObj || undefined,
+            quantity: quantity
+        }));
+        await dispatch(syncCart());
         setIsAddingToCart(false);
     };
 
     const handleBuyNow = async () => {
         if (!product || isOutOfStock) return;
         setIsBuyingNow(true);
-        await dispatch(addItemToCart({
-            productId: product._id,
-            quantity,
-            productPriceId: currentPriceObj?._id
-        }) as any);
+        dispatch(addItem({
+            product: product,
+            variant: currentPriceObj || undefined,
+            quantity: quantity
+        }));
+        await dispatch(syncCart());
         setIsBuyingNow(false);
         router.push('/cart');
     };

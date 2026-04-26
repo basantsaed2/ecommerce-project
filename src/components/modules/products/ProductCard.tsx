@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Product } from '@/types/api';
 import { ShoppingCart, Heart, Eye, Zap } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addItemToCart } from '@/store/slices/cartSlice';
-import { RootState } from '@/store/store';
+import { addItem, syncCart } from '@/store/slices/cartSlice';
+import { RootState, AppDispatch } from '@/store/store';
 import ProductDialog from './ProductDialog';
 import { toast } from 'sonner';
 import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
@@ -15,7 +15,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const token = useSelector((state: RootState) => state.auth.token);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -55,7 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         toggleWishlist({ productId: product._id });
     };
 
-    const handleAddToCart = (e: React.MouseEvent) => {
+    const handleAddToCart = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (product.quantity <= 0) return;
         
@@ -65,7 +65,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             return;
         }
         
-        dispatch(addItemToCart({ productId: product._id, quantity: 1 }) as any);
+        dispatch(addItem({ product, quantity: 1 }));
+        dispatch(syncCart());
         toast.success(`${product.name} added to cart`);
     };
 
@@ -79,7 +80,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             return;
         }
 
-        await dispatch(addItemToCart({ productId: product._id, quantity: 1 }) as any);
+        dispatch(addItem({ product, quantity: 1 }));
+        await dispatch(syncCart());
         router.push('/cart');
     };
 
