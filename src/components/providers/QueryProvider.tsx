@@ -9,9 +9,17 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
         defaultOptions: {
             queries: {
                 staleTime: 60 * 1000, // البيانات تعتبر "fresh" لمدة دقيقة
-                retry: 1, // لو الطلب فشل يعيد المحاولة مرة واحدة بس
-            },
-        },
+                retry: (failureCount, error: any) => {
+                    // Stop retrying if it's a network error (no response or server down)
+                    if (error?.message === 'Network Error' || !error?.response || error?.code === 'ERR_NETWORK') {
+                        return false;
+                    }
+                    // For other errors, retry only once
+                    return failureCount < 1;
+                },
+                retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+            }
+        }
     }));
 
     return (
