@@ -43,13 +43,13 @@ export default function BrandsSection() {
                             <Link
                                 key={`${brand._id}-r1-${idx}`}
                                 href={`/brands#${brand._id}`}
-                                className="min-w-[180px] md:min-w-[240px] h-24 md:h-32 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-[2rem] flex items-center justify-center p-8 hover:shadow-2xl hover:shadow-secondary/10 hover:border-secondary/20 transition-all duration-700 group relative overflow-hidden"
+                                className="min-w-[180px] md:min-w-[240px] h-24 md:h-32 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-[2rem] flex items-center justify-center p-2 md:p-8 hover:shadow-2xl hover:shadow-secondary/10 hover:border-secondary/20 transition-all duration-700 group relative overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-tr from-secondary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                                 <img
                                     src={brand.logo}
                                     alt={brand.name || brand.ar_name}
-                                    className="max-w-[70%] max-h-[70%] object-contain transition-all duration-700 group-hover:scale-110 relative z-10"
+                                    className="max-w-[100%] max-h-[100%] object-contain transition-all duration-700 group-hover:scale-110 relative z-10"
                                 />
                             </Link>
                         ))}
@@ -63,7 +63,7 @@ export default function BrandsSection() {
                             <Link
                                 key={`${brand._id}-r2-${idx}`}
                                 href={`/brands#${brand._id}`}
-                                className="min-w-[180px] md:min-w-[240px] h-24 md:h-32 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-[2rem] flex items-center justify-center p-8 hover:shadow-2xl hover:shadow-secondary/10 hover:border-secondary/20 transition-all duration-700 group relative overflow-hidden"
+                                className="min-w-[180px] md:min-w-[240px] h-24 md:h-32 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-[2rem] flex items-center justify-center p-2 md:p-8 hover:shadow-2xl hover:shadow-secondary/10 hover:border-secondary/20 transition-all duration-700 group relative overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-tr from-secondary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                                 <img
