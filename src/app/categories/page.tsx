@@ -6,8 +6,12 @@ import DynamicBanner from '@/components/common/DynamicBanner';
 import { Loader2, Grid } from 'lucide-react';
 import ProductCard from '@/components/modules/products/ProductCard';
 import { useSelector } from 'react-redux';
+import { useSearchParams } from 'next/navigation';
 
 export default function CategoriesPage() {
+    const searchParams = useSearchParams();
+    const selectedId = searchParams.get('id');
+
     const { data: categoriesData, isLoading: isLoadingCats } = useGet<ApiResponse<Category>>(['categories'], '/category');
     const { data: productsData, isLoading: isLoadingProds } = useGet<ApiResponse<Product>>(['products'], '/product');
     const user = useSelector((state: any) => state.auth);
@@ -21,8 +25,12 @@ export default function CategoriesPage() {
         );
     }
 
-    const categories = categoriesData?.data?.data || [];
+    const allCategories = categoriesData?.data?.data || [];
     const products = productsData?.data?.data || [];
+
+    const categories = selectedId
+        ? allCategories.filter(c => c._id === selectedId)
+        : allCategories;
 
     if (categories.length === 0) {
         return (
@@ -68,19 +76,24 @@ export default function CategoriesPage() {
                 <div className="absolute -top-24 -left-24 w-64 h-64 bg-white/5 rounded-full blur-[80px]" />
             </section>
 
-            <div className="container py-4">
+            <div className="w-full px-4 md:px-12 py-4">
                 <div className="flex flex-col gap-20">
                     {categories.map((category) => {
                         const categoryProducts = products.filter(p => {
-                            // Check for categoryId array (old/other schema)
-                            const matchesIdArray = p.categoryId?.some(cat => cat._id === category._id);
-                            // Check for category object (new schema seen in logs)
-                            const matchesCategoryObj = p.category?._id === category._id;
-                            
+                            const pCatId = typeof p.category === 'string' ? p.category : p.category?._id;
+                            const matchesCategoryObj = pCatId === category._id;
+
+                            const matchesIdArray = p.categoryId?.some(cat =>
+                                (typeof cat === 'string' ? cat : cat._id) === category._id
+                            );
+
                             return matchesIdArray || matchesCategoryObj;
                         });
-                        
-                        if (categoryProducts.length === 0) return null;
+
+                        const hasProducts = categoryProducts.length > 0;
+
+                        // If no products and not specifically selected, hide the category to keep view clean
+                        if (!hasProducts && !selectedId) return null;
 
                         return (
                             <div key={category._id} id={category._id} className="scroll-mt-32">
@@ -104,8 +117,8 @@ export default function CategoriesPage() {
                                                 <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tighter capitalize">
                                                     {category.name || category.ar_name}
                                                 </h2>
-                                                <span className="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-black rounded-full uppercase tracking-widest">
-                                                    {categoryProducts.length} Products
+                                                <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest ${hasProducts ? 'bg-gray-100 text-gray-500' : 'bg-red-50 text-red-500'}`}>
+                                                    {hasProducts ? `${categoryProducts.length} Products` : 'No Products'}
                                                 </span>
                                             </div>
                                             <div className="h-1 w-20 bg-secondary rounded-full transform origin-left group-hover:scale-x-150 transition-transform duration-500" />
@@ -113,12 +126,22 @@ export default function CategoriesPage() {
                                     </div>
                                 </div>
 
-                                {/* Product Grid */}
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
-                                    {categoryProducts.map(product => (
-                                        <ProductCard key={product._id} product={product} />
-                                    ))}
-                                </div>
+                                {/* Product Grid or Empty State */}
+                                {hasProducts ? (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+                                        {categoryProducts.map(product => (
+                                            <ProductCard key={product._id} product={product} />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-white rounded-[2rem] border border-gray-100 p-12 text-center shadow-sm">
+                                        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                            <Grid size={32} className="text-gray-200" />
+                                        </div>
+                                        <h3 className="text-xl font-black text-primary mb-2">No products in this collection</h3>
+                                        <p className="text-gray-400 font-medium">We're currently restocking this category. Please check back later!</p>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

@@ -49,14 +49,14 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
                 {categories.map((category) => (
                     <Link 
                         key={category._id} 
-                        href={`/categories#${category._id}`} 
+                        href={`/categories?id=${category._id}`} 
                         className="snap-start flex flex-col items-center group min-w-[140px] md:min-w-[160px]"
                     >
                         <div className="relative w-28 h-28 md:w-32 md:h-32 mb-4">
                             {/* Decorative background circle */}
                             <div className="absolute inset-0 bg-secondary/5 rounded-[2rem] group-hover:bg-secondary/10 group-hover:rotate-12 transition-all duration-500" />
                             
-                            <div className="absolute inset-2 bg-white rounded-[1.75rem] shadow-sm border border-gray-100 overflow-hidden flex items-center justify-center group-hover:border-secondary transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
+                            <div className="absolute inset-2 bg-white rounded-[1.75rem] shadow-sm border border-gray-100 transition-all duration-500 overflow-hidden flex items-center justify-center group-hover:border-secondary group-hover:scale-105 group-hover:-translate-y-2">
                                 <img
                                     src={category.image}
                                     alt={category.name || category.ar_name}

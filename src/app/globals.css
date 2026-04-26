@@ -19,3 +19,37 @@
         @apply w-full px-6 md:px-12 xl:px-16 py-5;
     }
 }
+
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-reverse {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+}
+
+.animate-marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee 120s linear infinite;
+}
+
+.animate-marquee-reverse {
+    display: flex;
+    width: max-content;
+    animation: marquee-reverse 120s linear infinite;
+}
+
+.animate-marquee:hover, .animate-marquee-reverse:hover {
+    animation-play-state: paused;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
