@@ -9,7 +9,7 @@ import ProductDialog from './ProductDialog';
 import { toast } from 'sonner';
 import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+
 interface ProductCardProps {
     product: Product;
 }
@@ -91,8 +91,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
     return (
         <>
-            <Link
-                href={`/product/${product._id}`}
+            <div
+                onClick={handleCardClick}
                 className="group relative flex flex-col bg-white rounded-[24px] border border-gray-100 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.07)] overflow-hidden cursor-pointer"
             >
                 {/* Badges & Actions Overlay */}
@@ -116,8 +116,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                             disabled={isTogglingWishlist}
                             aria-label="Add to wishlist"
                             className={`p-2.5 rounded-xl transition-all active:scale-90 shadow-sm border ${isInWishlist
-                                ? 'bg-red-50 border-red-100 text-red-500'
-                                : 'bg-white border-gray-100 text-gray-400 hover:text-red-500'
+                                    ? 'bg-red-50 border-red-100 text-red-500'
+                                    : 'bg-white border-gray-100 text-gray-400 hover:text-red-500'
                                 }`}
                         >
                             <Heart size={18} className={isInWishlist ? 'fill-current animate-pulse' : ''} />
@@ -128,10 +128,16 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {/* Image Container */}
                 <div className="relative aspect-square bg-[#F9FAFB] overflow-hidden flex items-center justify-center p-8">
                     {/* Hover Quick View Icon */}
-                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10 pointer-events-none">
-                        <div className="bg-white/90 backdrop-blur-sm p-3 rounded-full translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-md">
+                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsDialogOpen(true);
+                            }}
+                            className="bg-white/90 backdrop-blur-sm p-3 rounded-full translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-white hover:scale-110 active:scale-95 shadow-md"
+                        >
                             <Eye size={20} className="text-gray-700" />
-                        </div>
+                        </button>
                     </div>
 
                     <img
@@ -139,8 +145,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                         alt={product.name}
                         loading="lazy"
                         className={`max-w-full max-h-full object-contain transition-transform duration-700 ease-in-out ${product.quantity > 0
-                            ? 'group-hover:scale-110'
-                            : 'grayscale opacity-50'
+                                ? 'group-hover:scale-110'
+                                : 'grayscale opacity-50'
                             }`}
                     />
 
@@ -163,7 +169,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                                 </span>
                             ) : product.categoryId && product.categoryId.length > 0 ? (
                                 <>
-                                    {product.categoryId.slice(0, 2).map((cat: any) => (
+                                    {product.categoryId.slice(0, 2).map((cat) => (
                                         <span key={cat._id} className="text-[9px] font-bold text-secondary bg-secondary/5 px-2 py-0.5 rounded-md uppercase tracking-wider border border-secondary/10">
                                             {cat.name}
                                         </span>
@@ -215,8 +221,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                                 disabled={product.quantity <= 0}
                                 aria-label="Add to cart"
                                 className={`relative overflow-hidden w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 ${product.quantity > 0
-                                    ? 'bg-gray-900 text-white hover:bg-secondary hover:shadow-lg active:scale-95'
-                                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                                        ? 'bg-gray-900 text-white hover:bg-secondary hover:shadow-lg active:scale-95'
+                                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                                     }`}
                             >
                                 <ShoppingCart size={18} />
@@ -229,8 +235,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                             disabled={product.quantity <= 0}
                             aria-label="Buy now"
                             className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] ${product.quantity > 0
-                                ? 'bg-secondary text-white hover:bg-primary shadow-md shadow-secondary/20 hover:shadow-primary/20'
-                                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                                    ? 'bg-secondary text-white hover:bg-primary shadow-md shadow-secondary/20 hover:shadow-primary/20'
+                                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                                 }`}
                         >
                             <Zap size={13} strokeWidth={2.5} />
@@ -238,7 +244,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         </button>
                     </div>
                 </div>
-            </Link>
+            </div>
 
             {isDialogOpen && (
                 <ProductDialog
