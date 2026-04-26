@@ -11,9 +11,11 @@ import {
     removeFromCartLocal,
     clearCartLocal,
     setCartState,
-    setOrderType
+    setOrderType,
+    applyCoupon,
+    removeCoupon
 } from '@/store/slices/cartSlice';
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingBasket, Loader2, Store, Truck } from 'lucide-react';
+import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingBasket, Loader2, Store, Truck, Ticket, Percent } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -23,12 +25,17 @@ export default function CartPage() {
         items, 
         totalCartPrice, 
         shippingCost, 
+        couponDiscount,
+        taxAmount,
+        serviceFee,
         orderType,
         loading: isLoading 
     } = useSelector((state: RootState) => state.cart);
     
     const { token } = useSelector((state: RootState) => state.auth);
     const [mounted, setMounted] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -39,7 +46,23 @@ export default function CartPage() {
     if (!mounted) return null;
 
     const currentShippingCost = orderType === 'pickup' ? 0 : (shippingCost || 0);
-    const finalTotal = totalCartPrice + currentShippingCost;
+    const finalTotal = totalCartPrice + currentShippingCost + (taxAmount || 0) + (serviceFee || 0) - (couponDiscount || 0);
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode) return;
+        setIsApplyingCoupon(true);
+        const result = await dispatch(applyCoupon(couponCode));
+        if (applyCoupon.fulfilled.match(result)) {
+            setCouponCode('');
+        }
+        setIsApplyingCoupon(false);
+    };
+
+    const handleRemoveCoupon = async () => {
+        setIsApplyingCoupon(true);
+        await dispatch(removeCoupon());
+        setIsApplyingCoupon(false);
+    };
 
     const handleUpdateQuantity = (productId: string, newQty: number) => {
         if (newQty < 1) return;
@@ -178,19 +201,77 @@ export default function CartPage() {
                             </button>
                         </div>
 
-                        <div className="space-y-6 mb-10">
-                            <div className="flex justify-between items-center text-primary-foreground/70">
-                                <span className="font-bold">Subtotal</span>
-                                <span className="font-black text-lg">{totalCartPrice.toLocaleString()} EGP</span>
+                        {/* Coupon Section */}
+                        <div className="mb-8">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 block mb-3">Have a coupon?</label>
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+                                    <input
+                                        type="text"
+                                        placeholder="Enter code"
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-all"
+                                    />
+                                </div>
+                                <button
+                                    onClick={handleApplyCoupon}
+                                    disabled={isApplyingCoupon || !couponCode}
+                                    className="bg-white text-primary px-6 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-secondary hover:text-white transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                                >
+                                    {isApplyingCoupon ? <Loader2 size={16} className="animate-spin" /> : 'Apply'}
+                                </button>
                             </div>
-                            <div className="flex gap-2 justify-between items-center text-primary-foreground/70">
-                                <span className="font-bold">Shipping</span>
-                                <span className="font-black text-sm text-secondary uppercase text-center tracking-widest bg-white/10 px-3 py-1 rounded-lg">
-                                    {orderType === 'pickup' ? 'FREE' : (shippingCost === 0 ? (!token ? 'Calculated at checkout' : 'FREE') : `${shippingCost} EGP`)}
+                        </div>
+
+                        <div className="space-y-4 mb-10">
+                            <div className="flex justify-between items-center text-white/70">
+                                <span className="font-bold text-sm">Items Subtotal</span>
+                                <span className="font-black text-base">{totalCartPrice.toLocaleString()} EGP</span>
+                            </div>
+                            
+                            {taxAmount > 0 && (
+                                <div className="flex justify-between items-center text-white/70">
+                                    <span className="font-bold text-sm">Tax</span>
+                                    <span className="font-black text-base">{taxAmount.toLocaleString()} EGP</span>
+                                </div>
+                            )}
+
+                            {serviceFee > 0 && (
+                                <div className="flex justify-between items-center text-white/70">
+                                    <span className="font-bold text-sm">Service Fees</span>
+                                    <span className="font-black text-base">{serviceFee.toLocaleString()} EGP</span>
+                                </div>
+                            )}
+
+                            <div className="flex gap-2 justify-between items-center text-white/70">
+                                <span className="font-bold text-sm">Shipping</span>
+                                <span className="font-black text-sm text-secondary uppercase tracking-widest bg-white/10 px-3 py-1 rounded-lg">
+                                    {orderType === 'pickup' ? 'FREE' : (shippingCost === 0 ? (!token ? 'Calculated' : 'FREE') : `${shippingCost} EGP`)}
                                 </span>
                             </div>
+
+                            {couponDiscount > 0 && (
+                                <div className="flex justify-between items-center text-secondary-foreground bg-green-500/20 p-3 rounded-2xl border border-green-500/30">
+                                    <div className="flex items-center gap-2">
+                                        <Percent size={14} className="text-green-400" />
+                                        <div className="flex flex-col">
+                                            <span className="font-black text-xs uppercase tracking-wider text-green-400">Coupon Discount</span>
+                                            <button 
+                                                onClick={handleRemoveCoupon}
+                                                className="text-[9px] font-bold text-green-400/50 hover:text-green-400 underline underline-offset-2 text-left transition-colors"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <span className="font-black text-base text-green-400">-{couponDiscount.toLocaleString()} EGP</span>
+                                </div>
+                            )}
+
                             <div className="pt-6 border-t border-white/10 flex justify-between items-center">
-                                <span className="text-xl font-black italic">Total</span>
+                                <span className="text-xl font-black italic">Grand Total</span>
                                 <span className="text-3xl font-black tracking-tight">{finalTotal.toLocaleString()} EGP</span>
                             </div>
                         </div>

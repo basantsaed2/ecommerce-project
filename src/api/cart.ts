@@ -7,4 +7,6 @@ export const cartApi = {
     updateQuantity: (data: UpdateQuantityRequest) => axiosInstance.put('/cart/update-quantity', data),
     removeFromCart: (productId: string) => axiosInstance.delete(`/cart/remove/${productId}`),
     clearCart: () => axiosInstance.delete('/cart/clear'),
+    applyCoupon: (couponCode: string) => axiosInstance.post('/cart/apply-coupon', { couponCode }),
+    removeCoupon: () => axiosInstance.post('/cart/remove-coupon'),
 };

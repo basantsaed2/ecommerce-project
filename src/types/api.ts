@@ -18,6 +18,30 @@ export interface Category {
     updatedAt: string;
 }
 
+export interface ProductOption {
+    _id: string;
+    variationId: string;
+    name: string;
+    ar_name?: string;
+}
+
+export interface ProductVariation {
+    _id: string;
+    product_price_id: string;
+    name: string;
+    ar_name?: string;
+    options: ProductOption[];
+}
+
+export interface ProductPrice {
+    _id: string;
+    price: number;
+    price_after_discount?: number;
+    quantity: number;
+    sku?: string;
+    variations: ProductVariation[];
+}
+
 export interface Product {
     _id: string;
     name: string;
@@ -30,9 +54,11 @@ export interface Product {
     category?: Category;
     brandId: string;
     price: number;
+    main_price?: number;
     quantity: number;
     cost?: number;
     is_featured?: boolean;
+    prices?: ProductPrice[];
     createdAt: string;
     updatedAt: string;
 }

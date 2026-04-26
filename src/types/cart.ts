@@ -26,9 +26,11 @@ export interface Cart {
 export interface AddToCartRequest {
     productId: string;
     quantity: number;
+    productVariantId?: string;
 }
 
 export interface UpdateQuantityRequest {
     productId: string;
     quantity: number;
+    productVariantId?: string;
 }

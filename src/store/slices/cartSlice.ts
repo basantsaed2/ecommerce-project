@@ -8,6 +8,9 @@ interface CartState {
     items: PopulatedCartItem[];
     totalCartPrice: number;
     shippingCost: number;
+    couponDiscount: number;
+    taxAmount: number;
+    serviceFee: number;
     orderType: 'delivery' | 'pickup';
     loading: boolean;
     error: string | null;
@@ -17,6 +20,9 @@ const initialState: CartState = {
     items: [],
     totalCartPrice: 0,
     shippingCost: 0,
+    couponDiscount: 0,
+    taxAmount: 0,
+    serviceFee: 0,
     orderType: 'delivery',
     loading: false,
     error: null,
@@ -29,12 +35,12 @@ const getCartFromResponse = (response: any) => {
     const data = response.data?.data || response.data;
     let cartData = data?.cart || data;
     const shippingCost = data?.shippingCost || 0;
-    
+
     // If cart is explicitly an empty array, return an empty cart structure
     if (Array.isArray(cartData) && cartData.length === 0) {
         return { cart: { cartItems: [], totalCartPrice: 0 }, shippingCost };
     }
-    
+
     if (Array.isArray(cartData)) {
         cartData = cartData[0];
     }
@@ -44,10 +50,10 @@ const getCartFromResponse = (response: any) => {
 
 // Helper to extract error message safely
 const extractError = (error: any) => {
-    return error.response?.data?.error?.message || 
-           error.response?.data?.message || 
-           error.message || 
-           'Operation failed';
+    return error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        error.message ||
+        'Operation failed';
 };
 
 // Async Thunks
@@ -67,13 +73,11 @@ export const fetchCart = createAsyncThunk(
 
 export const addItemToCart = createAsyncThunk(
     'cart/addItemToCart',
-    async (payload: { productId: string; quantity: number }, { dispatch, getState, rejectWithValue }) => {
+    async (payload: { productId: string; quantity: number; productPriceId?: string }, { dispatch, rejectWithValue }) => {
         try {
-            // Guest support: backend handles session via x-session-id
-
-            const response = await cartApi.addToCart(payload);
-            dispatch(fetchCart());
-            return getCartFromResponse(response);
+            await cartApi.addToCart(payload);
+            const fetchResult = await dispatch(fetchCart()).unwrap();
+            return fetchResult;
         } catch (error: any) {
             console.log(error);
             const msg = extractError(error);
@@ -85,13 +89,11 @@ export const addItemToCart = createAsyncThunk(
 
 export const updateItemQuantity = createAsyncThunk(
     'cart/updateItemQuantity',
-    async (payload: { productId: string; quantity: number }, { dispatch, getState, rejectWithValue }) => {
+    async (payload: { productId: string; quantity: number }, { dispatch, rejectWithValue }) => {
         try {
-            // Guest support: backend handles session via x-session-id
-
-            const response = await cartApi.updateQuantity(payload);
-            dispatch(fetchCart());
-            return getCartFromResponse(response);
+            await cartApi.updateQuantity(payload);
+            const fetchResult = await dispatch(fetchCart()).unwrap();
+            return fetchResult;
         } catch (error: any) {
             const msg = extractError(error);
             toast.error(msg);
@@ -102,13 +104,11 @@ export const updateItemQuantity = createAsyncThunk(
 
 export const removeItemFromCart = createAsyncThunk(
     'cart/removeItemFromCart',
-    async (productId: string, { dispatch, getState, rejectWithValue }) => {
+    async (productId: string, { dispatch, rejectWithValue }) => {
         try {
-            // Guest support: backend handles session via x-session-id
-
-            const response = await cartApi.removeFromCart(productId);
-            dispatch(fetchCart());
-            return getCartFromResponse(response);
+            await cartApi.removeFromCart(productId);
+            const fetchResult = await dispatch(fetchCart()).unwrap();
+            return fetchResult;
         } catch (error: any) {
             const msg = extractError(error);
             toast.error(msg);
@@ -127,6 +127,38 @@ export const clearCartSync = createAsyncThunk(
             return null;
         } catch (error: any) {
             return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+export const applyCoupon = createAsyncThunk(
+    'cart/applyCoupon',
+    async (couponCode: string, { dispatch, rejectWithValue }) => {
+        try {
+            await cartApi.applyCoupon(couponCode);
+            const fetchResult = await dispatch(fetchCart()).unwrap();
+            toast.success('Coupon applied successfully');
+            return fetchResult;
+        } catch (error: any) {
+            const msg = extractError(error);
+            toast.error(msg);
+            return rejectWithValue(msg);
+        }
+    }
+);
+
+export const removeCoupon = createAsyncThunk(
+    'cart/removeCoupon',
+    async (_, { dispatch, rejectWithValue }) => {
+        try {
+            await cartApi.removeCoupon();
+            const fetchResult = await dispatch(fetchCart()).unwrap();
+            toast.success('Coupon removed');
+            return fetchResult;
+        } catch (error: any) {
+            const msg = extractError(error);
+            toast.error(msg);
+            return rejectWithValue(msg);
         }
     }
 );
@@ -168,15 +200,21 @@ export const cartSlice = createSlice({
             if (cartData) {
                 state.items = (cartData.cartItems || []).map((item: any) => ({
                     ...item,
-                    product: typeof item.product === 'string' 
-                        ? { _id: item.product, price: item.price } 
+                    product: typeof item.product === 'string'
+                        ? { _id: item.product, price: item.price }
                         : item.product
                 }));
-                state.totalCartPrice = cartData.totalCartPrice || 
+                state.totalCartPrice = cartData.totalCartPrice ||
                     state.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+                state.couponDiscount = cartData.couponDiscount || 0;
+                state.taxAmount = cartData.taxAmount || 0;
+                state.serviceFee = cartData.serviceFee || 0;
             } else {
                 state.items = [];
                 state.totalCartPrice = 0;
+                state.couponDiscount = 0;
+                state.taxAmount = 0;
+                state.serviceFee = 0;
             }
         },
         setOrderType: (state, action: PayloadAction<'delivery' | 'pickup'>) => {
@@ -200,15 +238,18 @@ export const cartSlice = createSlice({
                 // Normalize items to ensure each item has a product object, even if not populated
                 state.items = (cartData.cartItems || []).map((item: any) => ({
                     ...item,
-                    product: typeof item.product === 'string' 
-                        ? { _id: item.product, price: item.price } 
+                    product: typeof item.product === 'string'
+                        ? { _id: item.product, price: item.price }
                         : item.product
                 }));
                 // Calculate total price if missing from backend
-                state.totalCartPrice = cartData.totalCartPrice || 
+                state.totalCartPrice = cartData.totalCartPrice ||
                     state.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
-                
+
                 state.shippingCost = shippingCost || 0;
+                state.couponDiscount = cartData.couponDiscount || 0;
+                state.taxAmount = cartData.taxAmount || 0;
+                state.serviceFee = cartData.serviceFee || 0;
             }
         };
 
@@ -240,6 +281,14 @@ export const cartSlice = createSlice({
                 state.items = [];
                 state.totalCartPrice = 0;
                 toast.success('Cart cleared');
+            })
+            // Apply Coupon
+            .addCase(applyCoupon.fulfilled, (state, action) => {
+                handleCartUpdate(state, action);
+            })
+            // Remove Coupon
+            .addCase(removeCoupon.fulfilled, (state, action) => {
+                handleCartUpdate(state, action);
             });
     },
 });

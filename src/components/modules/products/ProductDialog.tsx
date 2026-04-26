@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useGet } from '@/hooks/useGet';
 import { Product, SingleApiResponse } from '@/types/api';
 import { Loader2, X, Plus, Minus, ShoppingCart, Zap } from 'lucide-react';
@@ -19,6 +19,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
     const dispatch = useDispatch();
     const router = useRouter();
     const token = useSelector((state: RootState) => state.auth.token);
+    const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isBuyingNow, setIsBuyingNow] = useState(false);
@@ -33,17 +34,86 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
     const product = data?.data?.data;
 
+    // Group variations and options
+    const { variationsMap, variationNames } = useMemo(() => {
+        const vMap: Record<string, string[]> = {};
+        if (product?.prices) {
+            product.prices.forEach(p => {
+                p.variations.forEach(v => {
+                    const vName = v.name;
+                    if (!vMap[vName]) {
+                        vMap[vName] = [];
+                    }
+                    v.options.forEach(opt => {
+                        if (!vMap[vName].includes(opt.name)) {
+                            vMap[vName].push(opt.name);
+                        }
+                    });
+                });
+            });
+        }
+        return { variationsMap: vMap, variationNames: Object.keys(vMap) };
+    }, [product]);
+
+    // Initialize selected options
+    useEffect(() => {
+        if (product && variationNames.length > 0 && Object.keys(selectedOptions).length === 0) {
+            // Find first price object with stock
+            const inStockPrice = product.prices?.find(p => p.quantity > 0);
+            const initialOptions: Record<string, string> = {};
+
+            if (inStockPrice) {
+                inStockPrice.variations.forEach(v => {
+                    initialOptions[v.name] = v.options[0].name;
+                });
+            } else {
+                variationNames.forEach(name => {
+                    initialOptions[name] = variationsMap[name][0];
+                });
+            }
+            setSelectedOptions(initialOptions);
+        }
+    }, [product, variationNames, variationsMap, selectedOptions]);
+
+    // Find the current selected price object
+    const currentPriceObj = useMemo(() => {
+        return product?.prices?.find(p => {
+            return variationNames.every(vName => {
+                return p.variations.some(v => v.name === vName && v.options.some(opt => opt.name === selectedOptions[vName]));
+            });
+        });
+    }, [product, variationNames, selectedOptions]);
+
+    const displayPrice = currentPriceObj ? currentPriceObj.price : (product?.main_price || product?.price || 0);
+    const displayPriceAfterDiscount = currentPriceObj?.price_after_discount;
+    const isOutOfStock = currentPriceObj ? currentPriceObj.quantity <= 0 : (product?.quantity || 0) <= 0;
+
+    // Check if an option is available given current selections of other variations
+    const isOptionAvailable = (vName: string, oName: string) => {
+        if (!product?.prices) return true;
+        return product.prices.some(p => {
+            if (p.quantity <= 0) return false;
+            const matchesOption = p.variations.some(v => v.name === vName && v.options.some(opt => opt.name === oName));
+            if (!matchesOption) return false;
+            return variationNames.every(otherVName => {
+                if (otherVName === vName) return true;
+                return p.variations.some(v => v.name === otherVName && v.options.some(opt => opt.name === selectedOptions[otherVName]));
+            });
+        });
+    };
+
     const handleAddToCart = () => {
         if (!product) return;
 
-        if (product.quantity <= 0) {
-            toast.error('This product is currently sold out');
+        if (isOutOfStock) {
+            toast.error('This combination is currently sold out');
             return;
         }
 
         dispatch(addItemToCart({
             productId: product._id,
-            quantity: quantity
+            quantity: quantity,
+            productPriceId: currentPriceObj?._id
         }) as any);
 
         toast.success(`Processing...`);
@@ -61,7 +131,8 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         setIsBuyingNow(true);
         await dispatch(addItemToCart({
             productId: product._id,
-            quantity: quantity
+            quantity: quantity,
+            productPriceId: currentPriceObj?._id
         }) as any);
         setIsBuyingNow(false);
         onClose();
@@ -115,11 +186,10 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                         <button
                                             key={idx}
                                             onClick={() => setSelectedImage(img)}
-                                            className={`w-12 h-12 md:w-14 md:h-14 rounded-xl border-2 transition-all overflow-hidden bg-white p-1 ${
-                                                (selectedImage === img || (!selectedImage && img === product.image))
-                                                    ? 'border-secondary shadow-md scale-110'
-                                                    : 'border-transparent hover:border-gray-200'
-                                            }`}
+                                            className={`w-12 h-12 md:w-14 md:h-14 rounded-xl border-2 transition-all overflow-hidden bg-white p-1 ${(selectedImage === img || (!selectedImage && img === product.image))
+                                                ? 'border-secondary shadow-md scale-110'
+                                                : 'border-transparent hover:border-gray-200'
+                                                }`}
                                         >
                                             <img src={img} alt={`${product.name} ${idx}`} className="w-full h-full object-contain" />
                                         </button>
@@ -146,14 +216,47 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
                                 <div className="flex items-end gap-3 mb-8">
                                     <span className="text-4xl font-black text-secondary">
-                                        {product.price?.toLocaleString()} EGP
+                                        {(displayPriceAfterDiscount || displayPrice)?.toLocaleString()} EGP
                                     </span>
-                                    {product.cost && (
+                                    {(displayPriceAfterDiscount && displayPrice) && (
                                         <span className="text-lg font-bold text-gray-400 line-through mb-1">
-                                            {(product.price * 1.25).toLocaleString()} EGP
+                                            {displayPrice.toLocaleString()} EGP
                                         </span>
                                     )}
                                 </div>
+
+                                {/* Variations Section */}
+                                {variationNames.length > 0 && (
+                                    <div className="space-y-6 mb-8">
+                                        {variationNames.map(vName => (
+                                            <div key={vName}>
+                                                <label className="text-sm font-bold text-gray-700 block mb-3 uppercase tracking-wider">
+                                                    {vName}
+                                                </label>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {variationsMap[vName].map(oName => {
+                                                        const isAvailable = isOptionAvailable(vName, oName);
+                                                        return (
+                                                            <button
+                                                                key={oName}
+                                                                disabled={!isAvailable}
+                                                                onClick={() => setSelectedOptions(prev => ({ ...prev, [vName]: oName }))}
+                                                                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 ${selectedOptions[vName] === oName
+                                                                    ? 'bg-secondary border-secondary text-white shadow-md'
+                                                                    : !isAvailable
+                                                                        ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 line-through'
+                                                                        : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300'
+                                                                    }`}
+                                                            >
+                                                                {oName}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-6 mt-auto pb-6 md:pb-0">
@@ -188,15 +291,14 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     <button
                                         onClick={handleAddToCart}
                                         disabled={product.quantity <= 0}
-                                        className={`w-full py-4 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all shadow-lg active:scale-[0.98] border-2 ${
-                                            product.quantity > 0
-                                                ? 'bg-white text-primary border-primary hover:bg-primary hover:text-white hover:shadow-primary/20'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-100 shadow-none'
-                                        }`}
+                                        className={`w-full py-4 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all shadow-lg active:scale-[0.98] border-2 ${product.quantity > 0
+                                            ? 'bg-white text-primary border-primary hover:bg-primary hover:text-white hover:shadow-primary/20'
+                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-100 shadow-none'
+                                            }`}
                                     >
                                         <ShoppingCart size={20} strokeWidth={2.5} />
                                         {product.quantity > 0
-                                            ? `ADD TO CART • ${(product.price * quantity).toLocaleString()} EGP`
+                                            ? `ADD TO CART • ${((displayPriceAfterDiscount || displayPrice || 0) * quantity).toLocaleString()} EGP`
                                             : 'OUT OF STOCK'
                                         }
                                     </button>
@@ -205,11 +307,10 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     <button
                                         onClick={handleBuyNow}
                                         disabled={product.quantity <= 0 || isBuyingNow}
-                                        className={`w-full py-4 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all shadow-xl active:scale-[0.98] ${
-                                            product.quantity > 0
-                                                ? 'bg-secondary text-white hover:bg-primary shadow-secondary/20 hover:shadow-primary/30'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                                        }`}
+                                        className={`w-full py-4 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all shadow-xl active:scale-[0.98] ${product.quantity > 0
+                                            ? 'bg-secondary text-white hover:bg-primary shadow-secondary/20 hover:shadow-primary/30'
+                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                                            }`}
                                     >
                                         {isBuyingNow
                                             ? <Loader2 size={20} className="animate-spin" />

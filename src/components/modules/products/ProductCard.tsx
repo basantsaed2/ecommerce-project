@@ -20,6 +20,25 @@ export default function ProductCard({ product }: ProductCardProps) {
     const token = useSelector((state: RootState) => state.auth.token);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+    // Group variations and options for summary
+    const variationsMap: Record<string, string[]> = {};
+    if (product.prices) {
+        product.prices.forEach(p => {
+            p.variations.forEach(v => {
+                const vName = v.name;
+                if (!variationsMap[vName]) {
+                    variationsMap[vName] = [];
+                }
+                v.options.forEach(opt => {
+                    if (!variationsMap[vName].includes(opt.name)) {
+                        variationsMap[vName].push(opt.name);
+                    }
+                });
+            });
+        });
+    }
+    const variationNames = Object.keys(variationsMap);
+
     const { data: wishlistData } = useGetWishlist(!!token);
     const { mutate: toggleWishlist, isPending: isTogglingWishlist } = useToggleWishlist();
 
@@ -39,6 +58,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     const handleAddToCart = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (product.quantity <= 0) return;
+        
+        // If has variations, open dialog instead of direct add
+        if (variationNames.length > 0) {
+            setIsDialogOpen(true);
+            return;
+        }
+        
         dispatch(addItemToCart({ productId: product._id, quantity: 1 }) as any);
         toast.success(`${product.name} added to cart`);
     };
@@ -46,6 +72,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     const handleBuyNow = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (product.quantity <= 0) return;
+
+        // If has variations, open dialog instead of direct add
+        if (variationNames.length > 0) {
+            setIsDialogOpen(true);
+            return;
+        }
+
         await dispatch(addItemToCart({ productId: product._id, quantity: 1 }) as any);
         router.push('/cart');
     };
@@ -156,6 +189,17 @@ export default function ProductCard({ product }: ProductCardProps) {
                         <h3 className="font-bold text-gray-900 text-sm md:text-base line-clamp-1 group-hover:text-secondary transition-colors">
                             {product.name}
                         </h3>
+
+                        {/* Variation Summary */}
+                        {variationNames.length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                                {variationNames.map(vName => (
+                                    <span key={vName} className="text-[8px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                        {variationsMap[vName].length} {vName}s
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Price row */}
@@ -165,7 +209,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                                 <span className="block text-[10px] text-gray-400 font-bold uppercase mb-0.5">Price</span>
                                 <div className="flex items-center gap-1.5">
                                     <span className="font-extrabold text-lg text-gray-900">
-                                        {product.price?.toLocaleString()}
+                                        {(product.main_price || product.price)?.toLocaleString()}
                                     </span>
                                     <span className="text-[11px] font-bold text-gray-400">EGP</span>
                                 </div>
@@ -198,7 +242,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                             }`}
                         >
                             <Zap size={13} strokeWidth={2.5} />
-                            Buy Now
+                            {variationNames.length > 0 ? 'Select Options' : 'Buy Now'}
                         </button>
                     </div>
                 </div>
@@ -213,4 +257,4 @@ export default function ProductCard({ product }: ProductCardProps) {
             )}
         </>
     );
-}
+}

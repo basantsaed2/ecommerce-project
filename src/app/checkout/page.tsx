@@ -5,7 +5,7 @@ import { RootState, AppDispatch } from '@/store/store';
 import { useGet } from '@/hooks/useGet';
 import { usePost } from '@/hooks/usePost';
 import { clearCartLocal, setCartState, setOrderType } from '@/store/slices/cartSlice';
-import { MapPin, CreditCard, Banknote, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Plus, Store, Truck, X } from 'lucide-react';
+import { MapPin, CreditCard, Banknote, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Plus, Store, Truck, X, Percent } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Address } from '@/types/address';
@@ -56,7 +56,10 @@ export default function CheckoutPage() {
     const totalCartPrice = backendCart?.totalCartPrice ?? reduxTotalPrice ?? 0;
     const backendShippingCost = cartResponse?.data?.shippingCost || 0;
     const shippingCost = selectedOrderType === 'pickup' ? 0 : backendShippingCost;
-    const finalTotal = totalCartPrice + shippingCost;
+    const taxAmount = backendCart?.taxAmount || 0;
+    const serviceFee = backendCart?.serviceFee || 0;
+    const couponDiscount = backendCart?.couponDiscount || 0;
+    const finalTotal = totalCartPrice + shippingCost + taxAmount + serviceFee - couponDiscount;
 
     // Sync API data with Redux
     useEffect(() => {
@@ -739,16 +742,42 @@ export default function CheckoutPage() {
                                 <span className="font-bold text-sm uppercase tracking-wider">Subtotal</span>
                                 <span className="font-black text-lg text-white">{totalCartPrice.toLocaleString()} EGP</span>
                             </div>
+
+                            {taxAmount > 0 && (
+                                <div className="flex justify-between items-center text-white/70">
+                                    <span className="font-bold text-sm uppercase tracking-wider">Tax</span>
+                                    <span className="font-black text-lg text-white">{taxAmount.toLocaleString()} EGP</span>
+                                </div>
+                            )}
+
+                            {serviceFee > 0 && (
+                                <div className="flex justify-between items-center text-white/70">
+                                    <span className="font-bold text-sm uppercase tracking-wider">Service Fees</span>
+                                    <span className="font-black text-lg text-white">{serviceFee.toLocaleString()} EGP</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between items-center text-white/50">
                                 <span className="font-bold text-sm uppercase tracking-wider">Shipping</span>
                                 {shippingCost > 0 ? (
                                     <span className="font-black text-lg text-white">{shippingCost} EGP</span>
                                 ) : (
                                     <span className="font-black text-[10px] text-white uppercase tracking-widest bg-white/20 px-2 py-1 rounded-lg">
-                                        {selectedOrderType === 'pickup' ? 'FREE' : (!token ? 'Calculated at checkout' : 'FREE')}
+                                        {selectedOrderType === 'pickup' ? 'FREE' : (!token ? 'Calculated' : 'FREE')}
                                     </span>
                                 )}
                             </div>
+
+                            {couponDiscount > 0 && (
+                                <div className="flex justify-between items-center bg-green-500/20 p-3 rounded-2xl border border-green-500/30">
+                                    <div className="flex items-center gap-2">
+                                        <Percent size={14} className="text-green-400" />
+                                        <span className="font-black text-[10px] uppercase tracking-wider text-green-400">Coupon Discount</span>
+                                    </div>
+                                    <span className="font-black text-lg text-green-400">-{couponDiscount.toLocaleString()} EGP</span>
+                                </div>
+                            )}
+
                             <div className="pt-6 flex justify-between items-center border-t border-white/10">
                                 <span className="text-xl font-black italic">Total</span>
                                 <span className="text-3xl font-black tracking-tight text-white">{finalTotal.toLocaleString()} <span className="text-base text-white/50">EGP</span></span>

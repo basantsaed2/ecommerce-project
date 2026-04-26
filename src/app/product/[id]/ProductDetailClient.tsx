@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useGet } from '@/hooks/useGet';
 import { Product, SingleApiResponse } from '@/types/api';
@@ -20,6 +20,7 @@ export default function ProductDetailClient() {
     const dispatch = useDispatch();
     const token = useSelector((state: RootState) => state.auth.token);
 
+    const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -38,22 +39,99 @@ export default function ProductDetailClient() {
         (item: any) => item._id === product?._id
     ) ?? false;
 
+    // Group variations and options
+    const { variationsMap, variationNames } = useMemo(() => {
+        const vMap: Record<string, string[]> = {};
+        if (product?.prices) {
+            product.prices.forEach(p => {
+                p.variations.forEach(v => {
+                    const vName = v.name;
+                    if (!vMap[vName]) {
+                        vMap[vName] = [];
+                    }
+                    v.options.forEach(opt => {
+                        if (!vMap[vName].includes(opt.name)) {
+                            vMap[vName].push(opt.name);
+                        }
+                    });
+                });
+            });
+        }
+        return { variationsMap: vMap, variationNames: Object.keys(vMap) };
+    }, [product]);
+
+    // Initialize selected options
+    useEffect(() => {
+        if (product && variationNames.length > 0 && Object.keys(selectedOptions).length === 0) {
+            // Find first price object with stock
+            const inStockPrice = product.prices?.find(p => p.quantity > 0);
+            const initialOptions: Record<string, string> = {};
+
+            if (inStockPrice) {
+                inStockPrice.variations.forEach(v => {
+                    initialOptions[v.name] = v.options[0].name;
+                });
+            } else {
+                variationNames.forEach(name => {
+                    initialOptions[name] = variationsMap[name][0];
+                });
+            }
+            setSelectedOptions(initialOptions);
+        }
+    }, [product, variationNames, variationsMap, selectedOptions]);
+
+    // Find the current selected price object
+    const currentPriceObj = useMemo(() => {
+        if (!product?.prices) return null;
+        return product.prices.find(p => {
+            return variationNames.every(vName => {
+                return p.variations.some(v => v.name === vName && v.options.some(opt => opt.name === selectedOptions[vName]));
+            });
+        });
+    }, [product, variationNames, selectedOptions]);
+
+    const displayPrice = currentPriceObj ? currentPriceObj.price : (product?.main_price || product?.price || 0);
+    const displayPriceAfterDiscount = currentPriceObj?.price_after_discount;
+    const isOutOfStock = currentPriceObj ? currentPriceObj.quantity <= 0 : (product?.quantity || 0) <= 0;
+
+    // Check if an option is available given current selections of other variations
+    const isOptionAvailable = (vName: string, oName: string) => {
+        if (!product?.prices) return true;
+        return product.prices.some(p => {
+            if (p.quantity <= 0) return false;
+            const matchesOption = p.variations.some(v => v.name === vName && v.options.some(opt => opt.name === oName));
+            if (!matchesOption) return false;
+            return variationNames.every(otherVName => {
+                if (otherVName === vName) return true;
+                return p.variations.some(v => v.name === otherVName && v.options.some(opt => opt.name === selectedOptions[otherVName]));
+            });
+        });
+    };
+
     const handleWishlistToggle = () => {
         if (!token) { toast.error('Please login to save to wishlist'); return; }
         toggleWishlist({ productId: product!._id });
     };
 
     const handleAddToCart = async () => {
-        if (!product || product.quantity <= 0) return;
+        if (!product || isOutOfStock) return;
         setIsAddingToCart(true);
-        await dispatch(addItemToCart({ productId: product._id, quantity }) as any);
+        await dispatch(addItemToCart({
+            productId: product._id,
+            quantity,
+            productPriceId: currentPriceObj?._id
+        }) as any);
         setIsAddingToCart(false);
     };
 
     const handleBuyNow = async () => {
-        if (!product || product.quantity <= 0) return;
+        if (!product || isOutOfStock) return;
         setIsBuyingNow(true);
-        await dispatch(addItemToCart({ productId: product._id, quantity }) as any);
+        await dispatch(addItemToCart({
+            productId: product._id,
+            quantity,
+            productPriceId: currentPriceObj?._id
+        }) as any);
         setIsBuyingNow(false);
         router.push('/cart');
     };
@@ -103,7 +181,7 @@ export default function ProductDetailClient() {
 
     const displayedImage = selectedImage || product.image;
     const inStock = product.quantity > 0;
-    const totalPrice = (product.price * quantity).toLocaleString();
+    const totalPrice = (displayPrice * quantity).toLocaleString();
 
     return (
         <div className="w-full max-h-screen bg-gray-50/30">
@@ -160,7 +238,7 @@ export default function ProductDetailClient() {
                                     className={`p-3 rounded-xl shadow-sm border transition-all active:scale-90 ${isInWishlist
                                         ? 'bg-red-50 border-red-100 text-red-500'
                                         : 'bg-white border-gray-100 text-gray-400 hover:text-red-500'
-                                    }`}
+                                        }`}
                                     aria-label="Wishlist"
                                 >
                                     <Heart size={20} className={isInWishlist ? 'fill-current' : ''} />
@@ -196,32 +274,16 @@ export default function ProductDetailClient() {
                                     <button
                                         key={idx}
                                         onClick={() => setSelectedImage(img)}
-                                        className={`w-16 h-16 rounded-2xl border-2 overflow-hidden bg-white p-1.5 transition-all ${
-                                            (selectedImage === img || (!selectedImage && img === product.image))
+                                        className={`w-16 h-16 rounded-2xl border-2 overflow-hidden bg-white p-1.5 transition-all ${(selectedImage === img || (!selectedImage && img === product.image))
                                                 ? 'border-primary shadow-lg scale-105'
                                                 : 'border-transparent hover:border-gray-200'
-                                        }`}
+                                            }`}
                                     >
                                         <img src={img} alt={`view ${idx}`} className="w-full h-full object-contain" />
                                     </button>
                                 ))}
                             </div>
                         )}
-
-                        {/* Trust badges */}
-                        {/* <div className="grid grid-cols-3 gap-3 mt-2">
-                            {[
-                                { icon: Shield, label: 'Secure Payment', sub: '100% protected' },
-                                { icon: Truck, label: 'Fast Delivery', sub: 'Quick shipping' },
-                                { icon: RotateCcw, label: 'Easy Returns', sub: 'Hassle-free' },
-                            ].map(({ icon: Icon, label, sub }) => (
-                                <div key={label} className="bg-white border border-gray-100 rounded-2xl p-3 text-center">
-                                    <Icon size={18} className="mx-auto text-primary mb-1" />
-                                    <p className="text-[10px] font-black text-primary uppercase tracking-wide">{label}</p>
-                                    <p className="text-[9px] font-bold text-gray-400">{sub}</p>
-                                </div>
-                            ))}
-                        </div> */}
                     </div>
 
                     {/* ─── Right: Info Panel ─── */}
@@ -258,21 +320,59 @@ export default function ProductDetailClient() {
                         <div className="bg-white border border-gray-100 rounded-[24px] p-6 mb-6 shadow-sm">
                             <div className="flex items-end gap-3 mb-2">
                                 <span className="text-5xl font-black text-secondary tracking-tight">
-                                    {product.price?.toLocaleString()}
+                                    {(displayPriceAfterDiscount || displayPrice)?.toLocaleString()}
                                 </span>
                                 <span className="text-2xl font-bold text-gray-400 mb-1">EGP</span>
-                                {product.cost && (
+                                {(displayPriceAfterDiscount && displayPrice) && (
                                     <span className="text-xl font-bold text-gray-300 line-through mb-1">
-                                        {(product.price * 1.2).toLocaleString()} EGP
+                                        {displayPrice.toLocaleString()} EGP
+                                    </span>
+                                )}
+                                {(!displayPriceAfterDiscount && product.main_price && product.main_price > displayPrice) && (
+                                    <span className="text-xl font-bold text-gray-300 line-through mb-1">
+                                        {product.main_price.toLocaleString()} EGP
                                     </span>
                                 )}
                             </div>
-                            {product.cost && (
+                            {displayPriceAfterDiscount && (
                                 <span className="inline-block bg-green-50 text-green-600 text-xs font-black px-3 py-1 rounded-lg border border-green-100">
-                                    Save 20%
+                                    Save {Math.round((1 - (displayPriceAfterDiscount / displayPrice)) * 100)}%
                                 </span>
                             )}
                         </div>
+
+                        {/* Variations Section */}
+                        {variationNames.length > 0 && (
+                            <div className="space-y-6 mb-8">
+                                {variationNames.map(vName => (
+                                    <div key={vName}>
+                                        <label className="text-sm font-black text-gray-700 block mb-3 uppercase tracking-wider">
+                                            {vName}
+                                        </label>
+                                        <div className="flex flex-wrap gap-3">
+                                            {variationsMap[vName].map(oName => {
+                                                const isAvailable = isOptionAvailable(vName, oName);
+                                                return (
+                                                    <button
+                                                        key={oName}
+                                                        disabled={!isAvailable}
+                                                        onClick={() => setSelectedOptions(prev => ({ ...prev, [vName]: oName }))}
+                                                        className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all border-2 ${selectedOptions[vName] === oName
+                                                            ? 'bg-primary border-primary text-white shadow-md'
+                                                            : !isAvailable
+                                                                ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 line-through'
+                                                                : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300'
+                                                            }`}
+                                                    >
+                                                        {oName}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Description */}
                         {(product.description || product.ar_description) && (
@@ -329,11 +429,10 @@ export default function ProductDetailClient() {
                                 id="add-to-cart-btn"
                                 onClick={handleAddToCart}
                                 disabled={!inStock || isAddingToCart || isBuyingNow}
-                                className={`flex-1 py-4 px-6 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all active:scale-[0.98] border-2 ${
-                                    inStock
+                                className={`flex-1 py-4 px-6 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all active:scale-[0.98] border-2 ${inStock
                                         ? 'bg-white text-primary border-primary hover:bg-primary hover:text-white shadow-lg shadow-primary/10 hover:shadow-primary/25'
                                         : 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
-                                }`}
+                                    }`}
                             >
                                 {isAddingToCart
                                     ? <Loader2 size={20} className="animate-spin" />
@@ -347,11 +446,10 @@ export default function ProductDetailClient() {
                                 id="buy-now-btn"
                                 onClick={handleBuyNow}
                                 disabled={!inStock || isAddingToCart || isBuyingNow}
-                                className={`flex-1 py-4 px-6 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all active:scale-[0.98] border-2 ${
-                                    inStock
+                                className={`flex-1 py-4 px-6 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all active:scale-[0.98] border-2 ${inStock
                                         ? 'bg-secondary text-white border-secondary hover:bg-primary hover:border-primary shadow-xl shadow-secondary/20 hover:shadow-primary/25'
                                         : 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
-                                }`}
+                                    }`}
                             >
                                 {isBuyingNow
                                     ? <Loader2 size={20} className="animate-spin" />
