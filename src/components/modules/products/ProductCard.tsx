@@ -86,7 +86,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     };
 
     const handleCardClick = () => {
-        router.push(`/product/${product._id}`);
+        router.push(`/product?id=${product._id}`);
     };
 
     return (
