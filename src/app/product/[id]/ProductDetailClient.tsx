@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useGet } from '@/hooks/useGet';
 import { Product, SingleApiResponse } from '@/types/api';
 import {
@@ -15,7 +15,8 @@ import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 import Link from 'next/link';
 
 export default function ProductDetailClient() {
-    const { id } = useParams<{ id: string }>();
+    const searchParams = useSearchParams();
+    const id = searchParams.get('id') ?? '';
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const token = useSelector((state: RootState) => state.auth.token);
