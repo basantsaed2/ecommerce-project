@@ -40,73 +40,71 @@ export default function ProductDetailClient() {
         (item: any) => item._id === product?._id
     ) ?? false;
 
-    // Group variations and options
-    const { variationsMap, variationNames } = useMemo(() => {
-        const vMap: Record<string, string[]> = {};
-        if (product?.prices) {
-            product.prices.forEach(p => {
-                p.variations.forEach(v => {
-                    const vName = v.name;
-                    if (!vMap[vName]) {
-                        vMap[vName] = [];
-                    }
-                    v.options.forEach(opt => {
-                        if (!vMap[vName].includes(opt.name)) {
-                            vMap[vName].push(opt.name);
-                        }
-                    });
-                });
-            });
-        }
-        return { variationsMap: vMap, variationNames: Object.keys(vMap) };
-    }, [product]);
+    // True when at least one SKU has stock.
+    const hasVariantStock = product?.skus?.some(sku => sku.quantity > 0) ?? false;
 
-    // Initialize selected options
+    // Initialize selected options from the first in-stock SKU
     useEffect(() => {
-        if (product && variationNames.length > 0 && Object.keys(selectedOptions).length === 0) {
-            // Find first price object with stock
-            const inStockPrice = product.prices?.find(p => p.quantity > 0);
+        if (hasVariantStock && product?.variations && product.variations.length > 0 && Object.keys(selectedOptions).length === 0) {
+            const inStockSku = product.skus?.find(sku => sku.quantity > 0);
             const initialOptions: Record<string, string> = {};
-
-            if (inStockPrice) {
-                inStockPrice.variations.forEach(v => {
-                    initialOptions[v.name] = v.options[0].name;
+            
+            if (inStockSku) {
+                // For each variation, find which of its options is in the sku's option_ids
+                product.variations.forEach(v => {
+                    const matchedOption = v.options.find(opt => inStockSku.option_ids.includes(opt._id));
+                    if (matchedOption) {
+                        initialOptions[v._id] = matchedOption._id;
+                    } else if (v.options.length > 0) {
+                        initialOptions[v._id] = v.options[0]._id;
+                    }
                 });
             } else {
-                variationNames.forEach(name => {
-                    initialOptions[name] = variationsMap[name][0];
+                product.variations.forEach(v => {
+                    if (v.options.length > 0) {
+                        initialOptions[v._id] = v.options[0]._id;
+                    }
                 });
             }
             setSelectedOptions(initialOptions);
         }
-    }, [product, variationNames, variationsMap, selectedOptions]);
+    }, [hasVariantStock, product, selectedOptions]);
 
-    // Find the current selected price object
-    const currentPriceObj = useMemo(() => {
-        if (!product?.prices) return null;
-        return product.prices.find(p => {
-            return variationNames.every(vName => {
-                return p.variations.some(v => v.name === vName && v.options.some(opt => opt.name === selectedOptions[vName]));
-            });
-        });
-    }, [product, variationNames, selectedOptions]);
+    // Match the current selection against in-stock SKUs.
+    // A SKU matches if its option_ids contain all the currently selected option_ids.
+    const currentSkuObj = useMemo(() => {
+        if (!hasVariantStock || !product?.skus) return null;
+        
+        const selectedOptionIds = Object.values(selectedOptions);
+        if (selectedOptionIds.length === 0) return null;
+        
+        // Find a SKU that contains all selected option IDs and has stock
+        return product.skus.find(sku => {
+            if (sku.quantity <= 0) return false;
+            // The SKU must contain every selected option ID
+            return selectedOptionIds.every(id => sku.option_ids.includes(id));
+        }) ?? null;
+    }, [hasVariantStock, product, selectedOptions]);
 
-    const displayPrice = currentPriceObj ? currentPriceObj.price : (product?.main_price || product?.price || 0);
-    const displayPriceAfterDiscount = currentPriceObj?.price_after_discount;
-    const isOutOfStock = currentPriceObj ? currentPriceObj.quantity <= 0 : (product?.quantity || 0) <= 0;
+    // Display price: use matched SKU price, else fall back to main_price.
+    const displayPrice = currentSkuObj
+        ? currentSkuObj.price
+        : (product?.main_price || product?.price || 0);
+    const displayPriceAfterDiscount = currentSkuObj?.price_after_discount;
 
-    // Check if an option is specifically out of stock for the current selection
-    const isOptionInStock = (vName: string, oName: string) => {
-        if (!product?.prices) return true;
-        return product.prices.some(p => {
-            if (p.quantity <= 0) return false;
-            const matchesOption = p.variations.some(v => v.name === vName && v.options.some(opt => opt.name === oName));
-            if (!matchesOption) return false;
-            return variationNames.every(otherVName => {
-                if (otherVName === vName) return true;
-                return p.variations.some(v => v.name === otherVName && v.options.some(opt => opt.name === selectedOptions[otherVName]));
-            });
-        });
+    // Out of stock when:
+    // 1. It has variations but no selected sku matched, or all skus are out of stock.
+    // 2. It has no variations, and product.quantity <= 0.
+    const isOutOfStock = (product?.variations && product.variations.length > 0)
+        ? (!hasVariantStock || !currentSkuObj)
+        : (product?.quantity || 0) <= 0;
+
+    // An option is in stock if any in-stock SKU contains it.
+    const isOptionInStock = (optionId: string): boolean => {
+        if (!product?.skus) return true;
+        return product.skus.some(sku =>
+            sku.quantity > 0 && sku.option_ids.includes(optionId)
+        );
     };
 
     const handleWishlistToggle = () => {
@@ -115,23 +113,30 @@ export default function ProductDetailClient() {
     };
 
     const handleAddToCart = async () => {
-        if (!product || isOutOfStock) return;
+        if (!product || isOutOfStock) {
+            if (isOutOfStock) toast.error('This combination is currently sold out');
+            return;
+        }
         setIsAddingToCart(true);
         dispatch(addItem({
             product: product,
-            variant: currentPriceObj || undefined,
+            variant: currentSkuObj || undefined,
             quantity: quantity
         }));
         await dispatch(syncCart());
         setIsAddingToCart(false);
+        toast.success('Added to cart');
     };
 
     const handleBuyNow = async () => {
-        if (!product || isOutOfStock) return;
+        if (!product || isOutOfStock) {
+            if (isOutOfStock) toast.error('This combination is currently sold out');
+            return;
+        }
         setIsBuyingNow(true);
         dispatch(addItem({
             product: product,
-            variant: currentPriceObj || undefined,
+            variant: currentSkuObj || undefined,
             quantity: quantity
         }));
         await dispatch(syncCart());
@@ -278,8 +283,8 @@ export default function ProductDetailClient() {
                                         key={idx}
                                         onClick={() => setSelectedImage(img)}
                                         className={`w-16 h-16 rounded-2xl border-2 overflow-hidden bg-white p-1.5 transition-all ${(selectedImage === img || (!selectedImage && img === product.image))
-                                                ? 'border-primary shadow-lg scale-105'
-                                                : 'border-transparent hover:border-gray-200'
+                                            ? 'border-primary shadow-lg scale-105'
+                                            : 'border-transparent hover:border-gray-200'
                                             }`}
                                     >
                                         <img src={img} alt={`view ${idx}`} className="w-full h-full object-contain" />
@@ -345,21 +350,21 @@ export default function ProductDetailClient() {
                         </div>
 
                         {/* Variations Section */}
-                        {variationNames.length > 0 && (
+                        {hasVariantStock && product?.variations && product.variations.length > 0 && (
                             <div className="space-y-6 mb-8">
-                                {variationNames.map(vName => (
-                                    <div key={vName}>
+                                {product.variations.map(variation => (
+                                    <div key={variation._id}>
                                         <label className="text-sm font-black text-gray-700 block mb-3 uppercase tracking-wider">
-                                            {vName}
+                                            {variation.name}
                                         </label>
                                         <div className="flex flex-wrap gap-3">
-                                            {variationsMap[vName].map(oName => {
-                                                const inStock = isOptionInStock(vName, oName);
-                                                const isSelected = selectedOptions[vName] === oName;
+                                            {variation.options.map(option => {
+                                                const inStock = isOptionInStock(option._id);
+                                                const isSelected = selectedOptions[variation._id] === option._id;
                                                 return (
                                                     <button
-                                                        key={oName}
-                                                        onClick={() => setSelectedOptions(prev => ({ ...prev, [vName]: oName }))}
+                                                        key={option._id}
+                                                        onClick={() => setSelectedOptions(prev => ({ ...prev, [variation._id]: option._id }))}
                                                         className={`px-5 py-3 rounded-xl text-sm font-black transition-all border-2 flex flex-col items-center min-w-[70px] ${isSelected
                                                             ? 'bg-secondary border-secondary text-white shadow-md scale-105'
                                                             : !inStock
@@ -367,7 +372,7 @@ export default function ProductDetailClient() {
                                                                 : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300'
                                                             }`}
                                                     >
-                                                        <span>{oName}</span>
+                                                        <span>{option.name}</span>
                                                         {!inStock && <span className="text-[9px] opacity-70 mt-0.5">Sold Out</span>}
                                                     </button>
                                                 );
@@ -434,8 +439,8 @@ export default function ProductDetailClient() {
                                 onClick={handleAddToCart}
                                 disabled={!inStock || isAddingToCart || isBuyingNow}
                                 className={`flex-1 py-4 px-6 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all active:scale-[0.98] border-2 ${inStock
-                                        ? 'bg-white text-primary border-primary hover:bg-primary hover:text-white shadow-lg shadow-primary/10 hover:shadow-primary/25'
-                                        : 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
+                                    ? 'bg-white text-primary border-primary hover:bg-primary hover:text-white shadow-lg shadow-primary/10 hover:shadow-primary/25'
+                                    : 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
                                     }`}
                             >
                                 {isAddingToCart
@@ -451,8 +456,8 @@ export default function ProductDetailClient() {
                                 onClick={handleBuyNow}
                                 disabled={!inStock || isAddingToCart || isBuyingNow}
                                 className={`flex-1 py-4 px-6 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all active:scale-[0.98] border-2 ${inStock
-                                        ? 'bg-secondary text-white border-secondary hover:bg-primary hover:border-primary shadow-xl shadow-secondary/20 hover:shadow-primary/25'
-                                        : 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
+                                    ? 'bg-secondary text-white border-secondary hover:bg-primary hover:border-primary shadow-xl shadow-secondary/20 hover:shadow-primary/25'
+                                    : 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
                                     }`}
                             >
                                 {isBuyingNow

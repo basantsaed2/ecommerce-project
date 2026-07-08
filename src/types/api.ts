@@ -44,6 +44,15 @@ export interface ProductPrice {
     variations: ProductVariation[];
 }
 
+export interface Sku {
+    _id?: string;
+    sku?: string;
+    price: number;
+    price_after_discount?: number;
+    quantity: number;
+    option_ids: string[];
+}
+
 export interface Product {
     _id: string;
     name: string;
@@ -54,13 +63,19 @@ export interface Product {
     gallery_product?: string[];
     categoryId?: Category[];
     category?: Category;
-    brandId: string;
+    brand: {
+        _id: string;
+        name: string;
+        ar_name?: string;
+    };
     price: number;
     main_price?: number;
     quantity: number;
     cost?: number;
     is_featured?: boolean;
     prices?: ProductPrice[];
+    variations?: ProductVariation[];
+    skus?: Sku[];
     createdAt: string;
     updatedAt: string;
 }

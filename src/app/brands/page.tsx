@@ -81,7 +81,7 @@ export default function BrandsPage() {
             <div className="container py-4">
                 <div className="flex flex-col gap-24">
                     {brands.map((brand) => {
-                        const brandProducts = products.filter(p => p.brandId === brand._id);
+                        const brandProducts = products.filter(p => p?.brand?._id.toString() === brand._id.toString());
                         if (brandProducts.length === 0) return null;
 
                         return (

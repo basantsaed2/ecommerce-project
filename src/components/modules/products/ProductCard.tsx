@@ -20,24 +20,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     const token = useSelector((state: RootState) => state.auth.token);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-    // Group variations and options for summary
-    const variationsMap: Record<string, string[]> = {};
-    if (product.prices) {
-        product.prices.forEach(p => {
-            p.variations.forEach(v => {
-                const vName = v.name;
-                if (!variationsMap[vName]) {
-                    variationsMap[vName] = [];
-                }
-                v.options.forEach(opt => {
-                    if (!variationsMap[vName].includes(opt.name)) {
-                        variationsMap[vName].push(opt.name);
-                    }
-                });
-            });
-        });
-    }
-    const variationNames = Object.keys(variationsMap);
+    const hasVariations = product.variations && product.variations.length > 0;
 
     const { data: wishlistData } = useGetWishlist(!!token);
     const { mutate: toggleWishlist, isPending: isTogglingWishlist } = useToggleWishlist();
@@ -60,7 +43,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         if (product.quantity <= 0) return;
 
         // If has variations, open dialog instead of direct add
-        if (variationNames.length > 0) {
+        if (hasVariations) {
             setIsDialogOpen(true);
             return;
         }
@@ -75,7 +58,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         if (product.quantity <= 0) return;
 
         // If has variations, open dialog instead of direct add
-        if (variationNames.length > 0) {
+        if (hasVariations) {
             setIsDialogOpen(true);
             return;
         }
@@ -191,11 +174,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                         </h3>
 
                         {/* Variation Summary */}
-                        {variationNames.length > 0 && (
+                        {hasVariations && (
                             <div className="mt-1 flex flex-wrap gap-1">
-                                {variationNames.map(vName => (
-                                    <span key={vName} className="text-[8px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                        {variationsMap[vName].length} {vName}s
+                                {product.variations!.map(v => (
+                                    <span key={v._id} className="text-[8px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                        {v.options.length} {v.name}s
                                     </span>
                                 ))}
                             </div>
@@ -240,7 +223,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                                 }`}
                         >
                             <Zap size={13} strokeWidth={2.5} />
-                            {variationNames.length > 0 ? 'Select Options' : 'Buy Now'}
+                            {hasVariations ? 'Select Options' : 'Buy Now'}
                         </button>
                     </div>
                 </div>
