@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
     Home, Grid, Heart, ShoppingCart, User,
-    Menu, X, Briefcase, LogIn, LogOut
+    Menu, X, Briefcase, LogIn, LogOut, Package
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
@@ -37,6 +37,7 @@ export default function Navbar() {
         { name: 'Home', href: '/', icon: Home },
         { name: 'Category', href: '/categories', icon: Grid },
         { name: 'Brands', href: '/brands', icon: Briefcase },
+        { name: 'Track Order', href: '/order-tracking', icon: Package },
     ];
 
     const handleLogout = () => {
