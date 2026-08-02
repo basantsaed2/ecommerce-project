@@ -1,5 +1,4 @@
 import axiosInstance from './axiosInstance';
-import { AddToCartRequest, UpdateQuantityRequest } from '@/types/cart';
 
 export const cartApi = {
     getCart: () => axiosInstance.get('/cart'),
