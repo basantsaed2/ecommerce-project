@@ -7,6 +7,7 @@ import * as z from 'zod';
 import { Mail, Lock, ArrowRight, Loader2, Phone } from 'lucide-react';
 import { usePost } from '@/hooks/usePost';
 import DynamicBanner from '@/components/common/DynamicBanner';
+import GoogleLoginButton from '@/components/common/GoogleLoginButton';
 import { useDispatch } from 'react-redux';
 import { setCredentials, setIncompleteUser } from '@/store/slices/authSlice';
 import { fetchCart } from '@/store/slices/cartSlice';
@@ -177,7 +178,15 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <div className="mt-12 text-center border-t border-gray-100 pt-8">
+                    <div className="my-6 flex items-center gap-4">
+                        <div className="flex-1 border-t border-gray-200" />
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">or</span>
+                        <div className="flex-1 border-t border-gray-200" />
+                    </div>
+
+                    <GoogleLoginButton text="Sign in with Google" />
+
+                    <div className="mt-10 text-center border-t border-gray-100 pt-8">
                         <p className="text-gray-500 font-semibold italic">
                             New to our store?
                             <Link href="/signup" className="text-secondary font-black ml-2 hover:underline tracking-tighter">

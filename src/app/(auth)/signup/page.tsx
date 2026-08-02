@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { User, Mail, Lock, Phone, ArrowRight, Loader2 } from 'lucide-react';
 import { usePost } from '@/hooks/usePost';
 import DynamicBanner from '@/components/common/DynamicBanner';
+import GoogleLoginButton from '@/components/common/GoogleLoginButton';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -175,7 +176,15 @@ export default function SignupPage() {
                         </button>
                     </form>
 
-                    <div className="mt-10 text-center border-t border-gray-100 pt-8">
+                    <div className="my-6 flex items-center gap-4">
+                        <div className="flex-1 border-t border-gray-200" />
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">or</span>
+                        <div className="flex-1 border-t border-gray-200" />
+                    </div>
+
+                    <GoogleLoginButton text="Sign up with Google" />
+
+                    <div className="mt-8 text-center border-t border-gray-100 pt-6">
                         <p className="text-gray-500 font-semibold italic">
                             Already a member?
                             <Link href="/login" className="text-secondary font-black ml-2 hover:underline tracking-tighter">

@@ -1,32 +1,57 @@
-"use client"; // مهم جداً لأن QueryClientProvider بيستخدم الـ Context
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useState } from "react";
+"use client";
 
-export default function QueryProvider({ children }: { children: React.ReactNode }) {
-    // بنستخدم useState عشان نضمن إن الـ QueryClient يتكريت مرة واحدة بس لكل Session
-    const [queryClient] = useState(() => new QueryClient({
+import React from "react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { QueryClient, QueryClientProvider, isServer } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+function makeQueryClient() {
+    return new QueryClient({
         defaultOptions: {
             queries: {
-                staleTime: 60 * 1000, // البيانات تعتبر "fresh" لمدة دقيقة
+                staleTime: 60 * 1000, // البيانات تعتبر طازجة لمدة دقيقة
+                refetchOnWindowFocus: false, // منع إعادات الجلب عند التنقل بين التابات
                 retry: (failureCount, error: any) => {
-                    // Stop retrying if it's a network error (no response or server down)
-                    if (error?.message === 'Network Error' || !error?.response || error?.code === 'ERR_NETWORK') {
+                    // إيقاف الـ Retry فوراً لو المشكلة مشكلة شبكة أو السيرفر فاصل
+                    if (
+                        error?.message === "Network Error" ||
+                        !error?.response ||
+                        error?.code === "ERR_NETWORK"
+                    ) {
                         return false;
                     }
-                    // For other errors, retry only once
+                    // لأي خطأ آخر يحاول مرة واحدة فقط
                     return failureCount < 1;
                 },
                 retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-            }
-        }
-    }));
+            },
+        },
+    });
+}
+
+let browserQueryClient: QueryClient | undefined = undefined;
+
+function getQueryClient() {
+    if (isServer) {
+        return makeQueryClient();
+    } else {
+        if (!browserQueryClient) browserQueryClient = makeQueryClient();
+        return browserQueryClient;
+    }
+}
+
+export default function QueryProvider({ children }: { children: React.ReactNode }) {
+    const queryClient = getQueryClient();
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string;
 
     return (
-        <QueryClientProvider client={queryClient}>
-            {children}
-            {/* الـ Devtools دي بتساعدك تشوف الـ Requests اللي بتحصل وانت شغال (اختياري) */}
-            <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
+        <GoogleOAuthProvider clientId={googleClientId}>
+            <QueryClientProvider client={queryClient}>
+                {children}
+                {process.env.NODE_ENV === "development" && (
+                    <ReactQueryDevtools initialIsOpen={false} />
+                )}
+            </QueryClientProvider>
+        </GoogleOAuthProvider>
     );
 }
