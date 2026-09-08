@@ -9,6 +9,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import { logout } from '@/store/slices/authSlice';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -16,6 +17,8 @@ export default function Navbar() {
     const dispatch = useDispatch();
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+
+    const { storeName, logoUrl } = useStoreSettings();
 
     const token = useSelector((state: RootState) => state.auth.token);
     const user = useSelector((state: RootState) => state.auth.user);
@@ -55,9 +58,19 @@ export default function Navbar() {
     return (
         <>
             {/* --- 1. Top Navbar (Desktop) --- */}
-            <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 h-20 flex items-center justify-between">
-                <Link href="/" className="text-2xl font-black tracking-tighter text-primary">
-                    STORE<span className="text-secondary">.</span>
+            <nav className="sticky top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 h-20 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-2">
+                    {logoUrl ? (
+                        <img
+                            src={logoUrl}
+                            alt={storeName || 'Store'}
+                            className="h-10 max-w-[160px] md:max-w-[200px] object-contain"
+                        />
+                    ) : (
+                        <span className="text-2xl font-black tracking-tighter text-primary">
+                            {storeName || 'STORE'}<span className="text-secondary">.</span>
+                        </span>
+                    )}
                 </Link>
 
                 {/* Desktop Links */}
@@ -161,7 +174,13 @@ export default function Navbar() {
             <aside className={`fixed top-0 left-0 h-full w-72 bg-white z-[60] shadow-2xl transform transition-transform duration-500 lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="p-8 flex flex-col h-full">
                     <div className="flex justify-between items-center mb-10">
-                        <span className="font-black text-2xl tracking-tighter text-primary">MENU<span className="text-secondary">.</span></span>
+                        {logoUrl ? (
+                            <img src={logoUrl} alt={storeName || 'Store'} className="h-8 max-w-[140px] object-contain" />
+                        ) : (
+                            <span className="font-black text-2xl tracking-tighter text-primary">
+                                {storeName || 'STORE'}<span className="text-secondary">.</span>
+                            </span>
+                        )}
                         <button onClick={() => setSidebarOpen(false)} className="p-2 bg-gray-50 rounded-full"><X size={20} /></button>
                     </div>
 

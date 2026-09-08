@@ -6,7 +6,7 @@ import { useGet } from '@/hooks/useGet';
 import { Product, SingleApiResponse, Sku } from '@/types/api';
 import {
     Loader2, ArrowLeft, ShoppingCart, Zap, Plus, Minus, Heart,
-    Share2, Shield, Truck, RotateCcw, Star, Package, Tag, Box, CheckCircle2, Calendar, Award
+    Share2, Shield, Truck, RotateCcw, Star, Package, Tag, Box, CheckCircle2, Calendar, Award, Ruler
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addItem, syncCart } from '@/store/slices/cartSlice';
@@ -15,6 +15,11 @@ import { toast } from 'sonner';
 import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 import Link from 'next/link';
 import { getProductPriceInfo } from '@/utils/productUtils';
+import SizeGuideDialog from '@/components/modules/products/SizeGuideDialog';
+import ProductTabsInfo from '@/components/modules/products/ProductTabsInfo';
+import FrequentlyBoughtTogether from '@/components/modules/products/FrequentlyBoughtTogether';
+import ProductReviewsSection from '@/components/modules/products/ProductReviewsSection';
+import RelatedProducts from '@/components/modules/products/RelatedProducts';
 
 export default function ProductDetailClient() {
     const searchParams = useSearchParams();
@@ -28,6 +33,7 @@ export default function ProductDetailClient() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [isBuyingNow, setIsBuyingNow] = useState(false);
+    const [isSizeGuideOpen, setSizeGuideOpen] = useState(false);
 
     const { data, isLoading, error } = useGet<SingleApiResponse<Product>>(
         ['product', id],
@@ -403,14 +409,26 @@ export default function ProductDetailClient() {
                                 {product.variations.map(variation => (
                                     <div key={variation._id}>
                                         <div className="flex items-center justify-between mb-3">
-                                            <label className="text-xs font-black text-gray-700 uppercase tracking-wider">
-                                                Select {variation.name}
-                                            </label>
-                                            {variation.ar_name && variation.ar_name !== variation.name && (
-                                                <span className="text-xs text-gray-400 font-medium">
-                                                    ({variation.ar_name})
-                                                </span>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">
+                                                    Select {variation.name}
+                                                </label>
+                                                {variation.ar_name && variation.ar_name !== variation.name && (
+                                                    <span className="text-xs text-gray-400 font-medium">
+                                                        ({variation.ar_name})
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Size Guide Button */}
+                                            {variation.name.toLowerCase().includes('size') || variation.name.toLowerCase().includes('مقاس') ? (
+                                                <button
+                                                    onClick={() => setSizeGuideOpen(true)}
+                                                    className="text-xs font-bold text-secondary hover:underline flex items-center gap-1"
+                                                >
+                                                    <Ruler size={13} /> Size Guide
+                                                </button>
+                                            ) : null}
                                         </div>
                                         <div className="flex flex-wrap gap-2.5">
                                             {variation.options.map(option => {
@@ -543,11 +561,32 @@ export default function ProductDetailClient() {
                                     {isBuyingNow ? 'Processing...' : (!inStock ? 'SOLD OUT' : 'Buy Now')}
                                 </button>
                             </div>
-                        </div>
 
+                        </div>
                     </div>
                 </div>
+
+                {/* 1. Product Tabs (Description, Specifications, Shipping, Warranty) */}
+                <ProductTabsInfo product={product} skuCode={currentSkuObj?.code} />
+
+                {/* 2. Frequently Bought Together (Bundle Upsell) */}
+                <FrequentlyBoughtTogether currentProduct={product} />
+
+                {/* 3. Customer Ratings & Reviews */}
+                <ProductReviewsSection />
+
+                {/* 4. Related & Recommended Products */}
+                <RelatedProducts
+                    currentProductId={product._id}
+                    categoryId={product.categoryId?.[0]?._id || product.category?._id}
+                />
             </div>
+
+            {/* Size Guide Modal */}
+            <SizeGuideDialog
+                isOpen={isSizeGuideOpen}
+                onClose={() => setSizeGuideOpen(false)}
+            />
         </div>
     );
 }

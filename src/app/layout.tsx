@@ -1,8 +1,11 @@
 import Navbar from "@/components/layout/Navbar";
+import AnnouncementBar from "@/components/layout/AnnouncementBar";
+import FooterWrapper from "@/components/layout/FooterWrapper";
 import { StoreProvider } from "@/store/provider";
 import QueryProvider from "@/components/providers/QueryProvider";
 import CartInitializer from "@/components/providers/CartInitializer";
 import TenantGuard from "@/components/providers/TenantGuard";
+import { StoreThemeProvider } from "@/components/providers/StoreThemeProvider";
 import "./globals.css";
 import { Toaster } from 'sonner';
 
@@ -13,13 +16,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <StoreProvider>
                     <QueryProvider>
                         <TenantGuard>
-                            <CartInitializer>
-                                <Toaster position="top-right" richColors closeButton duration={1000} />
-                                <Navbar />
-                                <main className="pt-20 pb-20 lg:pb-0">
-                                    {children}
-                                </main>
-                            </CartInitializer>
+                            <StoreThemeProvider>
+                                <CartInitializer>
+                                    <Toaster position="top-right" richColors closeButton duration={1500} />
+                                    <AnnouncementBar />
+                                    <Navbar />
+                                    <main className="pt-2 pb-20 lg:pb-0 min-h-[calc(100vh-80px)]">
+                                        {children}
+                                    </main>
+                                    <FooterWrapper />
+                                </CartInitializer>
+                            </StoreThemeProvider>
                         </TenantGuard>
                     </QueryProvider>
                 </StoreProvider>
