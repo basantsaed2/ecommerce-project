@@ -81,6 +81,37 @@ export const DEFAULT_STORE_SECTIONS: StoreSection[] = [
     },
 ];
 
+export const EXAMPLE_STORE_SECTIONS: StoreSection[] = [
+    {
+        key: 'hero',
+        enabled: true,
+        order: 1,
+        title: 'Example Hero Banner',
+        templateSlug: 'example',
+    },
+    {
+        key: 'features',
+        enabled: true,
+        order: 2,
+        title: 'Why Choose Us',
+        templateSlug: 'example',
+    },
+    {
+        key: 'categories',
+        enabled: true,
+        order: 3,
+        title: 'Shop Categories',
+        templateSlug: 'example',
+    },
+    {
+        key: 'footer',
+        enabled: true,
+        order: 4,
+        title: 'Example Footer',
+        templateSlug: 'example',
+    },
+];
+
 export const DEFAULT_STORE_COLORS: StoreColors = {
     primary: '#1a1a1a',
     secondary: '#3b82f6',
@@ -115,6 +146,16 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
     fontStyle: 'default',
     colors: DEFAULT_STORE_COLORS,
     sections: DEFAULT_STORE_SECTIONS,
+};
+
+export const getTemplateSectionsBySlug = (templateSlug?: string): StoreSection[] => {
+    const normalizedSlug = templateSlug || DEFAULT_STORE_SETTINGS.templateSlug || 'default';
+
+    if (normalizedSlug === 'example') {
+        return EXAMPLE_STORE_SECTIONS;
+    }
+
+    return DEFAULT_STORE_SECTIONS;
 };
 
 export const FONT_FAMILY_MAP: Record<string, { fontName: string; fontUrl?: string; className?: string }> = {

@@ -63,6 +63,7 @@ export type FontStyleOption =
 
 export type TemplateSlugOption = 
     | 'default' 
+    | 'example'
     | 'modern-shop' 
     | 'minimal' 
     | 'elegance' 

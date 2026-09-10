@@ -13,6 +13,7 @@ import {
     DEFAULT_STORE_SETTINGS,
     DEFAULT_STORE_COLORS,
     DEFAULT_STORE_SECTIONS,
+    getTemplateSectionsBySlug,
     FONT_FAMILY_MAP
 } from '@/utils/themeDefaults';
 import { toast } from 'sonner';
@@ -47,7 +48,13 @@ const StoreThemeContext = createContext<StoreThemeContextType>({
     isUpdating: false,
 });
 
-export function StoreThemeProvider({ children }: { children: React.ReactNode }) {
+export function StoreThemeProvider({
+    children,
+    initialSettings,
+}: {
+    children: React.ReactNode;
+    initialSettings?: StoreSettings;
+}) {
     const queryClient = useQueryClient();
 
     const {
@@ -58,7 +65,16 @@ export function StoreThemeProvider({ children }: { children: React.ReactNode }) 
     } = useQuery({
         queryKey: ['store-settings'],
         queryFn: getStoreSettingsApi,
-        staleTime: 1000 * 60 * 5, // 5 minutes cache
+        initialData: initialSettings
+            ? {
+                success: true,
+                data: {
+                    message: 'Store settings loaded from SSR',
+                    settings: initialSettings,
+                },
+            }
+            : undefined,
+        staleTime: 1000 * 60 * 5,
         retry: 1,
     });
 
@@ -73,16 +89,21 @@ export function StoreThemeProvider({ children }: { children: React.ReactNode }) 
             ...(rawSettings.colors || {}),
         };
 
+        const templateSlug = rawSettings.templateSlug || DEFAULT_STORE_SETTINGS.templateSlug;
+
         const sections: StoreSection[] =
             Array.isArray(rawSettings.sections) && rawSettings.sections.length > 0
-                ? rawSettings.sections
-                : DEFAULT_STORE_SECTIONS;
+                ? rawSettings.sections.map((section) => ({
+                    ...section,
+                    templateSlug: section.templateSlug || templateSlug,
+                }))
+                : getTemplateSectionsBySlug(templateSlug);
 
         return {
             ...DEFAULT_STORE_SETTINGS,
             ...rawSettings,
             storeName: rawSettings.storeName || DEFAULT_STORE_SETTINGS.storeName,
-            templateSlug: rawSettings.templateSlug || DEFAULT_STORE_SETTINGS.templateSlug,
+            templateSlug,
             fontStyle: rawSettings.fontStyle || DEFAULT_STORE_SETTINGS.fontStyle,
             colors,
             sections,

@@ -33,22 +33,34 @@ const getAuthHeaders = () => {
 // 1. Get Store Settings
 export const getStoreSettingsApi = async (): Promise<StoreSettingsResponse> => {
     const baseUrl = getApiBaseUrl();
-    // Try /api/store/store-settings first, with fallback support for /api/store/settings
+    const url = `${baseUrl}/api/store/store-settings`;
+
+    console.log('[store-settings] request fired', { baseUrl, url });
+
     try {
-        const { data } = await axios.get<StoreSettingsResponse>(
-            `${baseUrl}/api/store/store-settings`,
-            { headers: getAuthHeaders() }
-        );
+        const { data } = await axios.get<StoreSettingsResponse>(url, { headers: getAuthHeaders() });
+        console.log('[store-settings] success', data);
         return data;
     } catch (storeError: any) {
+        console.error('[store-settings] failed', {
+            message: storeError?.message,
+            status: storeError?.response?.status,
+            data: storeError?.response?.data,
+            url,
+        });
+
         try {
-            const { data } = await axios.get<StoreSettingsResponse>(
-                `${baseUrl}/api/store/store-settings`,
-                { headers: getAuthHeaders() }
-            );
+            const { data } = await axios.get<StoreSettingsResponse>(url, { headers: getAuthHeaders() });
+            console.log('[store-settings] retry success', data);
             return data;
-        } catch (storeError) {
-            throw storeError;
+        } catch (retryError: any) {
+            console.error('[store-settings] retry failed', {
+                message: retryError?.message,
+                status: retryError?.response?.status,
+                data: retryError?.response?.data,
+                url,
+            });
+            throw retryError;
         }
     }
 };

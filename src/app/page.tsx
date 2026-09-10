@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import SearchBar from "@/components/ui/SearchBar";
-import DynamicSectionRenderer from "@/components/sections/DynamicSectionRenderer";
+import TemplateRouter from '@/components/templates/TemplateRouter';
 
 export default function Home() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -13,8 +13,7 @@ export default function Home() {
                 <SearchBar onSearch={setSearchQuery} />
             </div>
 
-            {/* Dynamic Multi-Template Section Engine */}
-            <DynamicSectionRenderer
+            <TemplateRouter
                 searchQuery={searchQuery}
                 excludeKeys={['footer']}
             />
