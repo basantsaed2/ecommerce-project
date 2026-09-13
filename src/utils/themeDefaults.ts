@@ -158,6 +158,42 @@ export const getTemplateSectionsBySlug = (templateSlug?: string): StoreSection[]
     return DEFAULT_STORE_SECTIONS;
 };
 
+export const FONT_OPTIONS = [
+    { key: 'default', label: 'Default' },
+    { key: 'cairo', label: 'Cairo' },
+    { key: 'inter', label: 'Inter' },
+    { key: 'poppins', label: 'Poppins' },
+    { key: 'roboto', label: 'Roboto' },
+    { key: 'tajawal', label: 'Tajawal' },
+    { key: 'outfit', label: 'Outfit' },
+    { key: 'alexandria', label: 'Alexandria' },
+    { key: 'plus-jakarta-sans', label: 'Plus Jakarta Sans' },
+    { key: 'amiri', label: 'Amiri' },
+] as const;
+
+export const normalizeFontStyle = (value?: string): string => {
+    if (!value) return 'default';
+
+    const normalized = value.trim().toLowerCase().replace(/\s+/g, '-');
+
+    const directMap: Record<string, string> = {
+        default: 'default',
+        cairo: 'cairo',
+        inter: 'inter',
+        poppins: 'poppins',
+        roboto: 'roboto',
+        tajawal: 'tajawal',
+        outfit: 'outfit',
+        alexandria: 'alexandria',
+        'plus-jakarta-sans': 'plus-jakarta-sans',
+        'plus-jakarta': 'plus-jakarta-sans',
+        amiri: 'amiri',
+        amr: 'amiri',
+    };
+
+    return directMap[normalized] || 'default';
+};
+
 export const FONT_FAMILY_MAP: Record<string, { fontName: string; fontUrl?: string; className?: string }> = {
     default: {
         fontName: 'Inter, system-ui, -apple-system, sans-serif',
@@ -194,5 +230,9 @@ export const FONT_FAMILY_MAP: Record<string, { fontName: string; fontUrl?: strin
     'plus-jakarta-sans': {
         fontName: '"Plus Jakarta Sans", sans-serif',
         fontUrl: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap',
+    },
+    amiri: {
+        fontName: 'Amiri, serif',
+        fontUrl: 'https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap',
     },
 };

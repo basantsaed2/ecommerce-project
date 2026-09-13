@@ -14,7 +14,8 @@ import {
     DEFAULT_STORE_COLORS,
     DEFAULT_STORE_SECTIONS,
     getTemplateSectionsBySlug,
-    FONT_FAMILY_MAP
+    FONT_FAMILY_MAP,
+    normalizeFontStyle
 } from '@/utils/themeDefaults';
 import { toast } from 'sonner';
 
@@ -90,6 +91,7 @@ export function StoreThemeProvider({
         };
 
         const templateSlug = rawSettings.templateSlug || DEFAULT_STORE_SETTINGS.templateSlug;
+        const fontStyle = normalizeFontStyle(rawSettings.fontStyle || DEFAULT_STORE_SETTINGS.fontStyle);
 
         const sections: StoreSection[] =
             Array.isArray(rawSettings.sections) && rawSettings.sections.length > 0
@@ -104,7 +106,7 @@ export function StoreThemeProvider({
             ...rawSettings,
             storeName: rawSettings.storeName || DEFAULT_STORE_SETTINGS.storeName,
             templateSlug,
-            fontStyle: rawSettings.fontStyle || DEFAULT_STORE_SETTINGS.fontStyle,
+            fontStyle,
             colors,
             sections,
         };

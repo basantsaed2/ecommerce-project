@@ -9,28 +9,15 @@ import { StoreThemeProvider } from "@/components/providers/StoreThemeProvider";
 import type { StoreSettings } from '@/types/storeSettings';
 import "./globals.css";
 import { Toaster } from 'sonner';
+import axiosInstance from "@/api/axiosInstance";
 
 const getInitialStoreSettings = async (): Promise<StoreSettings | undefined> => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-    if (!baseUrl) {
-        return undefined;
-    }
-
     try {
-        const response = await fetch(`${baseUrl}/api/store/store-settings`, {
-            headers: {
-                Accept: 'application/json',
-            },
-            cache: 'no-store',
+        const { data } = await axiosInstance.get('/api/store/store-settings', {
+            headers: { Accept: 'application/json' },
         });
 
-        if (!response.ok) {
-            return undefined;
-        }
-
-        const payload = await response.json();
-        return payload?.data?.settings ?? undefined;
+        return data?.data?.settings;
     } catch {
         return undefined;
     }
