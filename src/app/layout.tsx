@@ -35,7 +35,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                             <TenantGuard>
                                 <CartInitializer>
                                     <Toaster position="top-right" richColors closeButton duration={1500} />
-                                    <AnnouncementBar />
                                     <Navbar />
                                     <main className="pt-2 pb-20 lg:pb-0 min-h-[calc(100vh-80px)]">
                                         {children}

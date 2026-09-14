@@ -18,7 +18,7 @@ export default function Navbar() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    const { storeName, logoUrl } = useStoreSettings();
+    const { storeName, logoUrl, templateSlug } = useStoreSettings();
 
     const token = useSelector((state: RootState) => state.auth.token);
     const user = useSelector((state: RootState) => state.auth.user);
@@ -51,6 +51,7 @@ export default function Navbar() {
 
     const authRoutes = ["/login", "/signup"];
     if (authRoutes.includes(pathname)) return null;
+    if (templateSlug === 'marwan') return null;
 
     // منع الرندر غير المتوافق مع السيرفر حتى يكتمل التحميل
     if (!mounted) return <nav className="h-20 bg-white border-b border-gray-100" />;

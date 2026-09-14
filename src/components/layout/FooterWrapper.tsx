@@ -22,6 +22,10 @@ export default function FooterWrapper() {
 
     const currentTemplate = footerSection?.templateSlug || templateSlug || 'default';
 
+    if (currentTemplate === 'marwan') {
+        return null;
+    }
+
     if (currentTemplate === 'modern-shop') {
         return <ModernFooter />;
     }

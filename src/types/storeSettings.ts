@@ -64,6 +64,7 @@ export type FontStyleOption =
 export type TemplateSlugOption = 
     | 'default' 
     | 'example'
+    | 'marwan'
     | 'modern-shop' 
     | 'minimal' 
     | 'elegance' 

@@ -4,6 +4,7 @@ import React from 'react';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import DefaultTemplate from '@/components/templates/default/DefaultTemplate';
 import ExampleTemplate from '@/components/templates/example/ExampleTemplate';
+import MarwanTemplate from '@/components/templates/marwan/MarwanTemplate';
 
 interface TemplateRouterProps {
     searchQuery?: string;
@@ -13,7 +14,7 @@ interface TemplateRouterProps {
 
 export default function TemplateRouter({
     searchQuery = '',
-    excludeKeys = ['footer'],
+    excludeKeys = [],
     className = '',
 }: TemplateRouterProps) {
     const { templateSlug, isLoading } = useStoreSettings();
@@ -32,6 +33,14 @@ export default function TemplateRouter({
         case 'example':
             return (
                 <ExampleTemplate
+                    searchQuery={searchQuery}
+                    excludeKeys={excludeKeys}
+                    className={className}
+                />
+            );
+        case 'marwan':
+            return (
+                <MarwanTemplate
                     searchQuery={searchQuery}
                     excludeKeys={excludeKeys}
                     className={className}
