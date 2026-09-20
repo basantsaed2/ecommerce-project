@@ -1,7 +1,14 @@
 export interface StoreColors {
     primary?: string;
+    primaryDark?: string;
     secondary?: string;
+    secondaryDark?: string;
+    textPrimary?: string;
+    textPrimaryDark?: string;
+    textSecondary?: string;
+    textSecondaryDark?: string;
     background?: string;
+    backgroundDark?: string;
     surface?: string;
     text?: string;
     textMuted?: string;
@@ -49,6 +56,40 @@ export interface StoreSection {
     config?: Record<string, any>;
 }
 
+export interface EcommerceHeader {
+    logo?: string;
+    title?: string;
+    announcement?: string;
+    links?: string[];
+}
+
+export interface EcommerceFooter {
+    logo?: string;
+    bio?: string;
+    copyright?: string;
+}
+
+export interface EcommerceSocialLinks {
+    facebook?: string;
+    instagram?: string;
+    whatsapp?: string;
+    twitter?: string;
+    tiktok?: string;
+    youtube?: string;
+    linkedin?: string;
+}
+
+export interface EcommerceData {
+    social_links?: EcommerceSocialLinks;
+    header?: EcommerceHeader;
+    footer?: EcommerceFooter;
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    bio?: string;
+}
+
 export type FontStyleOption = 
     | 'default' 
     | 'cairo' 
@@ -60,6 +101,8 @@ export type FontStyleOption =
     | 'alexandria' 
     | 'plus-jakarta-sans'
     | string;
+
+export type StoreLanguage = 'ar' | 'en';
 
 export type TemplateSlugOption = 
     | 'default' 
@@ -81,6 +124,7 @@ export interface StoreSettings {
     fontStyle: FontStyleOption;
     colors: StoreColors;
     sections: StoreSection[];
+    ecommerceData?: EcommerceData[];
     createdAt?: string;
     updatedAt?: string;
     __v?: number;

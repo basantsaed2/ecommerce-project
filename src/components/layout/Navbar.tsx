@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
     Home, Grid, Heart, ShoppingCart, User,
-    Menu, X, Briefcase, LogIn, LogOut, Package
+    Menu, X, Briefcase, LogIn, LogOut, Package, Sun, Moon
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
@@ -18,7 +18,7 @@ export default function Navbar() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    const { storeName, logoUrl, templateSlug } = useStoreSettings();
+    const { settings, storeName, logoUrl, templateSlug, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings();
 
     const token = useSelector((state: RootState) => state.auth.token);
     const user = useSelector((state: RootState) => state.auth.user);
@@ -36,12 +36,26 @@ export default function Navbar() {
         return pathname?.startsWith(path);
     };
 
-    const navLinks = [
-        { name: 'Home', href: '/', icon: Home },
-        { name: 'Category', href: '/categories', icon: Grid },
-        { name: 'Brands', href: '/brands', icon: Briefcase },
-        { name: 'Track Order', href: '/order-tracking', icon: Package },
-    ];
+    const headerLinks = settings.ecommerceData?.[0]?.header?.links || [];
+    const linkConfig = {
+        home: { name: 'Home', href: '/', icon: Home },
+        category: { name: 'Category', href: '/categories', icon: Grid },
+        categories: { name: 'Categories', href: '/categories', icon: Grid },
+        products: { name: 'Products', href: '/product', icon: ShoppingCart },
+        brands: { name: 'Brands', href: '/brands', icon: Briefcase },
+        'track-order': { name: 'Track Order', href: '/order-tracking', icon: Package },
+        'order-tracking': { name: 'Track Order', href: '/order-tracking', icon: Package },
+    } as const;
+    const fallbackLinks = ['home', 'category', 'brands', 'track-order'];
+    const navLinks = (headerLinks.length ? headerLinks : fallbackLinks)
+        .map((link) => {
+            const normalizedLink = link.toLowerCase().trim();
+            return linkConfig[normalizedLink as keyof typeof linkConfig] || {
+                name: normalizedLink.replace(/-/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
+                href: `/${normalizedLink.replace(/\s+/g, '-')}`,
+                icon: Grid,
+            };
+        });
 
     const handleLogout = () => {
         dispatch(logout());
@@ -51,7 +65,7 @@ export default function Navbar() {
 
     const authRoutes = ["/login", "/signup"];
     if (authRoutes.includes(pathname)) return null;
-    if (templateSlug === 'marwan') return null;
+    if (templateSlug === 'marwan' || templateSlug === 'example') return null;
 
     // منع الرندر غير المتوافق مع السيرفر حتى يكتمل التحميل
     if (!mounted) return <nav className="h-20 bg-white border-b border-gray-100" />;
@@ -88,7 +102,35 @@ export default function Navbar() {
                     ))}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 ">
+                    <button
+                        type="button"
+                        onClick={toggleLanguage}
+                        aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                        title={language === 'ar' ? 'English' : 'العربية'}
+                        className="h-10 min-w-10 rounded-xl border border-gray-200 bg-white px-2 text-xs font-black text-primary transition hover:border-secondary hover:text-secondary"
+                    >
+                        {language.toUpperCase()}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                        aria-pressed={themeMode === 'dark'}
+                        title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
+                        style={{
+                            backgroundColor: 'var(--color-secondary)',
+                            borderColor: 'var(--color-primary)',
+                            color: 'var(--color-primary)',
+                        }}
+                    >
+                        {themeMode === 'dark' ? (
+                            <Sun size={18} className="transition-transform duration-300 rotate-0" />
+                        ) : (
+                            <Moon size={18} className="transition-transform duration-300 rotate-[-18deg]" />
+                        )}
+                    </button>
                     {/* Icons (Desktop/Tablet) */}
                     <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1">
                         {isLoggedIn && (

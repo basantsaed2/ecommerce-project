@@ -34,7 +34,7 @@ export default function DefaultProducts({
 
     if (error) return null;
 
-    const allProducts = data?.data?.data || [];
+    const allProducts = (data?.data?.data || []).filter((product) => product.is_featured === true);
 
     const filteredProducts = allProducts.filter(p =>
         !searchQuery ||
@@ -62,7 +62,7 @@ export default function DefaultProducts({
                         </span>
                     </div>
                     <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
-                        {title || (searchQuery ? `Search Results (${filteredProducts.length})` : "Trending Products")}
+                        {title || (searchQuery ? `Featured Search Results (${filteredProducts.length})` : "Featured Products")}
                     </h2>
                 </div>
             </div>

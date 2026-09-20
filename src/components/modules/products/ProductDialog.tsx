@@ -10,6 +10,7 @@ import { RootState, AppDispatch } from '@/store/store';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { getProductPriceInfo } from '@/utils/productUtils';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 interface ProductDialogProps {
     productId: string;
@@ -18,6 +19,7 @@ interface ProductDialogProps {
 }
 
 export default function ProductDialog({ productId, isOpen, onClose }: ProductDialogProps) {
+    const { logoUrl } = useStoreSettings();
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const token = useSelector((state: RootState) => state.auth.token);
@@ -172,7 +174,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                 )}
 
                                 <img
-                                    src={selectedImage || product.image}
+                                    src={selectedImage || product.image || product.gallery_product?.[0] || logoUrl || undefined}
                                     alt={product.name || product.ar_name}
                                     className={`max-w-full max-h-full object-contain drop-shadow-xl transition-all duration-500 ${product.quantity > 0 ? 'hover:scale-105' : 'grayscale opacity-60'}`}
                                 />
@@ -186,9 +188,11 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                             </div>
 
                             {/* Gallery Thumbnails */}
-                            {(product.gallery_product && product.gallery_product.length > 0) && (
+                            {(product.image || product.gallery_product?.length || logoUrl) && (
                                 <div className="flex flex-wrap justify-center gap-2 mt-auto w-full">
-                                    {[product.image, ...product.gallery_product].map((img, idx) => (
+                                    {[product.image, ...(product.gallery_product || []), logoUrl]
+                                        .filter((image): image is string => Boolean(image))
+                                        .map((img, idx) => (
                                         <button
                                             key={idx}
                                             onClick={() => setSelectedImage(img)}

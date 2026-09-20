@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getCookie, deleteCookie } from 'cookies-next';
 import { getSessionId } from '@/utils/session';
+import { getCurrentLanguage } from '@/utils/language';
 
 const axiosInstance = axios.create({
     baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api/store`,
@@ -22,6 +23,10 @@ axiosInstance.interceptors.request.use(
             if (sessionId) {
                 config.headers['x-session-id'] = sessionId;
             }
+            config.params = {
+                ...config.params,
+                lang: getCurrentLanguage(),
+            };
         }
         return config;
     },

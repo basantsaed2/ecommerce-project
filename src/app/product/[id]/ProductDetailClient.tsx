@@ -20,6 +20,7 @@ import ProductTabsInfo from '@/components/modules/products/ProductTabsInfo';
 import FrequentlyBoughtTogether from '@/components/modules/products/FrequentlyBoughtTogether';
 import ProductReviewsSection from '@/components/modules/products/ProductReviewsSection';
 import RelatedProducts from '@/components/modules/products/RelatedProducts';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 export default function ProductDetailClient() {
     const searchParams = useSearchParams();
@@ -27,6 +28,7 @@ export default function ProductDetailClient() {
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const token = useSelector((state: RootState) => state.auth.token);
+    const { logoUrl } = useStoreSettings();
 
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [quantity, setQuantity] = useState(1);
@@ -194,9 +196,10 @@ export default function ProductDetailClient() {
     const galleryImages = (product.gallery_product && product.gallery_product.length > 0)
         ? product.gallery_product
         : [];
-    const allImages = [product.image, ...galleryImages].filter(Boolean);
+    const allImages = [product.image, ...galleryImages, logoUrl]
+        .filter((image): image is string => Boolean(image));
 
-    const displayedImage = selectedImage || product.image;
+    const displayedImage = selectedImage || product.image || galleryImages[0] || logoUrl || undefined;
     const currentStock = getSkuStock(currentSkuObj);
     const inStock = currentStock > 0;
     const totalPrice = (priceInfo.finalPrice * quantity).toLocaleString();

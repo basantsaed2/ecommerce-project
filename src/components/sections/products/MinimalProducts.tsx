@@ -27,7 +27,7 @@ export default function MinimalProducts({
     }
     if (error) return null;
 
-    const allProducts = data?.data?.data || [];
+    const allProducts = (data?.data?.data || []).filter((product) => product.is_featured === true);
     const filtered = allProducts.filter(p =>
         !searchQuery ||
         p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -37,7 +37,7 @@ export default function MinimalProducts({
     return (
         <section className="w-full py-8">
             <h2 className="text-2xl font-bold text-primary mb-6">
-                {title || "Selected Products"}
+                {title || "Featured Products"}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {filtered.slice(0, 8).map((product) => (

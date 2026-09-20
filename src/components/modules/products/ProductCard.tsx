@@ -11,12 +11,14 @@ import { toast } from 'sonner';
 import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 import { useRouter } from 'next/navigation';
 import { getProductPriceInfo } from '@/utils/productUtils';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 interface ProductCardProps {
     product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+    const { logoUrl } = useStoreSettings();
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const token = useSelector((state: RootState) => state.auth.token);
@@ -97,7 +99,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                         {/* Featured Badge */}
                         {product.is_featured && (
                             <span className="bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1">
-                                <Sparkles size={10} className="fill-current" />
+                                {logoUrl ? (
+                                    <img src={logoUrl} alt="" aria-hidden="true" className="h-3 w-3 rounded-sm object-contain" />
+                                ) : (
+                                    <Sparkles size={10} className="fill-current" />
+                                )}
                                 Hot
                             </span>
                         )}
@@ -144,10 +150,10 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </div>
 
                     <img
-                        src={product.image}
+                        src={product.image || product.gallery_product?.[0] || logoUrl || undefined}
                         alt={product.name || product.ar_name || 'Product'}
                         loading="lazy"
-                        className={`max-w-full max-h-full object-contain transition-transform duration-700 ease-out ${
+                        className={`max-w-full max-h-full object-contain transition-transform duration-700 ease-out group-hover:scale-110 ${
                             product.quantity > 0 ? 'group-hover:scale-105' : 'grayscale opacity-40'
                         }`}
                     />

@@ -11,7 +11,10 @@ interface ModernFooterProps {
 }
 
 export default function ModernFooter({ title }: ModernFooterProps) {
-    const { storeName, logoUrl } = useStoreSettings();
+    const { settings, storeName, logoUrl } = useStoreSettings();
+    const ecommerceData = settings.ecommerceData?.[0];
+    const socialLinks = ecommerceData?.social_links || {};
+    const footer = ecommerceData?.footer || {};
     const currentYear = new Date().getFullYear();
 
     return (
@@ -19,8 +22,8 @@ export default function ModernFooter({ title }: ModernFooterProps) {
             <div className="max-w-6xl mx-auto px-6 flex flex-col items-center text-center gap-8">
                 {/* Logo & Name */}
                 <Link href="/" className="flex items-center gap-2">
-                    {logoUrl ? (
-                        <img src={logoUrl} alt={storeName} className="h-10 max-w-[200px] object-contain brightness-0 invert" />
+                    {footer.logo || logoUrl ? (
+                        <img src={footer.logo || logoUrl || undefined} alt={storeName} className="h-10 max-w-[200px] object-contain brightness-0 invert" />
                     ) : (
                         <span className="text-3xl font-black tracking-tighter text-white">
                             {storeName || 'STORE'}<span className="text-secondary">.</span>
@@ -29,7 +32,7 @@ export default function ModernFooter({ title }: ModernFooterProps) {
                 </Link>
 
                 <p className="text-gray-400 text-sm max-w-md">
-                    Curated collections for modern living. Fast shipping, guaranteed satisfaction, and friendly customer support.
+                    {footer.bio || ecommerceData?.bio || 'Curated collections for modern living. Fast shipping, guaranteed satisfaction, and friendly customer support.'}
                 </p>
 
                 {/* Nav Links */}
@@ -43,19 +46,19 @@ export default function ModernFooter({ title }: ModernFooterProps) {
 
                 {/* Social Icons */}
                 <div className="flex items-center gap-4">
-                    <a href="#" className="w-10 h-10 rounded-full bg-white/10 hover:bg-secondary flex items-center justify-center text-white transition-colors">
+                    <a href={socialLinks.instagram || '#'} className="w-10 h-10 rounded-full bg-white/10 hover:bg-secondary flex items-center justify-center text-white transition-colors">
                         <Instagram size={18} />
                     </a>
-                    <a href="#" className="w-10 h-10 rounded-full bg-white/10 hover:bg-secondary flex items-center justify-center text-white transition-colors">
+                    <a href={socialLinks.facebook || '#'} className="w-10 h-10 rounded-full bg-white/10 hover:bg-secondary flex items-center justify-center text-white transition-colors">
                         <Facebook size={18} />
                     </a>
-                    <a href="#" className="w-10 h-10 rounded-full bg-white/10 hover:bg-secondary flex items-center justify-center text-white transition-colors">
+                    <a href={socialLinks.twitter || '#'} className="w-10 h-10 rounded-full bg-white/10 hover:bg-secondary flex items-center justify-center text-white transition-colors">
                         <Twitter size={18} />
                     </a>
                 </div>
 
                 <div className="w-full border-t border-gray-800 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
-                    <p>&copy; {currentYear} {storeName || 'Store'}. All rights reserved.</p>
+                    <p>&copy; {currentYear} {storeName || 'Store'}. {footer.copyright || 'All rights reserved.'}</p>
                     <p className="flex items-center gap-1">
                         Crafted with modern dynamic experience
                     </p>

@@ -26,12 +26,14 @@ export default function DefaultBrands({
     }
     if (error) return null;
 
-    const brands = data?.data?.data || [];
+    const brands = (data?.data?.data || []).filter((brand) => brand.is_featured === true);
     if (brands.length === 0) return null;
 
     const midPoint = Math.ceil(brands.length / 2);
     const firstRow = brands.slice(0, midPoint);
     const secondRow = brands.slice(midPoint);
+    const firstRowItems = firstRow.length > 1 ? [...firstRow, ...firstRow, ...firstRow] : firstRow;
+    const secondRowItems = secondRow.length > 1 ? [...secondRow, ...secondRow, ...secondRow] : secondRow;
 
     return (
         <section className="w-full py-16 bg-white/40 backdrop-blur-xl rounded-[3rem] border border-gray-100 shadow-xl overflow-hidden my-6">
@@ -40,15 +42,15 @@ export default function DefaultBrands({
                     {subtitle || "Official Partners"}
                 </span>
                 <h2 className="text-3xl md:text-5xl font-black text-primary tracking-tight">
-                    {title || "Shop Top Featured Brands"}
+                    {title || "Featured Brands"}
                 </h2>
             </div>
 
             <div className="flex flex-col gap-6">
                 {/* Row 1 */}
-                <div className="relative flex overflow-hidden">
+                <div className="relative flex overflow-hidden px-5 md:px-8">
                     <div className="animate-marquee flex items-center gap-6 py-2">
-                        {[...firstRow, ...firstRow, ...firstRow].map((brand, idx) => (
+                        {firstRowItems.map((brand, idx) => (
                             <Link
                                 key={`${brand._id}-r1-${idx}`}
                                 href={`/brands#${brand._id}`}
@@ -58,7 +60,12 @@ export default function DefaultBrands({
                                     src={brand.logo}
                                     alt={brand.name || brand.ar_name}
                                     className="max-w-[85%] max-h-[85%] object-contain transition-all duration-300 group-hover:scale-105"
+                                    onError={(event) => {
+                                        event.currentTarget.style.display = 'none';
+                                        event.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                    }}
                                 />
+                                <span className="hidden text-sm font-bold text-primary">{brand.name || brand.ar_name}</span>
                             </Link>
                         ))}
                     </div>
@@ -66,9 +73,9 @@ export default function DefaultBrands({
 
                 {/* Row 2 (if enough brands) */}
                 {secondRow.length > 0 && (
-                    <div className="relative flex overflow-hidden">
+                    <div className="relative flex overflow-hidden px-5 md:px-8">
                         <div className="animate-marquee-reverse flex items-center gap-6 py-2">
-                            {[...secondRow, ...secondRow, ...secondRow].map((brand, idx) => (
+                            {secondRowItems.map((brand, idx) => (
                                 <Link
                                     key={`${brand._id}-r2-${idx}`}
                                     href={`/brands#${brand._id}`}
@@ -78,7 +85,12 @@ export default function DefaultBrands({
                                         src={brand.logo}
                                         alt={brand.name || brand.ar_name}
                                         className="max-w-[85%] max-h-[85%] object-contain transition-all duration-300 group-hover:scale-105"
+                                        onError={(event) => {
+                                            event.currentTarget.style.display = 'none';
+                                            event.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                        }}
                                     />
+                                    <span className="hidden text-sm font-bold text-primary">{brand.name || brand.ar_name}</span>
                                 </Link>
                             ))}
                         </div>

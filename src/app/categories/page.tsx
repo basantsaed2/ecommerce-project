@@ -7,8 +7,10 @@ import { Loader2, Grid } from 'lucide-react';
 import ProductCard from '@/components/modules/products/ProductCard';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 export default function CategoriesPage() {
+    const { logoUrl } = useStoreSettings();
     const searchParams = useSearchParams();
     const selectedId = searchParams.get('id');
 
@@ -105,7 +107,7 @@ export default function CategoriesPage() {
                                         <div className="w-24 h-24 rounded-[32px] overflow-hidden bg-white shadow-2xl shadow-gray-200/50 p-1 shrink-0 transform group-hover:-rotate-3 transition-transform duration-500">
                                             <div className="w-full h-full rounded-[28px] overflow-hidden">
                                                 <img
-                                                    src={category.image}
+                                                    src={category.image || logoUrl || undefined}
                                                     alt={category.name || category.ar_name}
                                                     className="w-full h-full object-cover"
                                                 />

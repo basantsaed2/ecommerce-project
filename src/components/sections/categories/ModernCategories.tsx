@@ -4,6 +4,7 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Category } from '@/types/api';
 import { Loader2, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 interface ModernCategoriesProps {
     searchQuery?: string;
@@ -17,6 +18,7 @@ export default function ModernCategories({
     title,
     subtitle
 }: ModernCategoriesProps) {
+    const { logoUrl } = useStoreSettings();
     const { data, isLoading, error } = useGet<ApiResponse<Category>>(['categories'], '/category');
 
     if (isLoading) {
@@ -28,7 +30,7 @@ export default function ModernCategories({
     }
     if (error) return null;
 
-    const allCategories = data?.data?.data || [];
+    const allCategories = (data?.data?.data || []).filter((category) => category.is_featured === true);
     const categories = allCategories.filter(c => 
         !searchQuery || 
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -45,7 +47,7 @@ export default function ModernCategories({
                         {subtitle || "Categories Overview"}
                     </span>
                     <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
-                        {title || "Shop by Category"}
+                        {title || "Featured Categories"}
                     </h2>
                 </div>
                 <Link 
@@ -64,7 +66,7 @@ export default function ModernCategories({
                         className="group relative h-48 sm:h-56 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100"
                     >
                         <img
-                            src={cat.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60"}
+                            src={cat.image || logoUrl || undefined}
                             alt={cat.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />

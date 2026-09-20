@@ -11,8 +11,11 @@ import { toast } from 'sonner';
 import { Address } from '@/types/address';
 import SearchableSelect from '@/components/ui/SearchableSelect';
 import { useQueryClient } from '@tanstack/react-query';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
+import StoreLoader from '@/components/common/StoreLoader';
 
 export default function CheckoutPage() {
+    const { logoUrl } = useStoreSettings();
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -236,6 +239,7 @@ export default function CheckoutPage() {
                 const iframeUrl = res?.iframeUrl || res?.data?.iframeUrl || res?.data?.payment?.iframeUrl || res?.payment?.iframeUrl || res?.data?.order?.payment?.iframeUrl;
                 
                 dispatch(clearCartLocal());
+                toast.success('Thank you! Your order has been placed successfully.');
 
                 if (iframeUrl) {
                     window.location.href = iframeUrl;
@@ -277,8 +281,7 @@ export default function CheckoutPage() {
     if (isFetchingCart && items.length === 0) {
         return (
             <div className="w-full min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
-                <Loader2 className="animate-spin text-primary w-12 h-12 mb-4" />
-                <p className="text-gray-500 font-bold">Loading secure checkout...</p>
+                <StoreLoader logoUrl={logoUrl} label="Loading secure checkout..." size="lg" />
             </div>
         );
     }
@@ -724,7 +727,7 @@ export default function CheckoutPage() {
                             {items.map((item: any) => (
                                 <div key={item.product._id} className="flex gap-4 items-center bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
                                     <div className="w-16 h-16 bg-white rounded-xl p-2 shrink-0">
-                                        <img src={item.product.image} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply" />
+                                        <img src={item.product.image || item.product.gallery_product?.[0] || logoUrl || undefined} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply" />
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-bold text-sm line-clamp-1">{item.product.name || item.product.ar_name}</p>

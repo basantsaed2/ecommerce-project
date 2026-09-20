@@ -17,8 +17,10 @@ import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingBasket, Loader2, 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 export default function CartPage() {
+    const { logoUrl } = useStoreSettings();
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const { 
@@ -144,7 +146,7 @@ export default function CartPage() {
                             {/* Product Image */}
                             <div className="w-32 h-32 bg-gray-50 rounded-2xl p-4 flex items-center justify-center shrink-0">
                                 <img
-                                    src={item.product?.image || '/placeholder-product.png'}
+                                    src={item.product?.image || item.product?.gallery_product?.[0] || logoUrl || undefined}
                                     alt={item.product?.name || 'Product'}
                                     className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500"
                                 />

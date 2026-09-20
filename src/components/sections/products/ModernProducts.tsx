@@ -30,7 +30,7 @@ export default function ModernProducts({
     }
     if (error) return null;
 
-    const allProducts = data?.data?.data || [];
+    const allProducts = (data?.data?.data || []).filter((product) => product.is_featured === true);
 
     const searchFiltered = allProducts.filter(p =>
         !searchQuery ||
@@ -39,7 +39,7 @@ export default function ModernProducts({
     );
 
     const filtered = searchFiltered.filter(p => {
-        if (activeTab === 'featured') return p.is_featured === true || Boolean(p.discount);
+        if (activeTab === 'featured') return true;
         if (activeTab === 'sale') return Boolean(p.discount || (p.main_price && p.final_price && p.final_price < p.main_price));
         return true;
     });
@@ -64,7 +64,7 @@ export default function ModernProducts({
                             activeTab === 'all' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-primary'
                         }`}
                     >
-                        All ({searchFiltered.length})
+                        Featured ({searchFiltered.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('featured')}

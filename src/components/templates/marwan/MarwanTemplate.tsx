@@ -2,11 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Loader2, ShieldCheck, Sparkles, Star, Truck, Undo2 } from 'lucide-react';
+import { ArrowRight, Moon, ShieldCheck, Sparkles, Star, Sun, Truck, Undo2 } from 'lucide-react';
 import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import DynamicSectionRenderer from '@/components/sections/DynamicSectionRenderer';
 import { ApiResponse, Banner, Category, Product } from '@/types/api';
+import StoreLoader from '@/components/common/StoreLoader';
 
 interface MarwanTemplateProps {
   searchQuery?: string;
@@ -46,7 +47,13 @@ export default function MarwanTemplate({
   excludeKeys = [],
   className = '',
 }: MarwanTemplateProps) {
-  const { colors, sections, storeName, logoUrl, fontStyle, settings } = useStoreSettings() as any;
+  const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings() as any;
+  const isDarkMode = themeMode === 'dark';
+  const activePrimary = isDarkMode ? colors?.primaryDark || colors?.primary : colors?.primary;
+  const activeSecondary = isDarkMode ? colors?.secondaryDark || colors?.secondary : colors?.secondary;
+  const activeBackground = isDarkMode ? colors?.backgroundDark || colors?.background : colors?.background;
+  const activeTextPrimary = isDarkMode ? colors?.textPrimaryDark || colors?.textPrimary : colors?.textPrimary;
+  const activeTextSecondary = isDarkMode ? colors?.textSecondaryDark || colors?.textSecondary : colors?.textSecondary;
 
   const { data: bannersData, isLoading: bannersLoading } = useGet<ApiResponse<Banner>>(['banners'], '/banner');
   const { data: categoriesData, isLoading: categoriesLoading } = useGet<ApiResponse<Category>>(['categories'], '/category');
@@ -67,23 +74,36 @@ export default function MarwanTemplate({
   const showFeatures = sectionEnabled(sections, 'features');
   const showCategories = sectionEnabled(sections, 'categories');
   const showProducts = sectionEnabled(sections, 'products');
+  const hasBestSellersSection = (sections || []).some((section: any) =>
+    ['best-sellers', 'best-seller', 'bestsellers'].includes(section?.key?.toLowerCase())
+  );
+  const hasOffersSection = (sections || []).some((section: any) =>
+    ['offers', 'offer', 'offer-products', 'special-offers'].includes(section?.key?.toLowerCase())
+  );
   const showFooter = sectionEnabled(sections, '') && !excludeKeys.includes('');
   const extraSections = useMemo(() => {
     const keysToSkip = new Set(['hero', 'features', 'categories', 'products', 'footer']);
-    return ((sections || []) as any[])
+    const configuredSections = ((sections || []) as any[])
       .filter((section: any) => section && section.enabled !== false && !keysToSkip.has(section.key))
       .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-  }, [sections]);
+
+    const fallbackSections = [
+      !hasBestSellersSection && { key: 'best-sellers', enabled: true, order: 6, title: 'Best Sellers' },
+      !hasOffersSection && { key: 'offers', enabled: true, order: 7, title: 'Special Offers' },
+    ].filter(Boolean) as any[];
+
+    return [...configuredSections, ...fallbackSections].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [sections, hasBestSellersSection, hasOffersSection]);
   /* ── Theme, fully driven by the backend response ────────────────────────
      These become plain CSS custom properties on the wrapper, so any
      Tailwind arbitrary-value class (e.g. bg-[var(--mw-primary)]) can read
      them without hardcoding a single hex value anywhere below. ────────── */
   const themeVars = {
-    ['--mw-primary' as any]: colors?.primary || '#e6a817',
-    ['--mw-secondary' as any]: colors?.secondary || '#111827',
-    ['--mw-bg' as any]: colors?.background || '#ffffff',
-    ['--mw-text' as any]: colors?.textPrimary || '#111827',
-    ['--mw-text-muted' as any]: colors?.textSecondary || '#6b7280',
+    ['--mw-primary' as any]: activePrimary || '#e6a817',
+    ['--mw-secondary' as any]: activeSecondary || '#111827',
+    ['--mw-bg' as any]: activeBackground || '#ffffff',
+    ['--mw-text' as any]: activeTextPrimary || '#111827',
+    ['--mw-text-muted' as any]: activeTextSecondary || '#6b7280',
     ['--mw-font' as any]: fontStyle ? `'${fontStyle}', sans-serif` : 'inherit',
     ['--mw-surface' as any]: 'color-mix(in srgb, var(--mw-bg) 96%, var(--mw-text) 4%)',
     ['--mw-surface-2' as any]: 'color-mix(in srgb, var(--mw-bg) 92%, var(--mw-text) 8%)',
@@ -142,18 +162,20 @@ export default function MarwanTemplate({
   const categories = useMemo(() => {
     const list = categoriesData?.data?.data || [];
     const q = activeSearch;
+    const featured = list.filter((category) => category.is_featured === true);
     const filtered = q
-      ? list.filter((c) => c.name?.toLowerCase().includes(q) || c.ar_name?.toLowerCase().includes(q))
-      : list;
+      ? featured.filter((c) => c.name?.toLowerCase().includes(q) || c.ar_name?.toLowerCase().includes(q))
+      : featured;
     return filtered.slice(0, 6);
   }, [categoriesData, activeSearch]);
 
   const products = useMemo(() => {
     const list = productsData?.data?.data || [];
     const q = activeSearch;
+    const featured = list.filter((product) => product.is_featured === true);
     const filtered = q
-      ? list.filter((p) => p.name?.toLowerCase().includes(q) || p.ar_name?.toLowerCase().includes(q))
-      : list;
+      ? featured.filter((p) => p.name?.toLowerCase().includes(q) || p.ar_name?.toLowerCase().includes(q))
+      : featured;
     return filtered.slice(0, 8);
   }, [productsData, activeSearch]);
 
@@ -184,7 +206,7 @@ export default function MarwanTemplate({
   if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin" style={{ color: colors?.primary || '#e6a817' }} />
+        <StoreLoader logoUrl={logoUrl} label="Loading your store..." size="lg" />
       </div>
     );
   }
@@ -228,8 +250,18 @@ export default function MarwanTemplate({
           }}
         >
           <div className="max-w-[1460px] mx-auto px-4 flex items-center justify-between h-[72px] gap-4">
-            <Link href="/" className="text-[28px] md:text-[36px] font-black uppercase tracking-tight leading-none shrink-0" style={{ color: 'var(--mw-primary)' }}>
-              {storeName || 'STORE'}
+            <Link href="/" className="flex h-14 w-[150px] md:w-[220px] items-center shrink-0" aria-label={storeName || 'Store'}>
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={storeName || 'Store logo'}
+                  className="max-h-14 max-w-full object-contain object-left"
+                />
+              ) : (
+                <span className="text-[28px] md:text-[36px] font-black uppercase tracking-tight leading-none" style={{ color: 'var(--mw-primary)' }}>
+                  {storeName || 'STORE'}
+                </span>
+              )}
             </Link>
 
             <div className="hidden md:flex flex-1 justify-center px-3">
@@ -255,6 +287,31 @@ export default function MarwanTemplate({
             </nav>
 
             <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={toggleLanguage}
+                aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                title={language === 'ar' ? 'English' : 'العربية'}
+                className="inline-flex h-9 min-w-9 items-center justify-center rounded-full border px-2 text-[10px] font-black transition-all duration-300 hover:scale-105"
+                style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+              >
+                {language.toUpperCase()}
+              </button>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-pressed={themeMode === 'dark'}
+                title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
+                style={{
+                  backgroundColor: 'var(--color-secondary)',
+                  borderColor: 'var(--color-primary)',
+                  color: 'var(--color-primary)',
+                }}
+              >
+                {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
               <Link
                 href="/product"
                 className="hidden md:inline-flex items-center justify-center px-6 py-3 rounded-full text-[13px] font-extrabold uppercase tracking-wider transition-transform hover:-translate-y-0.5"
@@ -343,8 +400,8 @@ export default function MarwanTemplate({
                     {showProducts && (
                       <Link
                         href="#products"
-                        className="inline-flex items-center gap-2 px-6 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider text-white transition-transform hover:-translate-y-0.5"
-                        style={{ background: 'var(--mw-primary)', boxShadow: '0 16px 36px color-mix(in srgb, var(--mw-primary) 40%, transparent)' }}
+                        className="inline-flex items-center gap-2 px-6 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider transition-transform hover:-translate-y-0.5"
+                        style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)', boxShadow: '0 16px 36px color-mix(in srgb, var(--mw-primary) 40%, transparent)' }}
                       >
                         Shop Now <ArrowRight size={17} />
                       </Link>
@@ -404,14 +461,14 @@ export default function MarwanTemplate({
             { v: '24/7', l: 'Support' },
           ].map((s, i) => (
             <div key={s.l} className={`text-center py-7 px-4 border-white/20 hover:bg-white/10 transition-colors ${i < 3 ? 'border-r' : ''}`}>
-              <b className="block text-3xl font-black text-white">{s.v}</b>
-              <small className="block mt-1 text-[11px] font-bold tracking-wider uppercase text-white/85">{s.l}</small>
+              <b className="block text-3xl font-black" style={{ color: 'var(--mw-secondary)' }}>{s.v}</b>
+              <small className="block mt-1 text-[11px] font-bold tracking-wider uppercase" style={{ color: 'color-mix(in srgb, var(--mw-secondary) 85%, transparent)' }}>{s.l}</small>
             </div>
           ))}
         </div>
 
         {extraSections.length > 0 && (
-          <div className="w-full">
+          <div className="w-full max-w-[1240px] mx-auto px-5 py-8 md:py-12">
             <DynamicSectionRenderer
               sections={extraSections}
               searchQuery={searchQuery}
@@ -423,8 +480,8 @@ export default function MarwanTemplate({
 
         {/* ── Categories ───────────────────────────────────────────────── */}
         {showCategories && categories.length > 0 && (
-          <section className="py-8 md:py-10" id="categories">
-            <div className=" mx-auto px-0">
+          <section className="py-10 md:py-14 px-4 md:px-6" id="categories">
+            <div className="max-w-[1240px] mx-auto px-1 md:px-0">
               <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} flex flex-wrap items-end justify-between gap-4 mb-8`}>
                 <div>
                   <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
@@ -454,7 +511,7 @@ export default function MarwanTemplate({
                   >
                     <div className="relative h-[210px] overflow-hidden">
                       <img
-                        src={category.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80'}
+                        src={category.image || logoUrl || undefined}
                         alt={category.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
                       />
@@ -477,8 +534,8 @@ export default function MarwanTemplate({
 
         {/* ── Products ─────────────────────────────────────────────────── */}
         {showProducts && products.length > 0 && (
-          <section className="py-8 md:py-10" id="products">
-            <div className=" mx-auto px-0">
+          <section className="py-10 md:py-14 px-4 md:px-6" id="products">
+            <div className="max-w-[1240px] mx-auto px-1 md:px-0">
               <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} flex flex-wrap items-end justify-between gap-4 mb-8`}>
                 <div>
                   <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
@@ -507,13 +564,13 @@ export default function MarwanTemplate({
                   >
                     <div className="relative h-[220px] overflow-hidden" style={{ background: 'var(--mw-surface-2)' }}>
                       <span
-                        className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-white"
-                        style={{ background: 'var(--mw-primary)' }}
+                        className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+                        style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
                       >
                         New
                       </span>
                       <img
-                        src={product.image || product.gallery_product?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80'}
+                        src={product.image || product.gallery_product?.[0] || logoUrl || undefined}
                         alt={product.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
                       />
@@ -545,8 +602,8 @@ export default function MarwanTemplate({
 
         {/* ── Why us ───────────────────────────────────────────────────── */}
         {showFeatures && (
-          <section className="py-8 md:py-10" id="why-us" style={{ background: 'var(--mw-surface)' }}>
-            <div className=" mx-auto px-0">
+          <section className="py-10 md:py-14 px-4 md:px-6" id="why-us" style={{ background: 'var(--mw-surface)' }}>
+            <div className="max-w-[1240px] mx-auto px-1 md:px-0">
               <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} mb-8`}>
                 <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
                   <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Why choose us
@@ -608,7 +665,7 @@ export default function MarwanTemplate({
                     className="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
                     style={{ color: 'white' }}
                   />
-                  <button className="rounded-full px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-white" style={{ background: 'var(--mw-primary)' }}>
+                  <button className="rounded-full px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider" style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}>
                     Join
                   </button>
                 </div>

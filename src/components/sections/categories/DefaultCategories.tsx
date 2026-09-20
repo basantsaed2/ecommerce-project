@@ -4,6 +4,7 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Category } from '@/types/api';
 import { Loader2, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 interface CategoriesSectionProps {
     searchQuery?: string;
@@ -17,6 +18,7 @@ export default function DefaultCategories({
     title,
     subtitle
 }: CategoriesSectionProps) {
+    const { logoUrl } = useStoreSettings();
     const { data, isLoading, error } = useGet<ApiResponse<Category>>(['categories'], '/category');
 
     if (isLoading) {
@@ -29,7 +31,7 @@ export default function DefaultCategories({
     
     if (error) return null;
 
-    const allCategories = data?.data?.data || [];
+    const allCategories = (data?.data?.data || []).filter((category) => category.is_featured === true);
 
     const categories = allCategories.filter(c => 
         !searchQuery || 
@@ -47,7 +49,7 @@ export default function DefaultCategories({
                         {subtitle || "Curated Collections"}
                     </span>
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-primary tracking-tight">
-                        {title || "Browse by Category"}
+                        {title || "Featured Categories"}
                     </h2>
                 </div>
                 <Link
@@ -71,7 +73,7 @@ export default function DefaultCategories({
                             
                             <div className="absolute inset-2 bg-white rounded-[1.75rem] shadow-sm border border-gray-100 overflow-hidden flex items-center justify-center group-hover:border-secondary group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-300">
                                 <img
-                                    src={category.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60"}
+                                    src={category.image || logoUrl || undefined}
                                     alt={category.name}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 />

@@ -1,13 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getStoreSettingsApi, updateStoreSettingsApi } from '@/api/storeSettings';
 import {
     StoreSettings,
     StoreColors,
     StoreSection,
-    UpdateStoreSettingsPayload
+    UpdateStoreSettingsPayload,
+    StoreLanguage
 } from '@/types/storeSettings';
 import {
     DEFAULT_STORE_SETTINGS,
@@ -17,6 +18,7 @@ import {
     FONT_FAMILY_MAP,
     normalizeFontStyle
 } from '@/utils/themeDefaults';
+import { getCurrentLanguage, setCurrentLanguage } from '@/utils/language';
 import { toast } from 'sonner';
 
 interface StoreThemeContextType {
@@ -32,6 +34,10 @@ interface StoreThemeContextType {
     refetch: () => void;
     updateSettings: (payload: UpdateStoreSettingsPayload) => Promise<void>;
     isUpdating: boolean;
+    themeMode: 'light' | 'dark';
+    toggleTheme: () => void;
+    language: StoreLanguage;
+    toggleLanguage: () => void;
 }
 
 const StoreThemeContext = createContext<StoreThemeContextType>({
@@ -47,6 +53,10 @@ const StoreThemeContext = createContext<StoreThemeContextType>({
     refetch: () => {},
     updateSettings: async () => {},
     isUpdating: false,
+    themeMode: 'light',
+    toggleTheme: () => {},
+    language: 'en',
+    toggleLanguage: () => {},
 });
 
 export function StoreThemeProvider({
@@ -57,6 +67,37 @@ export function StoreThemeProvider({
     initialSettings?: StoreSettings;
 }) {
     const queryClient = useQueryClient();
+    const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
+    const [language, setLanguage] = useState<StoreLanguage>('en');
+
+    useEffect(() => {
+        const savedTheme = window.localStorage.getItem('store-theme-mode');
+        const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        setThemeMode(savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : preferredTheme);
+    }, []);
+
+    useEffect(() => {
+        setLanguage(getCurrentLanguage());
+    }, []);
+
+    useEffect(() => {
+        document.documentElement.classList.toggle('dark', themeMode === 'dark');
+        document.documentElement.style.colorScheme = themeMode;
+        window.localStorage.setItem('store-theme-mode', themeMode);
+    }, [themeMode]);
+
+    const toggleTheme = () => {
+        setThemeMode((currentMode) => currentMode === 'dark' ? 'light' : 'dark');
+    };
+
+    const toggleLanguage = () => {
+        const nextLanguage: StoreLanguage = language === 'ar' ? 'en' : 'ar';
+        setLanguage(nextLanguage);
+        setCurrentLanguage(nextLanguage);
+        document.documentElement.lang = nextLanguage;
+        document.documentElement.dir = nextLanguage === 'ar' ? 'rtl' : 'ltr';
+        queryClient.invalidateQueries();
+    };
 
     const {
         data: apiResponse,
@@ -134,6 +175,18 @@ export function StoreThemeProvider({
 
         const { colors, fontStyle } = mergedSettings;
         const fontConfig = FONT_FAMILY_MAP[fontStyle] || FONT_FAMILY_MAP.default;
+        const isDarkMode = themeMode === 'dark';
+
+        if (mergedSettings.logoUrl) {
+            let favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+            if (!favicon) {
+                favicon = document.createElement('link');
+                favicon.rel = 'icon';
+                document.head.appendChild(favicon);
+            }
+            favicon.type = 'image/png';
+            favicon.href = mergedSettings.logoUrl;
+        }
 
         // 1. Injected Google Font Link
         if (fontConfig.fontUrl) {
@@ -157,12 +210,24 @@ export function StoreThemeProvider({
             document.head.appendChild(styleTag);
         }
 
-        const primaryColor = colors.primary || '#1a1a1a';
-        const secondaryColor = colors.secondary || '#3b82f6';
-        const backgroundColor = colors.background || '#f9fafb';
-        const surfaceColor = colors.surface || '#ffffff';
-        const textColor = colors.text || '#111827';
-        const textMutedColor = colors.textMuted || '#6b7280';
+        const primaryColor = isDarkMode
+            ? colors.primaryDark || colors.primary || '#1a1a1a'
+            : colors.primary || '#1a1a1a';
+        const secondaryColor = isDarkMode
+            ? colors.secondaryDark || colors.secondary || '#3b82f6'
+            : colors.secondary || '#3b82f6';
+        const backgroundColor = isDarkMode
+            ? colors.backgroundDark || colors.background || '#111827'
+            : colors.background || '#f9fafb';
+        const surfaceColor = isDarkMode
+            ? colors.backgroundDark || colors.surface || backgroundColor
+            : colors.surface || '#ffffff';
+        const textColor = isDarkMode
+            ? colors.textPrimaryDark || colors.textPrimary || colors.text || '#f8fafc'
+            : colors.textPrimary || colors.text || '#111827';
+        const textMutedColor = isDarkMode
+            ? colors.textSecondaryDark || colors.textSecondary || colors.textMuted || '#94a3b8'
+            : colors.textSecondary || colors.textMuted || '#6b7280';
         const borderColor = colors.border || '#e5e7eb';
         const accentColor = colors.accent || '#f59e0b';
 
@@ -184,7 +249,7 @@ export function StoreThemeProvider({
                 color: var(--color-text);
             }
         `;
-    }, [mergedSettings]);
+    }, [mergedSettings, themeMode]);
 
     const contextValue: StoreThemeContextType = useMemo(
         () => ({
@@ -200,8 +265,12 @@ export function StoreThemeProvider({
             refetch,
             updateSettings: handleUpdateSettings,
             isUpdating: updateMutation.isPending,
+            themeMode,
+            toggleTheme,
+            language,
+            toggleLanguage,
         }),
-        [mergedSettings, isLoading, isError, refetch, updateMutation.isPending]
+        [mergedSettings, isLoading, isError, refetch, updateMutation.isPending, themeMode, language]
     );
 
     return (

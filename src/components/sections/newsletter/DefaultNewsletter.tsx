@@ -29,7 +29,12 @@ export default function DefaultNewsletter({
 
     return (
         <section className="w-full py-10">
-            <div className="rounded-[2.5rem] bg-gradient-to-br from-primary via-primary/95 to-secondary/80 p-8 sm:p-12 md:p-14 text-white shadow-2xl relative overflow-hidden text-center max-w-5xl mx-auto">
+            <div
+                className="rounded-[2.5rem] p-8 sm:p-12 md:p-14 text-white shadow-2xl relative overflow-hidden text-center max-w-5xl mx-auto"
+                style={{
+                    background: 'linear-gradient(120deg, color-mix(in srgb, var(--color-primary) 82%, #000000), color-mix(in srgb, var(--color-secondary) 68%, #000000))',
+                }}
+            >
                 {/* Decorative background lights */}
                 <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -z-0" />
                 <div className="absolute bottom-0 left-0 w-72 h-72 bg-secondary/30 rounded-full blur-3xl -z-0" />

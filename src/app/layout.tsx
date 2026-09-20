@@ -13,7 +13,7 @@ import axiosInstance from "@/api/axiosInstance";
 
 const getInitialStoreSettings = async (): Promise<StoreSettings | undefined> => {
     try {
-        const { data } = await axiosInstance.get('/api/store/store-settings', {
+        const { data } = await axiosInstance.get('/store-settings', {
             headers: { Accept: 'application/json' },
         });
 

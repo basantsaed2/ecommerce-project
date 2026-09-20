@@ -15,12 +15,14 @@ export default function BrandsSection() {
     );
     if (error) return null;
 
-    const brands = data?.data?.data || [];
+    const brands = (data?.data?.data || []).filter((brand) => brand.is_featured === true);
     if (brands.length === 0) return null;
 
     const midPoint = Math.ceil(brands.length / 2);
     const firstRow = brands.slice(0, midPoint);
     const secondRow = brands.slice(midPoint);
+    const firstRowItems = firstRow.length > 1 ? [...firstRow, ...firstRow, ...firstRow] : firstRow;
+    const secondRowItems = secondRow.length > 1 ? [...secondRow, ...secondRow, ...secondRow] : secondRow;
 
     return (
         <section className="w-full py-24 bg-white/30 backdrop-blur-xl rounded-[5rem] mt-16 border border-white/40 shadow-2xl shadow-primary/5 overflow-hidden">
@@ -31,7 +33,7 @@ export default function BrandsSection() {
                     <span className="w-12 h-[2px] bg-secondary/30" />
                 </div>
                 <h2 className="text-4xl md:text-6xl font-black text-primary tracking-tighter leading-tight">
-                    Trusted by <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-pulse">Industry Leaders</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-pulse">Featured Brands</span>
                 </h2>
             </div>
 
@@ -39,7 +41,7 @@ export default function BrandsSection() {
                 {/* Row 1: Left Scroll */}
                 <div className="relative flex overflow-hidden">
                     <div className="animate-marquee flex items-center gap-6 py-2">
-                        {[...firstRow, ...firstRow, ...firstRow].map((brand, idx) => (
+                        {firstRowItems.map((brand, idx) => (
                             <Link
                                 key={`${brand._id}-r1-${idx}`}
                                 href={`/brands#${brand._id}`}
@@ -50,7 +52,12 @@ export default function BrandsSection() {
                                     src={brand.logo}
                                     alt={brand.name || brand.ar_name}
                                     className="max-w-[100%] max-h-[100%] object-contain transition-all duration-700 group-hover:scale-110 relative z-10"
+                                    onError={(event) => {
+                                        event.currentTarget.style.display = 'none';
+                                        event.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                    }}
                                 />
+                                <span className="hidden text-sm font-bold text-primary">{brand.name || brand.ar_name}</span>
                             </Link>
                         ))}
                     </div>
@@ -59,7 +66,7 @@ export default function BrandsSection() {
                 {/* Row 2: Right Scroll */}
                 <div className="relative flex overflow-hidden">
                     <div className="animate-marquee-reverse flex items-center gap-6 py-2">
-                        {[...secondRow, ...secondRow, ...secondRow].map((brand, idx) => (
+                        {secondRowItems.map((brand, idx) => (
                             <Link
                                 key={`${brand._id}-r2-${idx}`}
                                 href={`/brands#${brand._id}`}
@@ -70,7 +77,12 @@ export default function BrandsSection() {
                                     src={brand.logo}
                                     alt={brand.name || brand.ar_name}
                                     className="max-w-[100%] max-h-[100%] object-contain transition-all duration-700 group-hover:scale-110 relative z-10"
+                                    onError={(event) => {
+                                        event.currentTarget.style.display = 'none';
+                                        event.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                    }}
                                 />
+                                <span className="hidden text-sm font-bold text-primary">{brand.name || brand.ar_name}</span>
                             </Link>
                         ))}
                     </div>

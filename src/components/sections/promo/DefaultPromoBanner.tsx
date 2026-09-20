@@ -39,7 +39,12 @@ export default function DefaultPromoBanner({
 
     return (
         <section className="w-full py-8">
-            <div className="relative rounded-[2.5rem] bg-gradient-to-r from-primary via-primary/95 to-secondary p-8 sm:p-12 md:p-14 text-white overflow-hidden shadow-2xl shadow-primary/20">
+            <div
+                className="relative rounded-[2.5rem] p-8 sm:p-12 md:p-14 text-white overflow-hidden shadow-2xl shadow-primary/20"
+                style={{
+                    background: 'linear-gradient(105deg, color-mix(in srgb, var(--color-primary) 82%, #000000), color-mix(in srgb, var(--color-secondary) 68%, #000000))',
+                }}
+            >
                 {/* Background Glass Shapes */}
                 <div className="absolute -right-16 -top-16 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
                 <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-secondary/20 rounded-full blur-2xl" />

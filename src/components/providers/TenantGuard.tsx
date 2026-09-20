@@ -2,9 +2,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { getCurrentLanguage } from '@/utils/language';
 
 async function fetchTenantInfo() {
-    const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/store/tenant-info`);
+    const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/store/tenant-info`, {
+        params: { lang: getCurrentLanguage() },
+    });
     return data;
 }
 

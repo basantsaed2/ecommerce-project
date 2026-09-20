@@ -17,7 +17,10 @@ interface FooterProps {
 }
 
 export default function DefaultFooter({ title }: FooterProps) {
-    const { storeName, logoUrl } = useStoreSettings();
+    const { settings, storeName, logoUrl } = useStoreSettings();
+    const ecommerceData = settings.ecommerceData?.[0];
+    const socialLinks = ecommerceData?.social_links || {};
+    const footer = ecommerceData?.footer || {};
     const { data: categoriesData } = useGet<ApiResponse<Category>>(['categories'], '/category');
     const categories = (categoriesData?.data?.data || []).slice(0, 5);
 
@@ -31,8 +34,8 @@ export default function DefaultFooter({ title }: FooterProps) {
                     {/* Brand Info & App download */}
                     <div className="lg:col-span-4 flex flex-col items-start gap-4">
                         <Link href="/" className="flex items-center gap-2">
-                            {logoUrl ? (
-                                <img src={logoUrl} alt={storeName} className="h-10 max-w-[180px] object-contain" />
+                            {footer.logo || logoUrl ? (
+                                <img src={footer.logo || logoUrl || undefined} alt={storeName} className="h-10 max-w-[180px] object-contain" />
                             ) : (
                                 <span className="text-2xl font-black tracking-tighter text-primary">
                                     {storeName || 'STORE'}<span className="text-secondary">.</span>
@@ -41,21 +44,21 @@ export default function DefaultFooter({ title }: FooterProps) {
                         </Link>
 
                         <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                            Your premier destination for modern lifestyle, curated essentials, and authentic products with nationwide express delivery.
+                            {footer.bio || ecommerceData?.bio || 'Your premier destination for modern lifestyle, curated essentials, and authentic products with nationwide express delivery.'}
                         </p>
 
                         {/* Social Icons */}
                         <div className="flex items-center gap-2.5 pt-1">
-                            <a href="#" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                            <a href={socialLinks.instagram || '#'} className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
                                 <Instagram size={16} />
                             </a>
-                            <a href="#" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                            <a href={socialLinks.facebook || '#'} className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
                                 <Facebook size={16} />
                             </a>
-                            <a href="#" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                            <a href={socialLinks.twitter || '#'} className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
                                 <Twitter size={16} />
                             </a>
-                            <a href="#" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                            <a href={socialLinks.youtube || '#'} className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
                                 <Youtube size={16} />
                             </a>
                         </div>
@@ -124,15 +127,15 @@ export default function DefaultFooter({ title }: FooterProps) {
                         </h4>
                         <div className="flex items-start gap-2.5 text-sm text-gray-600">
                             <MapPin size={18} className="text-secondary shrink-0 mt-0.5" />
-                            <span>123 Commercial Avenue, Suite 400</span>
+                            <span>{ecommerceData?.address || '123 Commercial Avenue, Suite 400'}</span>
                         </div>
                         <div className="flex items-center gap-2.5 text-sm text-gray-600">
                             <Phone size={18} className="text-secondary shrink-0" />
-                            <span>+1 (800) 123-4567</span>
+                            <span>{ecommerceData?.phone || '+1 (800) 123-4567'}</span>
                         </div>
                         <div className="flex items-center gap-2.5 text-sm text-gray-600">
                             <Mail size={18} className="text-secondary shrink-0" />
-                            <span>support@{storeName ? storeName.toLowerCase().replace(/\s+/g, '') : 'store'}.com</span>
+                            <span>{ecommerceData?.email || `support@${storeName ? storeName.toLowerCase().replace(/\s+/g, '') : 'store'}.com`}</span>
                         </div>
 
                         {/* Working hours */}
@@ -165,7 +168,7 @@ export default function DefaultFooter({ title }: FooterProps) {
                 {/* 3. Bottom Copyright & Security */}
                 <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
                     <p className="flex items-center gap-1">
-                        &copy; {currentYear} {storeName || 'Store'}. All rights reserved.
+                        &copy; {currentYear} {storeName || 'Store'}. {footer.copyright || 'All rights reserved.'}
                     </p>
 
                     <div className="flex flex-wrap items-center gap-4 text-gray-500 font-medium">

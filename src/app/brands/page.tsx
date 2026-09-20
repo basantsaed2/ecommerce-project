@@ -19,7 +19,7 @@ export default function BrandsPage() {
         );
     }
 
-    const brands = brandsData?.data?.data || [];
+    const brands = (brandsData?.data?.data || []).filter((brand) => brand.is_featured === true);
     const products = productsData?.data?.data || [];
 
     if (brands.length === 0) {
@@ -68,7 +68,7 @@ export default function BrandsPage() {
                 <div className="absolute bottom-12 right-12 hidden lg:flex items-center gap-12 text-white/40">
                     <div className="text-center">
                         <p className="text-3xl font-black text-white mb-1">{brands.length}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest">Global Partners</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest">Featured Brands</p>
                     </div>
                     <div className="w-px h-10 bg-white/10" />
                     <div className="text-center">
@@ -81,8 +81,7 @@ export default function BrandsPage() {
             <div className="container py-4">
                 <div className="flex flex-col gap-24">
                     {brands.map((brand) => {
-                        const brandProducts = products.filter(p => p?.brand?._id.toString() === brand._id.toString());
-                        if (brandProducts.length === 0) return null;
+                        const brandProducts = products.filter(p => p?.brand?._id?.toString() === brand._id.toString());
 
                         return (
                             <div key={brand._id} id={brand._id} className="scroll-mt-32 group">
@@ -95,7 +94,12 @@ export default function BrandsPage() {
                                             src={brand.logo}
                                             alt={brand.name || brand.ar_name}
                                             className="max-w-full max-h-full object-contain"
+                                            onError={(event) => {
+                                                event.currentTarget.style.display = 'none';
+                                                event.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                            }}
                                         />
+                                        <span className="hidden text-lg font-black text-primary">{brand.name || brand.ar_name}</span>
                                     </div>
 
                                     <div className="text-center md:text-left flex-1">
@@ -117,14 +121,20 @@ export default function BrandsPage() {
                                     <div className="hidden md:block h-px flex-1 bg-gradient-to-r from-gray-100 to-transparent" />
                                 </div>
 
-                                {/* Luxury Product Display */}
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-10">
-                                    {brandProducts.map(product => (
-                                        <div key={product._id} className="transform hover:-translate-y-2 transition-transform duration-500">
-                                            <ProductCard product={product} />
-                                        </div>
-                                    ))}
-                                </div>
+                                {brandProducts.length > 0 ? (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-10">
+                                        {brandProducts.map(product => (
+                                            <div key={product._id} className="transform hover:-translate-y-2 transition-transform duration-500">
+                                                <ProductCard product={product} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center">
+                                        <p className="text-lg font-black text-primary">No products available for this brand yet.</p>
+                                        <p className="mt-2 text-sm font-medium text-gray-400">Products from {brand.name || brand.ar_name} will appear here soon.</p>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

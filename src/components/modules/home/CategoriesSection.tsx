@@ -4,12 +4,14 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Category } from '@/types/api';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 interface CategoriesSectionProps {
     searchQuery?: string;
 }
 
 export default function CategoriesSection({ searchQuery = "" }: CategoriesSectionProps) {
+    const { logoUrl } = useStoreSettings();
     const { data, isLoading, error } = useGet<ApiResponse<Category>>(['categories'], '/category');
 
     if (isLoading) return (
@@ -20,7 +22,7 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
     
     if (error) return null;
 
-    const allCategories = data?.data?.data || [];
+    const allCategories = (data?.data?.data || []).filter((category) => category.is_featured === true);
 
     // Client-side filtering
     const categories = allCategories.filter(c => 
@@ -36,7 +38,7 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
             <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
                 <div className="text-center md:text-left">
                     <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight mb-2">
-                        Browse by <span className="text-secondary underline decoration-secondary/20 underline-offset-8">Category</span>
+                        Featured <span className="text-secondary underline decoration-secondary/20 underline-offset-8">Categories</span>
                     </h2>
                     <p className="text-gray-400 font-medium text-sm">Discover our handpicked collections for you</p>
                 </div>
@@ -58,7 +60,7 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
                             
                             <div className="absolute inset-2 bg-white rounded-[1.75rem] shadow-sm border border-gray-100 transition-all duration-500 overflow-hidden flex items-center justify-center group-hover:border-secondary group-hover:scale-105 group-hover:-translate-y-2">
                                 <img
-                                    src={category.image}
+                                    src={category.image || logoUrl || undefined}
                                     alt={category.name || category.ar_name}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />

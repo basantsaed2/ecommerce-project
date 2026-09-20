@@ -32,51 +32,63 @@ export const DEFAULT_STORE_SECTIONS: StoreSection[] = [
         title: 'Trending & Best Sellers',
     },
     {
-        key: 'promo-banner',
+        key: 'best-sellers',
         enabled: true,
         order: 6,
+        title: 'Best Sellers',
+    },
+    {
+        key: 'offers',
+        enabled: true,
+        order: 7,
+        title: 'Special Offers',
+    },
+    {
+        key: 'promo-banner',
+        enabled: true,
+        order: 8,
         title: 'Flash Sale & Limited Deals',
     },
     {
         key: 'brands',
         enabled: true,
-        order: 7,
+        order: 9,
         title: 'Featured Brands',
     },
     {
         key: 'testimonials',
         enabled: true,
-        order: 8,
+        order: 10,
         title: 'Customer Reviews & Social Proof',
     },
     {
         key: 'instagram-feed',
         enabled: true,
-        order: 9,
+        order: 11,
         title: 'Shop the Look #UGC',
     },
     {
         key: 'shopping-guides',
         enabled: true,
-        order: 10,
+        order: 12,
         title: 'Shopping Guides & Style Tips',
     },
     {
         key: 'faq',
         enabled: true,
-        order: 11,
+        order: 13,
         title: 'Frequently Asked Questions',
     },
     {
         key: 'newsletter',
         enabled: true,
-        order: 12,
+        order: 14,
         title: 'Newsletter Subscription',
     },
     {
         key: 'footer',
         enabled: true,
-        order: 13,
+        order: 15,
         title: 'Footer',
     },
 ];
@@ -114,11 +126,18 @@ export const EXAMPLE_STORE_SECTIONS: StoreSection[] = [
 
 export const DEFAULT_STORE_COLORS: StoreColors = {
     primary: '#1a1a1a',
+    primaryDark: '#ffffff',
     secondary: '#3b82f6',
+    secondaryDark: '#93c5fd',
     background: '#f9fafb',
+    backgroundDark: '#111827',
     surface: '#ffffff',
     text: '#111827',
+    textPrimary: '#111827',
+    textPrimaryDark: '#f8fafc',
     textMuted: '#6b7280',
+    textSecondary: '#6b7280',
+    textSecondaryDark: '#94a3b8',
     border: '#e5e7eb',
     accent: '#f59e0b',
 };
@@ -146,6 +165,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
     fontStyle: 'default',
     colors: DEFAULT_STORE_COLORS,
     sections: DEFAULT_STORE_SECTIONS,
+    ecommerceData: [],
 };
 
 export const getTemplateSectionsBySlug = (templateSlug?: string): StoreSection[] => {

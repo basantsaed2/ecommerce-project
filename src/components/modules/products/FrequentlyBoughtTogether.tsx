@@ -8,12 +8,14 @@ import { useDispatch } from 'react-redux';
 import { addItem, syncCart } from '@/store/slices/cartSlice';
 import { AppDispatch } from '@/store/store';
 import { toast } from 'sonner';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 interface FrequentlyBoughtTogetherProps {
     currentProduct: Product;
 }
 
 export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyBoughtTogetherProps) {
+    const { logoUrl } = useStoreSettings();
     const dispatch = useDispatch<AppDispatch>();
     const { data } = useGet<ApiResponse<Product>>(['products'], '/product');
     const allProducts = data?.data?.data || [];
@@ -90,7 +92,7 @@ export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyB
                         const isMain = item._id === currentProduct._id;
 
                         return (
-                            <React.Fragment key={item._id}>
+                            <React.Fragment key={`${item._id}-${idx}`}>
                                 {idx > 0 && (
                                     <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold shrink-0">
                                         <Plus size={16} />
@@ -111,7 +113,7 @@ export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyB
 
                                     <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
                                         <img
-                                            src={item.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300"}
+                                            src={item.image || item.gallery_product?.[0] || logoUrl || undefined}
                                             alt={item.name}
                                             className="w-full h-full object-cover"
                                         />

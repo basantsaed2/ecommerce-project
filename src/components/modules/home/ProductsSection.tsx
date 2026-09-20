@@ -26,7 +26,7 @@ export default function ProductsSection({ searchQuery = "" }: ProductsSectionPro
 
     if (error) return null;
 
-    const allProducts = data?.data?.data || [];
+    const allProducts = (data?.data?.data || []).filter((product) => product.is_featured === true);
 
     // Client-side filtering
     const filteredProducts = allProducts.filter(p =>
@@ -57,7 +57,7 @@ export default function ProductsSection({ searchQuery = "" }: ProductsSectionPro
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary">Our Collection</span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-primary tracking-tighter leading-tight">
-                        {searchQuery ? 'Search' : 'Trending'} <span className="text-secondary">Products</span>
+                        {searchQuery ? 'Featured Search' : 'Featured'} <span className="text-secondary">Products</span>
                     </h2>
                     {searchQuery && (
                         <p className="text-gray-500 mt-4 font-bold flex items-center gap-2">

@@ -4,23 +4,20 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { 
   Search, Heart, ShoppingBag, Phone, MapPin, 
-  ChevronDown, Star, Loader2, Menu,
-  Facebook, Twitter, Instagram, Youtube
+  ChevronDown, Star, Menu,
+  Facebook, Twitter, Instagram, Youtube, Sun, Moon
 } from 'lucide-react';
 import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
-import { ApiResponse, Banner, Category, Product } from '@/types/api';
+import { ApiResponse, Banner, Brand, Category, Product } from '@/types/api';
+import StoreLoader from '@/components/common/StoreLoader';
+import BestSellersSection from '@/components/sections/products/BestSellersSection';
+import OffersSection from '@/components/sections/promo/OffersSection';
 
 interface ExampleTemplateProps {
   searchQuery?: string;
   excludeKeys?: string[];
   className?: string;
-}
-
-interface Brand {
-  _id: string;
-  name: string;
-  logo?: string;
 }
 
 function sectionEnabled(sections: any[] | undefined, key: string, fallback = true) {
@@ -29,12 +26,49 @@ function sectionEnabled(sections: any[] | undefined, key: string, fallback = tru
   return found ? found.enabled !== false : fallback;
 }
 
+function sectionEnabledAny(sections: any[] | undefined, keys: string[], fallback = true) {
+  if (!Array.isArray(sections) || sections.length === 0) return fallback;
+  const matchingSections = sections.filter((section) => keys.includes(section?.key?.toLowerCase()));
+  return matchingSections.length === 0
+    ? fallback
+    : matchingSections.some((section) => section.enabled !== false);
+}
+
 export default function ExampleTemplate({
   searchQuery = '',
   excludeKeys = [],
   className = '',
 }: ExampleTemplateProps) {
-  const { colors, sections, storeName, logoUrl, fontStyle, contactInfo } = useStoreSettings() as any;
+  const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings();
+  const isDarkMode = themeMode === 'dark';
+  const activePrimary = isDarkMode ? colors?.primaryDark || colors?.primary : colors?.primary;
+  const activeSecondary = isDarkMode ? colors?.secondaryDark || colors?.secondary : colors?.secondary;
+  const activeBackground = isDarkMode ? colors?.backgroundDark || colors?.background : colors?.background;
+  const activeTextPrimary = isDarkMode ? colors?.textPrimaryDark || colors?.textPrimary : colors?.textPrimary;
+  const activeTextSecondary = isDarkMode ? colors?.textSecondaryDark || colors?.textSecondary : colors?.textSecondary;
+  const ecommerceData = settings.ecommerceData?.[0];
+  const header = ecommerceData?.header || {};
+  const footer = ecommerceData?.footer || {};
+  const socialLinks = ecommerceData?.social_links || {};
+  const contactInfo = ecommerceData || {};
+  const headerLinks = header.links || [];
+  const headerLinkConfig: Record<string, { label: string; href: string }> = {
+    home: { label: 'Home', href: '/' },
+    category: { label: 'Categories', href: '/categories' },
+    categories: { label: 'Categories', href: '/categories' },
+    products: { label: 'Products', href: '/product' },
+    brands: { label: 'Brands', href: '/brands' },
+    'track-order': { label: 'Track Order', href: '/order-tracking' },
+    'order-tracking': { label: 'Track Order', href: '/order-tracking' },
+  };
+  const dynamicHeaderLinks = headerLinks
+    .map((link) => {
+      const normalizedLink = link.toLowerCase().trim();
+      return headerLinkConfig[normalizedLink] || {
+        label: normalizedLink.replace(/-/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
+        href: `/${normalizedLink.replace(/\s+/g, '-')}`,
+      };
+    });
 
   // ── 1. Dynamic Backend API Hooks ───────────────────────────────────────
   const { data: bannersData, isLoading: bannersLoading } = useGet<ApiResponse<Banner>>(['banners'], '/banner');
@@ -48,23 +82,25 @@ export default function ExampleTemplate({
   const showHero = sectionEnabled(sections, 'hero');
   const showProducts = sectionEnabled(sections, 'products');
   const showBrands = sectionEnabled(sections, 'brands');
+  const showBestSellers = sectionEnabledAny(sections, ['best-sellers', 'best-seller', 'bestsellers']);
+  const showOffers = sectionEnabledAny(sections, ['offers', 'offer', 'offer-products', 'special-offers']);
   const showFooter = sectionEnabled(sections, 'footer') && !excludeKeys.includes('footer');
 
   // Dynamic Theme Styling Variable Map
   const themeVars = {
-    ['--bs-primary' as any]: colors?.primary || '#d9232d',
-    ['--bs-secondary' as any]: colors?.secondary || '#1e293b',
-    ['--bs-bg' as any]: colors?.background || '#f8fafc',
-    ['--bs-text' as any]: colors?.textPrimary || '#0f172a',
-    ['--bs-text-muted' as any]: colors?.textSecondary || '#64748b',
+    ['--bs-primary' as any]: activePrimary || '#d9232d',
+    ['--bs-secondary' as any]: activeSecondary || '#1e293b',
+    ['--bs-bg' as any]: activeBackground || '#f8fafc',
+    ['--bs-text' as any]: activeTextPrimary || '#0f172a',
+    ['--bs-text-muted' as any]: activeTextSecondary || '#64748b',
     ['--bs-font' as any]: fontStyle ? `'${fontStyle}', sans-serif` : 'sans-serif',
   } as React.CSSProperties;
 
   // Extract Dynamic Lists
-  const categories = useMemo(() => categoriesData?.data?.data || [], [categoriesData]);
+  const categories = useMemo(() => (categoriesData?.data?.data || []).filter((category) => category.is_featured === true), [categoriesData]);
   const banners = useMemo(() => bannersData?.data?.data || [], [bannersData]);
-  const products = useMemo(() => productsData?.data?.data || [], [productsData]);
-  const brands = useMemo(() => brandsData?.data?.data || [], [brandsData]);
+  const products = useMemo(() => (productsData?.data?.data || []).filter((product) => product.is_featured === true), [productsData]);
+  const brands = useMemo(() => (brandsData?.data?.data || []).filter((brand) => brand.is_featured === true), [brandsData]);
 
   // Filtered Lists
   const filteredProducts = useMemo(() => {
@@ -79,24 +115,23 @@ export default function ExampleTemplate({
 
   const newArrivals = useMemo(() => filteredProducts.slice(0, 4), [filteredProducts]);
   const trendingProducts = useMemo(() => filteredProducts.slice(4, 8), [filteredProducts]);
-  const offerProducts = useMemo(() => filteredProducts.filter(p => p.discount || p.final_price).slice(0, 4), [filteredProducts]);
 
   const heroMainBanner = banners[0];
-  const heroTitle = heroMainBanner?.title || heroMainBanner?.name?.[0] || 'Simple and easy';
-  const heroDescription = heroMainBanner?.description || 'Discover top picks dynamically synced with your store backend.';
+  const heroTitle = heroMainBanner?.title || heroMainBanner?.name?.[0] || storeName;
+  const heroDescription = heroMainBanner?.description || '';
 
   const isLoading = bannersLoading || categoriesLoading || productsLoading;
 
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-gray-50">
-        <Loader2 className="h-10 w-10 animate-spin text-[var(--bs-primary)]" style={{ color: colors?.primary || '#d9232d' }} />
+        <StoreLoader logoUrl={logoUrl} label="Loading your store..." size="lg" />
       </div>
     );
   }
 
   return (
-    <div className={`bs-tpl w-full bg-[#f4f5f7] min-h-screen text-slate-800 ${className}`} style={themeVars}>
+    <div className={`bs-tpl w-full min-h-screen text-[var(--bs-text)] ${className}`} style={{ ...themeVars, backgroundColor: 'var(--bs-bg)' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
         .bs-tpl { font-family: 'Poppins', sans-serif; }
@@ -108,11 +143,11 @@ export default function ExampleTemplate({
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1.5">
               <MapPin size={14} className="text-gray-400" />
-              {contactInfo?.address || '56 King Street, New York'}
+              {contactInfo?.address}
             </span>
             <span className="flex items-center gap-1.5">
               <Phone size={14} className="text-gray-400" />
-              {contactInfo?.phone || '+1 964 123 456789'}
+              {contactInfo?.phone}
             </span>
           </div>
 
@@ -128,10 +163,10 @@ export default function ExampleTemplate({
       <header className="bg-white py-4 border-b border-gray-200">
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between gap-6">
           <Link href="/" className="flex items-center gap-2 text-3xl font-extrabold tracking-tight shrink-0">
-            {logoUrl ? (
-              <img src={logoUrl} alt={storeName || 'Logo'} className="h-10 w-auto object-contain" />
+              {header.logo || logoUrl ? (
+              <img src={header.logo || logoUrl || undefined} alt={header.title || storeName || 'Logo'} className="h-10 w-auto object-contain" />
             ) : (
-              <span className="text-slate-900">{storeName || 'bShop'}</span>
+              <span className="text-[var(--bs-text)]">{storeName}</span>
             )}
           </Link>
 
@@ -154,17 +189,36 @@ export default function ExampleTemplate({
           </div>
 
           <div className="flex items-center gap-5 shrink-0">
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+              title={language === 'ar' ? 'English' : 'العربية'}
+              className="flex h-9 min-w-9 items-center justify-center rounded-full border px-2 text-[10px] font-black transition-all duration-300 hover:scale-105"
+              style={{ borderColor: 'var(--bs-primary)', color: 'var(--bs-primary)' }}
+            >
+              {language.toUpperCase()}
+            </button>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-pressed={themeMode === 'dark'}
+              title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
+              className="flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
+              style={{
+                backgroundColor: 'var(--color-secondary)',
+                borderColor: 'var(--color-primary)',
+                color: 'var(--color-primary)',
+              }}
+            >
+              {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <Link href="/wishlist" className="relative p-2 text-gray-700 hover:text-[var(--bs-primary)] transition-colors">
               <Heart size={24} />
-              <span className="absolute -top-1 -right-1 bg-gray-200 text-slate-800 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border border-white">
-                0
-              </span>
             </Link>
             <Link href="/cart" className="relative p-2 text-gray-700 hover:text-[var(--bs-primary)] transition-colors">
               <ShoppingBag size={24} />
-              <span className="absolute -top-1 -right-1 bg-[var(--bs-primary)] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                0
-              </span>
             </Link>
           </div>
         </div>
@@ -185,10 +239,11 @@ export default function ExampleTemplate({
             </button>
 
             <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-wider">
-              <Link href="/" className="hover:text-[var(--bs-primary)] transition-colors">Home</Link>
-              <Link href="/categories" className="hover:text-[var(--bs-primary)] transition-colors">Mega Menu</Link>
-              <Link href="/products" className="hover:text-[var(--bs-primary)] transition-colors">Mega Fixed Width</Link>
-              <Link href="/offers" className="hover:text-[var(--bs-primary)] transition-colors">Dropdown</Link>
+              {dynamicHeaderLinks.map((link) => (
+                <Link key={link.href} href={link.href} className="hover:text-[var(--bs-primary)] transition-colors">
+                  {link.label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>
@@ -235,7 +290,7 @@ export default function ExampleTemplate({
                   </div>
                   <div className="relative flex justify-center items-center mt-6 md:mt-0">
                     <img
-                      src={heroMainBanner.images?.[0] || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800'}
+                      src={heroMainBanner.images?.[0] || undefined}
                       alt="Hero Product"
                       className="max-h-[300px] object-contain drop-shadow-2xl"
                     />
@@ -243,7 +298,7 @@ export default function ExampleTemplate({
                 </div>
               ) : (
                 <div className="p-12 text-center w-full">
-                  <h2 className="text-2xl font-bold">Welcome to {storeName || 'our Store'}</h2>
+                  <h2 className="text-2xl font-bold">{storeName}</h2>
                 </div>
               )}
             </div>
@@ -252,7 +307,7 @@ export default function ExampleTemplate({
       )}
 
       {/* ── Dynamic 5-Grid Feature Banners Section (Matching Screenshot) ─ */}
-      <FeatureBannersGrid banners={banners.slice(1)} primaryColor={colors?.primary || '#d9232d'} />
+      <FeatureBannersGrid banners={banners.slice(1)} primaryColor="var(--bs-primary)" />
 
       {/* ── Shop by Brands ────────────────────────────────────────────── */}
       {showBrands && brands.length > 0 && (
@@ -284,7 +339,7 @@ export default function ExampleTemplate({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {newArrivals.map((prod) => (
-              <ProductCard key={prod._id} product={prod} badge="NEW" />
+              <ProductCard key={prod._id} product={prod} badge="NEW" logoUrl={logoUrl} />
             ))}
           </div>
         </section>
@@ -302,29 +357,14 @@ export default function ExampleTemplate({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {trendingProducts.map((prod) => (
-              <ProductCard key={prod._id} product={prod} />
+              <ProductCard key={prod._id} product={prod} logoUrl={logoUrl} />
             ))}
           </div>
         </section>
       )}
 
-      {/* ── Available Offer ───────────────────────────────────────────── */}
-      {showProducts && offerProducts.length > 0 && (
-        <section className="max-w-[1400px] mx-auto px-6 pt-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900">Available Offer</h2>
-            <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
-              SEE ALL
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {offerProducts.map((prod) => (
-              <ProductCard key={prod._id} product={prod} badge="OFF" />
-            ))}
-          </div>
-        </section>
-      )}
+      {showBestSellers && <BestSellersSection title="Best Sellers" searchQuery={currentSearch} />}
+      {showOffers && <OffersSection title="Special Offers" />}
 
       {/* ── Footer ────────────────────────────────────────────────────── */}
       {showFooter && (
@@ -332,12 +372,18 @@ export default function ExampleTemplate({
           <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 pb-12 border-b border-gray-200">
             
             <div>
+              {(footer.logo || logoUrl) && (
+                <img src={footer.logo || logoUrl || undefined} alt={storeName || 'Store logo'} className="h-10 w-auto object-contain mb-4" />
+              )}
               <h4 className="font-bold text-slate-900 text-sm mb-4">Contact Us</h4>
-              <p className="mb-2"><strong>Address:</strong> {contactInfo?.address || '56 King Street, New York'}</p>
-              <p className="mb-2"><strong>Email:</strong> {contactInfo?.email || 'support@bshop.com'}</p>
-              <p className="mb-4"><strong>Phone:</strong> {contactInfo?.phone || '+1 964 123 456789'}</p>
+              {contactInfo?.address && <p className="mb-2"><strong>Address:</strong> {contactInfo.address}</p>}
+              {contactInfo?.email && <p className="mb-2"><strong>Email:</strong> {contactInfo.email}</p>}
+              {contactInfo?.phone && <p className="mb-4"><strong>Phone:</strong> {contactInfo.phone}</p>}
               <div className="flex gap-3 text-slate-700">
-                <Facebook size={16} /> <Twitter size={16} /> <Instagram size={16} /> <Youtube size={16} />
+                <a href={socialLinks.facebook || '#'} aria-label="Facebook"><Facebook size={16} /></a>
+                <a href={socialLinks.twitter || '#'} aria-label="Twitter"><Twitter size={16} /></a>
+                <a href={socialLinks.instagram || '#'} aria-label="Instagram"><Instagram size={16} /></a>
+                <a href={socialLinks.youtube || '#'} aria-label="YouTube"><Youtube size={16} /></a>
               </div>
             </div>
 
@@ -363,7 +409,7 @@ export default function ExampleTemplate({
 
             <div>
               <h4 className="font-bold text-slate-900 text-sm mb-4">Subscribe our newsletter</h4>
-              <p className="mb-4 text-gray-500">Subscribe to the mailing list to receive updates on special offers and new arrivals.</p>
+              {footer.bio && <p className="mb-4 text-gray-500">{footer.bio}</p>}
               <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
                 <input
                   type="email"
@@ -378,7 +424,7 @@ export default function ExampleTemplate({
           </div>
 
           <div className="max-w-[1400px] mx-auto px-6 pt-6 text-xs text-gray-500">
-            <p>Copyright © {new Date().getFullYear()}. All rights reserved by <span className="text-[var(--bs-primary)] font-bold">{storeName || 'bShop'}</span></p>
+            <p>{footer.copyright && `${footer.copyright} `}<span className="text-[var(--bs-primary)] font-bold">{storeName}</span></p>
           </div>
         </footer>
       )}
@@ -386,8 +432,45 @@ export default function ExampleTemplate({
   );
 }
 
-// ── 2. Feature Banners Grid Sub-Component (Matching Banner Image Grid) ───
-function FeatureBannersGrid({ banners = [], primaryColor = '#d9232d' }: { banners: Banner[]; primaryColor?: string }) {
+// ── 2. Dynamic Feature Banners Grid ─────────────────────────────────────
+function FeatureBannersGrid({ banners, primaryColor }: { banners: Banner[]; primaryColor: string }) {
+  if (banners.length === 0) return null;
+
+  return (
+    <section className="max-w-[1400px] mx-auto px-6 pt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {banners.map((banner) => {
+          const title = banner.title || banner.name?.filter(Boolean).join(' ');
+          const description = banner.description || '';
+          const image = banner.images?.[0];
+
+          return (
+            <Link
+              key={banner._id}
+              href="/categories"
+              className="relative min-h-[240px] overflow-hidden rounded-2xl border border-gray-200 bg-[var(--bs-secondary)] p-6 text-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+            >
+              {image && (
+                <img src={image} alt={title || 'Banner'} className="absolute inset-0 h-full w-full object-cover opacity-60 transition-transform duration-500" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="relative z-10 flex min-h-[190px] flex-col justify-end gap-2">
+                {title && <h3 className="text-xl font-black leading-tight">{title}</h3>}
+                {description && <p className="text-sm text-white/80">{description}</p>}
+                <span className="mt-2 inline-flex w-fit rounded-lg px-4 py-2 text-xs font-bold uppercase" style={{ backgroundColor: primaryColor }}>
+                  View Collection
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// Legacy implementation retained below for reference only.
+function LegacyFeatureBannersGrid({ banners = [], primaryColor = '#d9232d' }: { banners: Banner[]; primaryColor?: string }) {
   const b1 = banners[0]; // Top Left (Cyan)
   const b2 = banners[1]; // Bottom Left (Pink)
   const b3 = banners[2]; // Middle Tall (Light Grey)
@@ -486,7 +569,7 @@ function FeatureBannersGrid({ banners = [], primaryColor = '#d9232d' }: { banner
 }
 
 // ── 3. Product Card Sub-Component ───────────────────────────────────────
-function ProductCard({ product, badge }: { product: Product; badge?: string }) {
+function ProductCard({ product, badge, logoUrl }: { product: Product; badge?: string; logoUrl?: string | null }) {
   const price = product.final_price ?? product.main_price ?? product.price ?? 0;
   const oldPrice = product.main_price && product.final_price ? product.main_price : null;
 
@@ -500,7 +583,7 @@ function ProductCard({ product, badge }: { product: Product; badge?: string }) {
 
       <Link href={`/product/${product._id}`} className="block relative pt-[100%] overflow-hidden bg-white p-4">
         <img
-          src={product.image || product.gallery_product?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600'}
+          src={product.image || product.gallery_product?.[0] || logoUrl || undefined}
           alt={product.name}
           className="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)] object-contain group-hover:scale-105 transition-transform duration-300"
         />
@@ -512,10 +595,10 @@ function ProductCard({ product, badge }: { product: Product; badge?: string }) {
             {product.name}
           </h3>
           <p className="text-[11px] text-gray-500 mb-0.5">
-            Brand: <span className="text-[var(--bs-primary)]">{product.brand?.name || (product as any).brand_name || 'Roadstar'}</span>
+            Brand: <span className="text-[var(--bs-primary)]">{product.brand?.name || (product as any).brand_name || ''}</span>
           </p>
           <p className="text-[11px] text-gray-500 mb-3">
-            Sold By: <span className="text-[var(--bs-primary)]">{(product as any).seller || 'Store'}</span>
+            Sold By: <span className="text-[var(--bs-primary)]">{(product as any).seller || ''}</span>
           </p>
         </div>
 

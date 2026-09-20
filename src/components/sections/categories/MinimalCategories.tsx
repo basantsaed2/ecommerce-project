@@ -28,14 +28,14 @@ export default function MinimalCategories({
     }
     if (error) return null;
 
-    const categories = data?.data?.data || [];
+    const categories = (data?.data?.data || []).filter((category) => category.is_featured === true);
     if (categories.length === 0) return null;
 
     return (
         <section className="w-full py-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-primary">
-                    {title || "Categories"}
+                    {title || "Featured Categories"}
                 </h3>
                 <Link href="/categories" className="text-xs font-semibold text-secondary hover:underline">
                     View All

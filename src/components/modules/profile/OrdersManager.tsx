@@ -1,10 +1,12 @@
 "use client";
 import React, { useState } from 'react';
 import { useGet } from '@/hooks/useGet';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { Loader2, Package, ChevronRight, FileText, X, CheckCircle2, Clock, MapPin, CreditCard, Store, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function OrdersManager() {
+    const { logoUrl } = useStoreSettings();
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
     // Fetch My Orders
@@ -129,7 +131,7 @@ export default function OrdersManager() {
                                         {(orderDetails.cartItems || orderDetails.products || orderDetails.items || []).map((item: any) => {
                                             const isPopulated = item.product && typeof item.product === 'object';
                                             const productName = isPopulated ? (item.product.name || item.product.ar_name) : `Product ID: ${item.product}`;
-                                            const productImage = isPopulated && item.product.image ? item.product.image : '/placeholder-product.png';
+                                            const productImage = isPopulated && item.product.image ? item.product.image : logoUrl;
 
                                             return (
                                                 <div key={item._id || (isPopulated ? item.product._id : item.product)} className="flex gap-4 items-center bg-gray-50 p-4 rounded-2xl">
