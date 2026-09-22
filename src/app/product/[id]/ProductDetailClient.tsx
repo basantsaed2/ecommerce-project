@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useGet } from '@/hooks/useGet';
 import { Product, SingleApiResponse, Sku } from '@/types/api';
 import {
@@ -23,8 +23,9 @@ import RelatedProducts from '@/components/modules/products/RelatedProducts';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 
 export default function ProductDetailClient() {
+    const params = useParams<{ id?: string }>();
     const searchParams = useSearchParams();
-    const id = searchParams.get('id') ?? '';
+    const id = params?.id ?? searchParams.get('id') ?? '';
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const token = useSelector((state: RootState) => state.auth.token);
