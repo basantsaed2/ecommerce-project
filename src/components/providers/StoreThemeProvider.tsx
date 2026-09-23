@@ -117,6 +117,7 @@ export function StoreThemeProvider({
             }
             : undefined,
         staleTime: 1000 * 60 * 5,
+        refetchOnMount: 'always',
         retry: 1,
     });
 

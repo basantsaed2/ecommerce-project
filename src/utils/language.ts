@@ -5,6 +5,8 @@ export const DEFAULT_LANGUAGE: StoreLanguage = 'en';
 export const LANGUAGE_COOKIE = 'store-language';
 
 export const getCurrentLanguage = (): StoreLanguage => {
+    if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
+
     const language = getCookie(LANGUAGE_COOKIE);
     return language === 'ar' ? 'ar' : DEFAULT_LANGUAGE;
 };
