@@ -13,6 +13,7 @@ import SearchableSelect from '@/components/ui/SearchableSelect';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import StoreLoader from '@/components/common/StoreLoader';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BostaCityOption {
     _id: string;
@@ -124,6 +125,7 @@ const getBostaDistricts = (response: unknown): BostaDistrictOption[] => {
 
 export default function CheckoutPage() {
     const { logoUrl } = useStoreSettings();
+    const { t, isRtl } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -316,19 +318,19 @@ export default function CheckoutPage() {
     const { mutate: placeOrder, isPending: isPlacingOrder } = usePost(
         '/order/checkout',
         ['cart', 'orders'],
-        'Order placed successfully!'
+        t.checkout.orderPlacedSuccess
     );
 
     // Add Address Mutation
     const { mutate: addAddress, isPending: isAddingAddress } = usePost(
         '/address',
         ['addresses'],
-        'Address added successfully!'
+        t.checkout.addressAddedSuccess
     );
 
     const handleAddAddress = () => {
         if (!newAddrCountry || !newAddrCity || !newAddrZone || !newAddrStreet || !newAddrBuilding) {
-            toast.error('Please fill in all required fields (Country, City, Zone, Street, Building)');
+            toast.error(t.checkout.addressFieldsError);
             return;
         }
         addAddress({
@@ -354,27 +356,27 @@ export default function CheckoutPage() {
     const handleCheckout = () => {
         if (selectedOrderType === 'pickup') {
             if (!selectedWarehouse) {
-                toast.error("Please select a pick up branch");
+                toast.error(t.checkout.orderTypePickupError);
                 return;
             }
         } else {
             if (isLoadingShippingMethod || isShippingMethodError) {
-                toast.error("Could not confirm the active shipping method. Please refresh and try again.");
+                toast.error(t.checkout.shippingMethodErrorSubmit);
                 return;
             }
 
             if (isBostaShipping && (!guestCity || !guestDistrict || !guestZone || !guestStreet || !guestBuildingNumber)) {
-                toast.error("Please select a Bosta city, district, and zone and fill in the required address details");
+                toast.error(t.checkout.bostaAddressError);
                 return;
             }
 
             if (!isBostaShipping && !token && (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber)) {
-                toast.error("Please fill in all required delivery details (Country, City, Zone, Street, Building)");
+                toast.error(t.checkout.deliveryDetailsError);
                 return;
             }
 
             if (!isBostaShipping && token && !selectedAddress) {
-                toast.error("Please select a shipping address");
+                toast.error(t.checkout.shippingAddressError);
                 return;
             }
         }
@@ -388,7 +390,7 @@ export default function CheckoutPage() {
             payload.warehouseId = selectedWarehouse;
         } else if (isBostaShipping) {
             if (!selectedBostaCity || !selectedBostaDistrict) {
-                toast.error("Please select a valid Bosta city, zone, and district");
+                toast.error(t.checkout.validBostaAddressError);
                 return;
             }
             payload.shippingAddress = {
@@ -426,7 +428,7 @@ export default function CheckoutPage() {
                 const iframeUrl = res?.iframeUrl || res?.data?.iframeUrl || res?.data?.payment?.iframeUrl || res?.payment?.iframeUrl || res?.data?.order?.payment?.iframeUrl;
                 
                 dispatch(clearCartLocal());
-                toast.success('Thank you! Your order has been placed successfully.');
+                toast.success(t.checkout.orderPlacedSuccess);
 
                 if (iframeUrl) {
                     window.location.href = iframeUrl;
@@ -443,22 +445,20 @@ export default function CheckoutPage() {
                 <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6 animate-bounce">
                     <CheckCircle2 size={48} className="text-green-500" />
                 </div>
-                <h1 className="text-4xl font-black text-primary tracking-tighter mb-4">Order Confirmed!</h1>
-                <p className="text-gray-500 font-medium max-w-sm mb-8">
-                    Your order has been successfully placed. We'll send you an email with your shipping details shortly.
-                </p>
+                <h1 className="text-4xl font-black text-primary tracking-tighter mb-4">{t.checkout.orderConfirmedTitle}</h1>
+                <p className="text-gray-500 font-medium max-w-sm mb-8">{t.checkout.confirmedDesc}</p>
                 <div className="flex gap-4">
                     <button
                         onClick={() => router.push('/profile')}
                         className="px-8 py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all"
                     >
-                        View Orders
+                        {t.checkout.viewOrders}
                     </button>
                     <button
                         onClick={() => router.push('/')}
                         className="px-8 py-3 bg-primary text-white rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-primary/20"
                     >
-                        Continue Shopping
+                        {t.checkout.continueShopping}
                     </button>
                 </div>
             </div>
@@ -468,7 +468,7 @@ export default function CheckoutPage() {
     if (isFetchingCart && items.length === 0) {
         return (
             <div className="w-full min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
-                <StoreLoader logoUrl={logoUrl} label="Loading secure checkout..." size="lg" />
+                <StoreLoader logoUrl={logoUrl} label={t.checkout.secureCheckoutLoading} size="lg" />
             </div>
         );
     }
@@ -477,7 +477,7 @@ export default function CheckoutPage() {
 
     return (
         <div className="w-full px-4 md:px-12 py-6 pb-24">
-            <h1 className="text-4xl font-black text-primary tracking-tight mb-10">Secure Checkout</h1>
+            <h1 className="text-4xl font-black text-primary tracking-tight mb-10">{t.checkout.secureCheckoutTitle}</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <div className="lg:col-span-2 space-y-10">
@@ -485,13 +485,13 @@ export default function CheckoutPage() {
                     <section>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center font-black">1</div>
-                            <h2 className="text-2xl font-black text-primary">Order Type</h2>
+                            <h2 className="text-2xl font-black text-primary">{t.checkout.orderType}</h2>
                         </div>
                         {isFetchingOt ? (
                             <div className="flex justify-center p-6"><Loader2 className="animate-spin text-gray-400" /></div>
                         ) : orderTypesList.length === 0 ? (
                             <div className="p-6 border border-dashed border-gray-200 rounded-2xl text-center">
-                                <p className="text-gray-400 font-medium">No order types available.</p>
+                                <p className="text-gray-400 font-medium">{t.checkout.noOrderTypes}</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -512,9 +512,9 @@ export default function CheckoutPage() {
                                                 {isPickup ? <Store size={28} /> : <Truck size={28} />}
                                             </div>
                                             <div>
-                                                <p className="font-black text-primary text-lg capitalize">{typeName}</p>
+                                                <p className="font-black text-primary text-lg capitalize">{isPickup ? t.checkout.pickUpFromBranch : t.checkout.deliverToDoor}</p>
                                                 <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wider">
-                                                    {isPickup ? 'Pick up from branch' : 'Deliver to your door'}
+                                                    {isPickup ? t.checkout.pickupDesc : t.checkout.deliveryDesc}
                                                 </p>
                                             </div>
                                         </div>
@@ -529,7 +529,7 @@ export default function CheckoutPage() {
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center font-black">2</div>
                             <h2 className="text-2xl font-black text-primary">
-                                {selectedOrderType === 'pickup' ? 'Select Branch' : 'Shipping Address'}
+                                {selectedOrderType === 'pickup' ? t.checkout.selectBranch : t.checkout.shippingAddress}
                             </h2>
                         </div>
 
@@ -539,7 +539,7 @@ export default function CheckoutPage() {
                             ) : warehousesList.length === 0 ? (
                                 <div className="p-12 border-2 border-dashed border-gray-200 rounded-3xl text-center bg-gray-50/50">
                                     <Store className="mx-auto text-gray-300 mb-4" size={40} />
-                                    <p className="text-gray-500 font-black text-lg mb-2">No Branches Available</p>
+                                    <p className="text-gray-500 font-black text-lg mb-2">{t.checkout.noBranches}</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -557,8 +557,8 @@ export default function CheckoutPage() {
                                                     <div className={`w-3 h-3 rounded-full transition-transform ${selectedWarehouse === wh._id ? 'bg-secondary scale-100' : 'scale-0'}`} />
                                                 </div>
                                                 <div>
-                                                    <p className="font-black text-primary text-lg">{wh.name || 'Branch'}</p>
-                                                    <p className="text-sm font-bold text-gray-500 mt-1">{wh.address || 'No address'}</p>
+                                                    <p className="font-black text-primary text-lg">{wh.name || t.checkout.branch}</p>
+                                                    <p className="text-sm font-bold text-gray-500 mt-1">{wh.address || t.checkout.noAddress}</p>
                                                     {wh.phone && (
                                                         <div className="mt-3 flex gap-2 flex-wrap">
                                                             <span className="px-2.5 py-1 bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400 rounded-lg">
@@ -576,41 +576,41 @@ export default function CheckoutPage() {
                             <div className="flex justify-center p-8"><Loader2 className="animate-spin text-gray-400" /></div>
                         ) : isShippingMethodError ? (
                             <div className="p-6 border border-red-200 bg-red-50 rounded-2xl text-center">
-                                <p className="text-red-600 font-bold">Could not load the active shipping method. Please refresh and try again.</p>
+                                <p className="text-red-600 font-bold">{t.checkout.shippingMethodError}</p>
                             </div>
                         ) : isBostaShipping || !token ? (
                             <div className="bg-gray-50/50 p-6 sm:p-8 rounded-[32px] border-2 border-gray-100 mb-6">
-                                <h3 className="text-2xl font-black text-primary mb-6">Delivery Details</h3>
+                                <h3 className="text-2xl font-black text-primary mb-6">{t.checkout.deliveryDetails}</h3>
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {isBostaShipping ? (
                                             <>
                                                 <div className="space-y-1.5">
-                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Country</label>
-                                                    <div className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-sm text-primary">Egypt</div>
+                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.country}</label>
+                                                    <div className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-sm text-primary">{t.checkout.countryEgypt}</div>
                                                 </div>
                                                 {isBostaCitiesError ? (
-                                                    <p className="md:col-span-2 text-sm font-bold text-red-600">Could not load Bosta cities. Please refresh and try again.</p>
+                                                    <p className="md:col-span-2 text-sm font-bold text-red-600">{t.checkout.bostaCitiesError}</p>
                                                 ) : (
                                                     <SearchableSelect
-                                                        label="City"
+                                                        label={t.checkout.city}
                                                         options={bostaCities}
                                                         value={guestCity}
                                                         onChange={(val) => { setGuestCity(val); setGuestZone(''); setGuestDistrict(''); }}
-                                                        placeholder={isLoadingBostaCities ? 'Loading Bosta cities...' : 'Pick City'}
+                                                        placeholder={isLoadingBostaCities ? t.checkout.loadingCities : t.checkout.pickCity}
                                                         disabled={isLoadingBostaCities}
                                                     />
                                                 )}
                                                 {guestCity && (isLoadingBostaDistricts ? (
                                                     <div className="md:col-span-2 flex items-center gap-2 text-sm font-bold text-gray-400">
-                                                        <Loader2 size={16} className="animate-spin" /> Loading delivery areas...
+                                                        <Loader2 size={16} className="animate-spin" /> {t.checkout.loadingDeliveryAreas}
                                                     </div>
                                                 ) : isBostaDistrictsError ? (
-                                                    <p className="md:col-span-2 text-sm font-bold text-red-600">Could not load Bosta delivery areas. Please select the city again or refresh.</p>
+                                                    <p className="md:col-span-2 text-sm font-bold text-red-600">{t.checkout.bostaAreasError}</p>
                                                 ) : (
                                                     <>
                                                         <SearchableSelect
-                                                            label="District"
+                                                            label={t.checkout.district}
                                                             options={bostaDistrictOptions}
                                                             value={guestDistrict}
                                                             onChange={(val) => {
@@ -620,11 +620,11 @@ export default function CheckoutPage() {
                                                                     setGuestZone(matched.zoneId);
                                                                 }
                                                             }}
-                                                            placeholder="Pick District"
+                                                            placeholder={t.checkout.pickDistrict}
                                                             disabled={!bostaDistrictOptions.length}
                                                         />
                                                         <SearchableSelect
-                                                            label="Zone"
+                                                            label={t.checkout.zone}
                                                             options={bostaZones}
                                                             value={guestZone}
                                                             onChange={(val) => {
@@ -634,11 +634,11 @@ export default function CheckoutPage() {
                                                                     setGuestDistrict('');
                                                                 }
                                                             }}
-                                                            placeholder="Pick Zone"
+                                                            placeholder={t.checkout.pickZone}
                                                             disabled={!bostaZones.length}
                                                         />
                                                         {!bostaDistricts.length && (
-                                                            <p className="md:col-span-2 text-sm font-bold text-amber-600">No Bosta delivery areas were returned for this city.</p>
+                                                            <p className="md:col-span-2 text-sm font-bold text-amber-600">{t.checkout.noDeliveryAreas}</p>
                                                         )}
                                                     </>
                                                 ))}
@@ -646,26 +646,26 @@ export default function CheckoutPage() {
                                         ) : (
                                             <>
                                                 <SearchableSelect
-                                                    label="Country"
+                                                    label={t.checkout.country}
                                                     options={lists.countries || []}
                                                     value={guestCountry}
                                                     onChange={(val) => { setGuestCountry(val); setGuestCity(''); setGuestZone(''); }}
-                                                    placeholder="Pick Country"
+                                                    placeholder={t.checkout.pickCity}
                                                 />
                                                 <SearchableSelect
-                                                    label="City"
+                                                    label={t.checkout.city}
                                                     options={filteredCities}
                                                     value={guestCity}
                                                     onChange={(val) => { setGuestCity(val); setGuestZone(''); }}
-                                                    placeholder="Pick City"
+                                                    placeholder={t.checkout.pickCity}
                                                     disabled={!guestCountry}
                                                 />
                                                 <SearchableSelect
-                                                    label="Zone"
+                                                    label={t.checkout.zone}
                                                     options={filteredZones}
                                                     value={guestZone}
                                                     onChange={(val) => setGuestZone(val)}
-                                                    placeholder="Pick Zone"
+                                                    placeholder={t.checkout.pickZone}
                                                     disabled={!guestCity}
                                                 />
                                             </>
@@ -673,24 +673,24 @@ export default function CheckoutPage() {
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1.5 md:col-span-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Street Name</label>
-                                            <input type="text" placeholder="e.g. Al-Hamra St." value={guestStreet} onChange={(e) => setGuestStreet(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.streetName}</label>
+                                            <input type="text" placeholder={t.checkout.streetPlaceholder} value={guestStreet} onChange={(e) => setGuestStreet(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Building Number</label>
-                                            <input type="text" placeholder="e.g. 42" value={guestBuildingNumber} onChange={(e) => setGuestBuildingNumber(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.buildingNumber}</label>
+                                            <input type="text" placeholder={t.checkout.buildingPlaceholder} value={guestBuildingNumber} onChange={(e) => setGuestBuildingNumber(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Floor</label>
-                                            <input type="number" placeholder="e.g. 12" value={guestFloorNumber} onChange={(e) => setGuestFloorNumber(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.floor}</label>
+                                            <input type="number" placeholder={t.checkout.floorPlaceholder} value={guestFloorNumber} onChange={(e) => setGuestFloorNumber(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Apartment</label>
-                                            <input type="number" placeholder="e.g. 1" value={guestApartmentNumber} onChange={(e) => setGuestApartmentNumber(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.apartment}</label>
+                                            <input type="number" placeholder={t.checkout.apartmentPlaceholder} value={guestApartmentNumber} onChange={(e) => setGuestApartmentNumber(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Landmark</label>
-                                            <input type="text" placeholder="e.g. Near Mosque" value={guestLandmark} onChange={(e) => setGuestLandmark(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.landmark}</label>
+                                            <input type="text" placeholder={t.checkout.landmarkPlaceholder} value={guestLandmark} onChange={(e) => setGuestLandmark(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:border-secondary outline-none transition-all font-medium text-gray-700" />
                                         </div>
                                     </div>
                                 </div>
@@ -700,8 +700,8 @@ export default function CheckoutPage() {
                         ) : addresses.length === 0 ? (
                             <div className="p-12 border-2 border-dashed border-gray-200 rounded-3xl text-center bg-gray-50/50">
                                 <MapPin className="mx-auto text-gray-300 mb-4" size={40} />
-                                <p className="text-gray-500 font-black text-lg mb-2">No Saved Addresses</p>
-                                <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">You need a delivery address to complete your checkout.</p>
+                                <p className="text-gray-500 font-black text-lg mb-2">{t.checkout.noSavedAddresses}</p>
+                                <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">{t.checkout.needAddress}</p>
                                 <button
                                     onClick={() => setShowAddAddressDialog(true)}
                                     className="bg-secondary text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all active:scale-95 flex items-center gap-2 mx-auto"
@@ -729,10 +729,10 @@ export default function CheckoutPage() {
                                                 <p className="text-sm font-bold text-gray-500 mt-1">Bldg {addr.buildingNumber}{addr.apartmentNumber ? `, Apt ${addr.apartmentNumber}` : ''}</p>
                                                 <div className="mt-3 flex gap-2 flex-wrap">
                                                     <span className="px-2.5 py-1 bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400 rounded-lg">
-                                                        {addr.city?.name || 'City'}
+                                                        {addr.city?.name || t.checkout.city}
                                                     </span>
                                                     <span className="px-2.5 py-1 bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400 rounded-lg">
-                                                        {addr.zone?.name || 'Zone'}
+                                                        {addr.zone?.name || t.checkout.zone}
                                                     </span>
                                                 </div>
                                             </div>
@@ -747,7 +747,7 @@ export default function CheckoutPage() {
                                     <div className="w-12 h-12 rounded-full border-2 border-gray-200 group-hover:border-secondary flex items-center justify-center mb-3 transition-colors">
                                         <Plus className="text-gray-400 group-hover:text-secondary w-6 h-6 transition-colors" />
                                     </div>
-                                    <p className="font-bold text-gray-500 text-sm group-hover:text-secondary transition-colors">Add New Address</p>
+                                    <p className="font-bold text-gray-500 text-sm group-hover:text-secondary transition-colors">{t.checkout.addNewAddress}</p>
                                 </div>
                             </div>
                         )}
@@ -768,7 +768,7 @@ export default function CheckoutPage() {
                                             <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center">
                                                 <MapPin size={20} />
                                             </div>
-                                            <h2 className="text-xl font-black text-primary">Add New Address</h2>
+                                            <h2 className="text-xl font-black text-primary">{t.checkout.addNewAddress}</h2>
                                         </div>
                                         <button
                                             onClick={() => setShowAddAddressDialog(false)}
@@ -782,37 +782,37 @@ export default function CheckoutPage() {
                                     <div className="px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <SearchableSelect
-                                                label="Country *"
+                                                label={`${t.checkout.country} *`}
                                                 options={lists.countries || []}
                                                 value={newAddrCountry}
                                                 onChange={(val) => { setNewAddrCountry(val); setNewAddrCity(''); setNewAddrZone(''); }}
-                                                placeholder="Select Country"
+                                                placeholder={t.checkout.pickCountry}
                                             />
                                             <SearchableSelect
-                                                label="City *"
+                                                label={`${t.checkout.city} *`}
                                                 options={(lists.cities || []).filter((c: any) => c.country === newAddrCountry || !c.country)}
                                                 value={newAddrCity}
                                                 onChange={(val) => { setNewAddrCity(val); setNewAddrZone(''); }}
-                                                placeholder="Select City"
+                                                placeholder={t.checkout.pickCity}
                                                 disabled={!newAddrCountry}
                                             />
                                             <div className="sm:col-span-2">
                                                 <SearchableSelect
-                                                    label="Zone *"
+                                                    label={`${t.checkout.zone} *`}
                                                     options={(lists.zones || []).filter((z: any) => z.cityId === newAddrCity || !z.cityId)}
                                                     value={newAddrZone}
                                                     onChange={(val) => setNewAddrZone(val)}
-                                                    placeholder="Select Zone"
+                                                    placeholder={t.checkout.pickZone}
                                                     disabled={!newAddrCity}
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Street Name *</label>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.streetName} *</label>
                                             <input
                                                 type="text"
-                                                placeholder="e.g. Al-Hamra St."
+                                                placeholder={t.checkout.streetPlaceholder}
                                                 value={newAddrStreet}
                                                 onChange={e => setNewAddrStreet(e.target.value)}
                                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-secondary focus:bg-white outline-none transition-all font-medium text-gray-700"
@@ -821,40 +821,40 @@ export default function CheckoutPage() {
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Building No. *</label>
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.buildingNumber} *</label>
                                                 <input
                                                     type="text"
-                                                    placeholder="e.g. 42"
+                                                    placeholder={t.checkout.buildingPlaceholder}
                                                     value={newAddrBuilding}
                                                     onChange={e => setNewAddrBuilding(e.target.value)}
                                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-secondary focus:bg-white outline-none transition-all font-medium text-gray-700"
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Floor</label>
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.floor}</label>
                                                 <input
                                                     type="number"
-                                                    placeholder="e.g. 3"
+                                                    placeholder={t.checkout.floorPlaceholder}
                                                     value={newAddrFloor}
                                                     onChange={e => setNewAddrFloor(e.target.value)}
                                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-secondary focus:bg-white outline-none transition-all font-medium text-gray-700"
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Apartment</label>
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.apartment}</label>
                                                 <input
                                                     type="number"
-                                                    placeholder="e.g. 1"
+                                                    placeholder={t.checkout.apartmentPlaceholder}
                                                     value={newAddrApartment}
                                                     onChange={e => setNewAddrApartment(e.target.value)}
                                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-secondary focus:bg-white outline-none transition-all font-medium text-gray-700"
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Landmark</label>
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.checkout.landmark}</label>
                                                 <input
                                                     type="text"
-                                                    placeholder="e.g. Near Mosque"
+                                                    placeholder={t.checkout.landmarkPlaceholder}
                                                     value={newAddrLandmark}
                                                     onChange={e => setNewAddrLandmark(e.target.value)}
                                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-secondary focus:bg-white outline-none transition-all font-medium text-gray-700"
@@ -877,7 +877,7 @@ export default function CheckoutPage() {
                                             className="flex-1 py-3 rounded-xl font-black text-white bg-secondary hover:bg-primary transition-all shadow-lg shadow-secondary/20 flex items-center justify-center gap-2 disabled:opacity-60"
                                         >
                                             {isAddingAddress ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-                                            {isAddingAddress ? 'Saving...' : 'Save Address'}
+                                            {isAddingAddress ? t.checkout.saving : t.checkout.saveAddress}
                                         </button>
                                     </div>
                                 </div>
@@ -889,20 +889,20 @@ export default function CheckoutPage() {
                     <section>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center font-black">3</div>
-                            <h2 className="text-2xl font-black text-primary">Payment Method</h2>
+                            <h2 className="text-2xl font-black text-primary">{t.checkout.paymentMethod}</h2>
                         </div>
 
                         {isFetchingPm ? (
                             <div className="flex justify-center p-6"><Loader2 className="animate-spin text-gray-400" /></div>
                         ) : paymentMethodsList.length === 0 ? (
                             <div className="p-6 border border-dashed border-gray-200 rounded-2xl text-center">
-                                <p className="text-gray-400 font-medium">No payment methods available.</p>
+                                <p className="text-gray-400 font-medium">{t.checkout.noPaymentMethods}</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {paymentMethodsList.map((methodObj: any, idx: number) => {
                                     const methodIdentifier = methodObj._id || methodObj.name || methodObj.id || methodObj;
-                                    const methodName = methodObj.name || methodObj.title || methodObj.method || "Unknown";
+                                    const methodName = methodObj.name || methodObj.title || methodObj.method || t.checkout.unknown;
                                     const methodLogo = methodObj.logo || methodObj.icon;
                                     const methodDesc = methodObj.description || methodObj.discription;
                                     const isCash = methodName?.toLowerCase() === 'cash' || String(methodIdentifier).toLowerCase() === 'cash';
@@ -924,9 +924,9 @@ export default function CheckoutPage() {
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="font-black text-primary text-lg capitalize">{isCash ? 'Cash on Delivery' : methodName}</p>
+                                                <p className="font-black text-primary text-lg capitalize">{isCash ? t.checkout.cashOnDelivery : methodName}</p>
                                                 <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wider">
-                                                    {methodDesc || (isCash ? 'Pay when received' : 'Pay securely online')}
+                                                    {methodDesc || (isCash ? t.checkout.payWhenReceived : t.checkout.payOnline)}
                                                 </p>
                                             </div>
                                         </div>
@@ -937,10 +937,8 @@ export default function CheckoutPage() {
 
                         {paymentMethod && (
                             <div className="mt-6 p-6 rounded-[24px] border-2 border-gray-100 bg-gray-50/50">
-                                <h3 className="text-lg font-black text-primary mb-2">Payment Proof</h3>
-                                <p className="text-sm font-bold text-gray-500 mb-4">
-                                    If you are using a manual payment method (e.g., Vodafone Cash, Bank Transfer), please upload a screenshot of the receipt.
-                                </p>
+                                <h3 className="text-lg font-black text-primary mb-2">{t.checkout.paymentProof}</h3>
+                                <p className="text-sm font-bold text-gray-500 mb-4">{t.checkout.paymentProofDesc}</p>
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -966,7 +964,7 @@ export default function CheckoutPage() {
                                 />
                                 {proofFileName && (
                                     <p className="mt-3 text-sm font-bold text-green-600 flex items-center gap-2">
-                                        <CheckCircle2 size={16} /> Attached: {proofFileName}
+                                        <CheckCircle2 size={16} /> {t.checkout.attached}: {proofFileName}
                                     </p>
                                 )}
                             </div>
@@ -978,7 +976,7 @@ export default function CheckoutPage() {
                 {/* Summary Sidebar */}
                 <div className="lg:col-span-1">
                     <div className="bg-primary text-white rounded-[40px] p-8 md:p-10 sticky top-32 shadow-2xl shadow-primary/30">
-                        <h2 className="text-2xl font-black mb-8 italic tracking-tighter">Order Summary</h2>
+                        <h2 className="text-2xl font-black mb-8 italic tracking-tighter">{t.checkout.orderSummary}</h2>
 
                         <div className="space-y-4 mb-8 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                             {items.map((item: any) => (
@@ -988,10 +986,10 @@ export default function CheckoutPage() {
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-bold text-sm line-clamp-1">{item.product.name || item.product.ar_name}</p>
-                                        <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-1">QTY: {item.quantity}</p>
+                                        <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-1">{t.checkout.quantity}: {item.quantity}</p>
                                     </div>
                                     <div className="font-black text-secondary">
-                                        {(item.price * item.quantity).toLocaleString()} EGP
+                                        {(item.price * item.quantity).toLocaleString()} {t.common.currency}
                                     </div>
                                 </div>
                             ))}
@@ -999,31 +997,31 @@ export default function CheckoutPage() {
 
                         <div className="space-y-4 mb-8 pt-6 border-t border-white/10">
                             <div className="flex justify-between items-center text-white/70">
-                                <span className="font-bold text-sm uppercase tracking-wider">Subtotal</span>
-                                <span className="font-black text-lg text-white">{totalCartPrice.toLocaleString()} EGP</span>
+                                <span className="font-bold text-sm uppercase tracking-wider">{t.cart.subtotal}</span>
+                                <span className="font-black text-lg text-white">{totalCartPrice.toLocaleString()} {t.common.currency}</span>
                             </div>
 
                             {taxAmount > 0 && (
                                 <div className="flex justify-between items-center text-white/70">
-                                    <span className="font-bold text-sm uppercase tracking-wider">Tax</span>
-                                    <span className="font-black text-lg text-white">{taxAmount.toLocaleString()} EGP</span>
+                                    <span className="font-bold text-sm uppercase tracking-wider">{t.cart.tax}</span>
+                                    <span className="font-black text-lg text-white">{taxAmount.toLocaleString()} {t.common.currency}</span>
                                 </div>
                             )}
 
                             {serviceFee > 0 && (
                                 <div className="flex justify-between items-center text-white/70">
-                                    <span className="font-bold text-sm uppercase tracking-wider">Service Fees</span>
-                                    <span className="font-black text-lg text-white">{serviceFee.toLocaleString()} EGP</span>
+                                    <span className="font-bold text-sm uppercase tracking-wider">{t.checkout.serviceFees}</span>
+                                    <span className="font-black text-lg text-white">{serviceFee.toLocaleString()} {t.common.currency}</span>
                                 </div>
                             )}
 
                             <div className="flex justify-between items-center text-white/50">
-                                <span className="font-bold text-sm uppercase tracking-wider">Shipping</span>
+                                <span className="font-bold text-sm uppercase tracking-wider">{t.cart.shipping}</span>
                                 {shippingCost > 0 ? (
-                                    <span className="font-black text-lg text-white">{shippingCost} EGP</span>
+                                    <span className="font-black text-lg text-white">{shippingCost} {t.common.currency}</span>
                                 ) : (
                                     <span className="font-black text-[10px] text-white uppercase tracking-widest bg-white/20 px-2 py-1 rounded-lg">
-                                        {selectedOrderType === 'pickup' ? 'FREE' : (!token ? 'Calculated' : 'FREE')}
+                                        {selectedOrderType === 'pickup' ? t.cart.shippingFree : (!token ? t.checkout.calculated : t.cart.shippingFree)}
                                     </span>
                                 )}
                             </div>
@@ -1032,15 +1030,15 @@ export default function CheckoutPage() {
                                 <div className="flex justify-between items-center bg-green-500/20 p-3 rounded-2xl border border-green-500/30">
                                     <div className="flex items-center gap-2">
                                         <Percent size={14} className="text-green-400" />
-                                        <span className="font-black text-[10px] uppercase tracking-wider text-green-400">Coupon Discount</span>
+                                        <span className="font-black text-[10px] uppercase tracking-wider text-green-400">{t.checkout.couponDiscount}</span>
                                     </div>
-                                    <span className="font-black text-lg text-green-400">-{couponDiscount.toLocaleString()} EGP</span>
+                                    <span className="font-black text-lg text-green-400">-{couponDiscount.toLocaleString()} {t.common.currency}</span>
                                 </div>
                             )}
 
                             <div className="pt-6 flex justify-between items-center border-t border-white/10">
-                                <span className="text-xl font-black italic">Total</span>
-                                <span className="text-3xl font-black tracking-tight text-white">{finalTotal.toLocaleString()} <span className="text-base text-white/50">EGP</span></span>
+                                <span className="text-xl font-black italic">{t.cart.total}</span>
+                                <span className="text-3xl font-black tracking-tight text-white">{finalTotal.toLocaleString()} <span className="text-base text-white/50">{t.common.currency}</span></span>
                             </div>
                         </div>
 
@@ -1051,14 +1049,14 @@ export default function CheckoutPage() {
                         >
                             {isPlacingOrder ? <Loader2 className="animate-spin" size={24} /> : (
                                 <>
-                                    Confirm Order <ArrowRight size={20} />
+                                    {t.checkout.confirmOrder} <ArrowRight size={20} className={isRtl ? 'rotate-180' : ''} />
                                 </>
                             )}
                         </button>
 
                         <div className="mt-8 flex items-center justify-center gap-3 text-white/40 bg-white/5 py-4 rounded-2xl border border-white/5">
                             <ShieldCheck size={20} className="text-green-400" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Secure Encryption</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t.checkout.secureEncryption}</span>
                         </div>
                     </div>
                 </div>

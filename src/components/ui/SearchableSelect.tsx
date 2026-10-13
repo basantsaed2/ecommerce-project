@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Search, X, Check } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useTranslation } from '@/hooks/useTranslation';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -11,6 +12,7 @@ function cn(...inputs: ClassValue[]) {
 interface Option {
     _id: string;
     name: string;
+    ar_name?: string;
 }
 
 interface SearchableSelectProps {
@@ -27,11 +29,12 @@ export default function SearchableSelect({
     options, 
     value, 
     onChange, 
-    placeholder = "Select option", 
+    placeholder,
     label,
     error,
     disabled = false
 }: SearchableSelectProps) {
+    const { t, getLocalized } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const containerRef = useRef<HTMLDivElement>(null);
@@ -40,7 +43,7 @@ export default function SearchableSelect({
     const selectedOption = options.find(opt => opt._id === value);
 
     const filteredOptions = options.filter(opt => 
-        opt.name.toLowerCase().includes(searchQuery.toLowerCase())
+        getLocalized(opt).toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     useEffect(() => {
@@ -88,7 +91,7 @@ export default function SearchableSelect({
                     "font-bold text-sm",
                     !selectedOption ? "text-gray-400" : "text-primary"
                 )}>
-                    {selectedOption ? selectedOption.name : placeholder}
+                    {selectedOption ? getLocalized(selectedOption) : (placeholder || t.common.selectOption)}
                 </span>
                 <ChevronDown size={16} className={cn(
                     "text-gray-400 transition-transform duration-300",
@@ -105,7 +108,7 @@ export default function SearchableSelect({
                                 ref={inputRef}
                                 type="text"
                                 className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-lg outline-none text-sm font-medium"
-                                placeholder="Search..."
+                                placeholder={t.common.search}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onClick={(e) => e.stopPropagation()}
@@ -127,13 +130,13 @@ export default function SearchableSelect({
                                         value === opt._id ? "bg-secondary/5 text-secondary" : "hover:bg-gray-50 text-gray-600"
                                     )}
                                 >
-                                    <span className="font-bold text-sm">{opt.name}</span>
+                                    <span className="font-bold text-sm">{getLocalized(opt)}</span>
                                     {value === opt._id && <Check size={16} />}
                                 </div>
                             ))
                         ) : (
                             <div className="py-8 text-center text-gray-400">
-                                <p className="text-sm font-bold">No results found</p>
+                                <p className="text-sm font-bold">{t.common.noResultsFound}</p>
                             </div>
                         )}
                     </div>

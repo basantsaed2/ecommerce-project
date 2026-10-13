@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { getProductPriceInfo } from '@/utils/productUtils';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ProductDialogProps {
     productId: string;
@@ -20,6 +21,7 @@ interface ProductDialogProps {
 
 export default function ProductDialog({ productId, isOpen, onClose }: ProductDialogProps) {
     const { logoUrl } = useStoreSettings();
+    const { t, getLocalized, formatPrice } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const token = useSelector((state: RootState) => state.auth.token);
@@ -103,7 +105,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         if (!product) return;
 
         if (isOutOfStock) {
-            toast.error('This combination is currently sold out');
+            toast.error(t.product.soldOutCombination);
             return;
         }
 
@@ -114,7 +116,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         }));
 
         dispatch(syncCart());
-        toast.success(`Added to cart`);
+        toast.success(t.product.addedToCartSimple);
         onClose();
     };
 
@@ -122,7 +124,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         if (!product) return;
 
         if (isOutOfStock) {
-            toast.error('This combination is currently sold out');
+            toast.error(t.product.soldOutCombination);
             return;
         }
 
@@ -169,19 +171,19 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                 {priceInfo.hasDiscount && (
                                     <div className="absolute top-0 left-0 z-10 bg-gradient-to-r from-red-600 to-rose-500 text-white font-black text-xs px-3 py-1.5 rounded-xl uppercase tracking-wider shadow-md flex items-center gap-1">
                                         <Tag size={12} className="fill-current" />
-                                        -{priceInfo.discountPercent}% OFF
+                                        -{priceInfo.discountPercent}% {t.product.discount}
                                     </div>
                                 )}
 
                                 <img
                                     src={selectedImage || product.image || product.gallery_product?.[0] || logoUrl || undefined}
-                                    alt={product.name || product.ar_name}
+                                    alt={getLocalized(product)}
                                     className={`max-w-full max-h-full object-contain drop-shadow-xl transition-all duration-500 ${product.quantity > 0 ? 'hover:scale-105' : 'grayscale opacity-60'}`}
                                 />
                                 {product.quantity <= 0 && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-sm rounded-3xl">
                                         <div className="bg-red-500 text-white font-black px-6 py-2 rounded-xl transform -rotate-12 shadow-xl text-lg tracking-widest uppercase border-4 border-white">
-                                            Out of Stock
+                                            {t.product.outOfStock}
                                         </div>
                                     </div>
                                 )}
@@ -216,35 +218,35 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     {product.brand?.name && (
                                         <span className="text-[10px] font-black text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1">
                                             <Award size={10} className="text-gray-400" />
-                                            {product.brand.name}
+                                            {getLocalized(product.brand)}
                                         </span>
                                     )}
                                     {product.category?.name && (
                                         <span className="text-[10px] font-black text-secondary bg-secondary/10 px-2.5 py-1 rounded-md uppercase tracking-wider">
-                                            {product.category.name}
+                                            {getLocalized(product.category)}
                                         </span>
                                     )}
                                 </div>
 
                                 <h1 className="text-xl md:text-2xl font-black text-primary mb-2 leading-tight">
-                                    {product.name || product.ar_name}
+                                    {getLocalized(product)}
                                 </h1>
 
                                 {/* Price Box */}
                                 <div className="flex items-baseline gap-2 mb-4">
                                     <span className="text-3xl font-black text-secondary">
-                                        {priceInfo.finalPrice.toLocaleString()} EGP
+                                        {formatPrice(priceInfo.finalPrice)}
                                     </span>
                                     {priceInfo.hasDiscount && (
                                         <span className="text-base font-bold text-gray-400 line-through">
-                                            {priceInfo.mainPrice.toLocaleString()} EGP
+                                            {formatPrice(priceInfo.mainPrice)}
                                         </span>
                                     )}
                                 </div>
 
                                 {product.description && (
                                     <p className="text-gray-500 text-xs mb-6 leading-relaxed line-clamp-3">
-                                        {product.description}
+                                        {getLocalized(product, 'description')}
                                     </p>
                                 )}
 
@@ -254,7 +256,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                         {product.variations.map(variation => (
                                             <div key={variation._id}>
                                                 <label className="text-xs font-bold text-gray-700 block mb-2 uppercase tracking-wider">
-                                                    {variation.name}
+                                                    {getLocalized(variation)}
                                                 </label>
                                                 <div className="flex flex-wrap gap-2">
                                                     {variation.options.map(option => {
@@ -271,7 +273,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                                                         : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300'
                                                                     }`}
                                                             >
-                                                                <span>{option.name}</span>
+                                                                <span>{getLocalized(option)}</span>
                                                             </button>
                                                         );
                                                     })}
@@ -285,7 +287,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                             {/* Controls */}
                             <div className="space-y-4 mt-auto">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Quantity</label>
+                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">{t.product.quantity}</label>
                                     <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl p-1 shadow-inner">
                                         <button
                                             onClick={() => setQuantity(q => Math.max(1, q - 1))}
@@ -314,8 +316,8 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     >
                                         <ShoppingCart size={16} strokeWidth={2.5} />
                                         {!isOutOfStock
-                                            ? `ADD TO CART • ${((priceInfo.finalPrice) * quantity).toLocaleString()} EGP`
-                                            : 'OUT OF STOCK'
+                                            ? `${t.product.addToCart} • ${formatPrice(priceInfo.finalPrice * quantity)}`
+                                            : t.product.outOfStock
                                         }
                                     </button>
 
@@ -331,7 +333,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                             ? <Loader2 size={16} className="animate-spin" />
                                             : <Zap size={16} strokeWidth={2.5} />
                                         }
-                                        {isBuyingNow ? 'Processing...' : (isOutOfStock ? 'OUT OF STOCK' : 'BUY NOW')}
+                                        {isBuyingNow ? t.product.processing : (isOutOfStock ? t.product.outOfStock : t.product.buyNow)}
                                     </button>
                                 </div>
                             </div>

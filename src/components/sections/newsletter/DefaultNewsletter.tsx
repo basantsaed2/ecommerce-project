@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Mail, Send, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface NewsletterProps {
     title?: string;
@@ -13,17 +14,18 @@ export default function DefaultNewsletter({
     title,
     subtitle
 }: NewsletterProps) {
+    const { t } = useTranslation();
     const [email, setEmail] = useState("");
     const [subscribed, setSubscribed] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!email || !email.includes('@')) {
-            toast.error('Please enter a valid email address');
+            toast.error(t.sections.invalidEmail);
             return;
         }
         setSubscribed(true);
-        toast.success('Thank you for subscribing to our newsletter!');
+        toast.success(t.sections.newsletterSuccess);
         setEmail("");
     };
 
@@ -45,11 +47,11 @@ export default function DefaultNewsletter({
                     </div>
 
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight">
-                        {title || "Stay Ahead with Exclusive Deals & Updates"}
+                        {title || t.sections.newsletterTitle}
                     </h2>
 
                     <p className="text-gray-200 text-sm sm:text-base font-normal max-w-lg mb-4">
-                        {subtitle || "Subscribe to our weekly newsletter to receive member-only discounts, new releases, and inspiration directly in your inbox."}
+                        {subtitle || t.sections.newsletterSubtitle}
                     </p>
 
                     <form onSubmit={handleSubmit} className="w-full max-w-md flex flex-col sm:flex-row gap-3">
@@ -57,7 +59,7 @@ export default function DefaultNewsletter({
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email address..."
+                            placeholder={t.sections.emailPlaceholder}
                             className="flex-1 px-5 py-3.5 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 text-white placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary text-sm"
                             required
                         />
@@ -67,11 +69,11 @@ export default function DefaultNewsletter({
                         >
                             {subscribed ? (
                                 <>
-                                    <Check size={18} /> Subscribed
+                                    <Check size={18} /> {t.sections.subscribed}
                                 </>
                             ) : (
                                 <>
-                                    <span>Subscribe</span>
+                                    <span>{t.sections.subscribe}</span>
                                     <Send size={16} />
                                 </>
                             )}
@@ -79,7 +81,7 @@ export default function DefaultNewsletter({
                     </form>
 
                     <p className="text-[11px] text-gray-300 pt-1">
-                        We respect your privacy. Unsubscribe anytime with one click.
+                        {t.sections.newsletterPrivacy}
                     </p>
                 </div>
             </div>

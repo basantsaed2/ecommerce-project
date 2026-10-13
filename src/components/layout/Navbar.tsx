@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import { logout } from '@/store/slices/authSlice';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -19,6 +20,7 @@ export default function Navbar() {
     const [mounted, setMounted] = useState(false);
 
     const { settings, storeName, logoUrl, templateSlug, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings();
+    const { t } = useTranslation();
 
     const token = useSelector((state: RootState) => state.auth.token);
     const user = useSelector((state: RootState) => state.auth.user);
@@ -37,16 +39,18 @@ export default function Navbar() {
     };
 
     const headerLinks = settings.ecommerceData?.[0]?.header?.links || [];
-    const linkConfig = {
-        home: { name: 'Home', href: '/', icon: Home },
-        about: { name: 'About', href: '/about', icon: Info },
-        category: { name: 'Category', href: '/categories', icon: Grid },
-        categories: { name: 'Categories', href: '/categories', icon: Grid },
-        products: { name: 'Products', href: '/product', icon: ShoppingCart },
-        brands: { name: 'Brands', href: '/brands', icon: Briefcase },
-        'track-order': { name: 'Track Order', href: '/order-tracking', icon: Package },
-        'order-tracking': { name: 'Track Order', href: '/order-tracking', icon: Package },
-    } as const;
+    const linkConfig: Record<string, { name: string; href: string; icon: any }> = {
+        home: { name: t.nav.home, href: '/', icon: Home },
+        about: { name: t.nav.about, href: '/about', icon: Info },
+        category: { name: t.nav.categories, href: '/categories', icon: Grid },
+        categories: { name: t.nav.categories, href: '/categories', icon: Grid },
+        products: { name: t.nav.products, href: '/product', icon: ShoppingCart },
+        product: { name: t.nav.products, href: '/product', icon: ShoppingCart },
+        brands: { name: t.nav.brands, href: '/brands', icon: Briefcase },
+        brand: { name: t.nav.brands, href: '/brands', icon: Briefcase },
+        'track-order': { name: t.nav.trackOrder, href: '/order-tracking', icon: Package },
+        'order-tracking': { name: t.nav.trackOrder, href: '/order-tracking', icon: Package },
+    };
     const fallbackLinks = ['home', 'category', 'brands', 'track-order'];
     const navLinks = (headerLinks.length ? headerLinks : fallbackLinks)
         .map((link) => {
@@ -187,15 +191,15 @@ export default function Navbar() {
             <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 px-4 py-3 z-50 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 <Link href="/" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/') ? 'text-secondary' : 'text-gray-400'}`}>
                     <Home size={22} />
-                    <span className="text-[10px] font-bold">Home</span>
+                    <span className="text-[10px] font-bold">{t.nav.home}</span>
                 </Link>
                 <Link href="/categories" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/categories') ? 'text-secondary' : 'text-gray-400'}`}>
                     <Grid size={22} />
-                    <span className="text-[10px] font-bold">Menu</span>
+                    <span className="text-[10px] font-bold">{t.nav.categories}</span>
                 </Link>
                 <Link href="/cart" className={`relative flex flex-col items-center gap-1 transition-colors ${isActive('/cart') || isActive('/checkout') ? 'text-secondary' : 'text-gray-400'}`}>
                     <ShoppingCart size={22} />
-                    <span className="text-[10px] font-bold">Cart</span>
+                    <span className="text-[10px] font-bold">{t.nav.cart}</span>
                     {cartCount > 0 && (
                         <span className="absolute -top-1 right-0 bg-secondary text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                             {cartCount}
@@ -205,12 +209,12 @@ export default function Navbar() {
                 {isLoggedIn && (
                     <Link href="/favourite" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/favourite') ? 'text-secondary' : 'text-gray-400'}`}>
                         <Heart size={22} />
-                        <span className="text-[10px] font-bold">Wishlist</span>
+                        <span className="text-[10px] font-bold">{t.nav.wishlist}</span>
                     </Link>
                 )}
                 <Link href={isLoggedIn ? "/profile" : "/login"} className={`flex flex-col items-center gap-1 transition-colors ${isActive('/profile') || isActive('/login') ? 'text-secondary' : 'text-gray-400'}`}>
                     <User size={22} />
-                    <span className="text-[10px] font-bold">{isLoggedIn ? "Profile" : "Account"}</span>
+                    <span className="text-[10px] font-bold">{isLoggedIn ? t.nav.profile : t.nav.account}</span>
                 </Link>
             </div>
 
@@ -243,9 +247,9 @@ export default function Navbar() {
                         {!isLoggedIn ? (
                             <div className="flex flex-col gap-3">
                                 <Link href="/login" onClick={() => setSidebarOpen(false)} className="w-full py-4 text-center font-bold border border-gray-200 rounded-2xl flex items-center justify-center gap-2 hover:bg-gray-50 transition">
-                                    <LogIn size={18} /> Login
+                                    <LogIn size={18} /> {t.nav.login}
                                 </Link>
-                                <Link href="/signup" onClick={() => setSidebarOpen(false)} className="w-full py-4 text-center font-bold bg-primary text-white rounded-2xl">Create Account</Link>
+                                <Link href="/signup" onClick={() => setSidebarOpen(false)} className="w-full py-4 text-center font-bold bg-primary text-white rounded-2xl">{t.auth.signUpButton}</Link>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -263,7 +267,7 @@ export default function Navbar() {
                                     </div>
                                 </div>
                                 <button onClick={handleLogout} className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-bold flex items-center justify-center gap-2">
-                                    <LogOut size={18} /> Logout
+                                    <LogOut size={18} /> {t.nav.logout}
                                 </button>
                             </div>
                         )}

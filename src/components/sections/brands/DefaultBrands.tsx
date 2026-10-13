@@ -4,6 +4,7 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Brand } from '@/types/api';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BrandsProps {
     title?: string;
@@ -15,6 +16,7 @@ export default function DefaultBrands({
     title,
     subtitle
 }: BrandsProps) {
+    const { t, getLocalized } = useTranslation();
     const { data, isLoading, error } = useGet<ApiResponse<Brand>>(['brands'], '/brand');
 
     if (isLoading) {
@@ -39,10 +41,10 @@ export default function DefaultBrands({
         <section className="w-full py-16 bg-white/40 backdrop-blur-xl rounded-[3rem] border border-gray-100 shadow-xl overflow-hidden my-6">
             <div className="flex flex-col items-center text-center mb-10 px-6">
                 <span className="text-xs font-black uppercase tracking-[0.3em] text-secondary mb-2 block">
-                    {subtitle || "Official Partners"}
+                    {subtitle || t.sections.officialPartners}
                 </span>
                 <h2 className="text-3xl md:text-5xl font-black text-primary tracking-tight">
-                    {title || "Featured Brands"}
+                    {title || t.sections.featuredBrands}
                 </h2>
             </div>
 
@@ -58,14 +60,14 @@ export default function DefaultBrands({
                             >
                                 <img
                                     src={brand.logo}
-                                    alt={brand.name || brand.ar_name}
+                                    alt={getLocalized(brand)}
                                     className="max-w-[85%] max-h-[85%] object-contain transition-all duration-300 group-hover:scale-105"
                                     onError={(event) => {
                                         event.currentTarget.style.display = 'none';
                                         event.currentTarget.nextElementSibling?.classList.remove('hidden');
                                     }}
                                 />
-                                <span className="hidden text-sm font-bold text-primary">{brand.name || brand.ar_name}</span>
+                                <span className="hidden text-sm font-bold text-primary">{getLocalized(brand)}</span>
                             </Link>
                         ))}
                     </div>
@@ -83,14 +85,14 @@ export default function DefaultBrands({
                                 >
                                     <img
                                         src={brand.logo}
-                                        alt={brand.name || brand.ar_name}
+                                        alt={getLocalized(brand)}
                                         className="max-w-[85%] max-h-[85%] object-contain transition-all duration-300 group-hover:scale-105"
                                         onError={(event) => {
                                             event.currentTarget.style.display = 'none';
                                             event.currentTarget.nextElementSibling?.classList.remove('hidden');
                                         }}
                                     />
-                                    <span className="hidden text-sm font-bold text-primary">{brand.name || brand.ar_name}</span>
+                                    <span className="hidden text-sm font-bold text-primary">{getLocalized(brand)}</span>
                                 </Link>
                             ))}
                         </div>

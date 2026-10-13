@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Product } from '@/types/api';
 import { FileText, Sliders, Truck, RefreshCcw, ShieldCheck, Box } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ProductTabsInfoProps {
     product: Product;
@@ -10,6 +11,7 @@ interface ProductTabsInfoProps {
 }
 
 export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoProps) {
+    const { t, getLocalized } = useTranslation();
     const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'shipping' | 'warranty'>('description');
 
     return (
@@ -25,7 +27,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                     }`}
                 >
                     <FileText size={16} />
-                    Description
+                    {t.product.description}
                 </button>
 
                 <button
@@ -37,7 +39,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                     }`}
                 >
                     <Sliders size={16} />
-                    Specifications
+                    {t.sections.specifications}
                 </button>
 
                 <button
@@ -49,7 +51,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                     }`}
                 >
                     <Truck size={16} />
-                    Shipping & Delivery
+                    {t.sections.shippingDelivery}
                 </button>
 
                 <button
@@ -61,7 +63,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                     }`}
                 >
                     <ShieldCheck size={16} />
-                    Returns & Guarantee
+                    {t.sections.returnsGuarantee}
                 </button>
             </div>
 
@@ -70,11 +72,11 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                 {activeTab === 'description' && (
                     <div className="space-y-4">
                         <p className="text-gray-700 leading-relaxed">
-                            {product.description || product.ar_description || "Detailed description for this item will be available shortly."}
+                            {getLocalized(product, 'description') || t.sections.detailedDescriptionSoon}
                         </p>
                         {product.ar_description && product.description !== product.ar_description && (
                             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 mt-4 text-right" dir="rtl">
-                                <h4 className="font-bold text-gray-800 mb-1">الوصف بالعربية:</h4>
+                                <h4 className="font-bold text-gray-800 mb-1">{t.sections.arabicDescription}</h4>
                                 <p className="text-gray-600 text-sm leading-relaxed">{product.ar_description}</p>
                             </div>
                         )}
@@ -84,20 +86,20 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                 {activeTab === 'specs' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex justify-between p-3.5 bg-gray-50 rounded-xl">
-                            <span className="text-gray-400 font-medium">SKU / Item Code</span>
+                            <span className="text-gray-400 font-medium">{t.sections.itemCode}</span>
                             <span className="font-bold text-primary">{skuCode || product._id.slice(-8).toUpperCase()}</span>
                         </div>
                         <div className="flex justify-between p-3.5 bg-gray-50 rounded-xl">
-                            <span className="text-gray-400 font-medium">Brand</span>
-                            <span className="font-bold text-primary">{product.brand?.name || 'Authorized Brand'}</span>
+                            <span className="text-gray-400 font-medium">{t.product.brand}</span>
+                            <span className="font-bold text-primary">{product.brand ? getLocalized(product.brand) : t.sections.authorizedBrand}</span>
                         </div>
                         <div className="flex justify-between p-3.5 bg-gray-50 rounded-xl">
-                            <span className="text-gray-400 font-medium">Category</span>
-                            <span className="font-bold text-primary">{product.category?.name || 'General Collection'}</span>
+                            <span className="text-gray-400 font-medium">{t.product.category}</span>
+                            <span className="font-bold text-primary">{product.category ? getLocalized(product.category) : t.sections.generalCollection}</span>
                         </div>
                         <div className="flex justify-between p-3.5 bg-gray-50 rounded-xl">
-                            <span className="text-gray-400 font-medium">Condition</span>
-                            <span className="font-bold text-emerald-600">100% Brand New</span>
+                            <span className="text-gray-400 font-medium">{t.sections.condition}</span>
+                            <span className="font-bold text-emerald-600">{t.sections.brandNew}</span>
                         </div>
                     </div>
                 )}
@@ -107,9 +109,9 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                         <div className="flex items-start gap-3 p-4 bg-secondary/5 rounded-2xl border border-secondary/10">
                             <Truck className="text-secondary shrink-0 mt-0.5" size={20} />
                             <div>
-                                <h4 className="font-bold text-primary text-sm mb-1">Standard Delivery (2-4 Days)</h4>
+                                <h4 className="font-bold text-primary text-sm mb-1">{t.sections.standardDelivery}</h4>
                                 <p className="text-xs text-gray-500 leading-relaxed">
-                                    Delivered right to your doorstep with live SMS tracking updates. Free delivery on orders over 500 EGP.
+                                    {t.sections.standardDeliveryDesc}
                                 </p>
                             </div>
                         </div>
@@ -117,9 +119,9 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                         <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                             <Box className="text-gray-500 shrink-0 mt-0.5" size={20} />
                             <div>
-                                <h4 className="font-bold text-primary text-sm mb-1">Careful Packaging</h4>
+                                <h4 className="font-bold text-primary text-sm mb-1">{t.sections.carefulPackaging}</h4>
                                 <p className="text-xs text-gray-500 leading-relaxed">
-                                    Every item is double-inspected and packed securely in protective eco-friendly packaging.
+                                    {t.sections.carefulPackagingDesc}
                                 </p>
                             </div>
                         </div>
@@ -131,9 +133,9 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                         <div className="flex items-start gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
                             <RefreshCcw className="text-emerald-600 shrink-0 mt-0.5" size={20} />
                             <div>
-                                <h4 className="font-bold text-emerald-950 text-sm mb-1">14-Day Money Back Guarantee</h4>
+                                <h4 className="font-bold text-emerald-950 text-sm mb-1">{t.sections.moneyBack}</h4>
                                 <p className="text-xs text-emerald-800 leading-relaxed">
-                                    If you&apos;re not completely satisfied with your purchase, exchange or return it within 14 days without hassle.
+                                    {t.sections.moneyBackDesc}
                                 </p>
                             </div>
                         </div>
@@ -141,9 +143,9 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                         <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                             <ShieldCheck className="text-primary shrink-0 mt-0.5" size={20} />
                             <div>
-                                <h4 className="font-bold text-primary text-sm mb-1">100% Authenticity Guaranteed</h4>
+                                <h4 className="font-bold text-primary text-sm mb-1">{t.sections.authenticity}</h4>
                                 <p className="text-xs text-gray-500 leading-relaxed">
-                                    All products sold on our platform are verified authentic directly from original distributors.
+                                    {t.sections.authenticityDesc}
                                 </p>
                             </div>
                         </div>

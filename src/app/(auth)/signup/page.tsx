@@ -9,23 +9,24 @@ import DynamicBanner from '@/components/common/DynamicBanner';
 import GoogleLoginButton from '@/components/common/GoogleLoginButton';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
-
-const signupSchema = z.object({
-    name: z.string().min(2, "name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    phone: z.string().min(8, "Phone number is too short"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-});
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function SignupPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const identifier = searchParams.get('identifier');
+    const { t, isRtl } = useTranslation();
+    const signupSchema = z.object({
+        name: z.string().min(2, t.auth.nameTooShort),
+        email: z.string().email(t.auth.invalidEmail),
+        phone: z.string().min(8, t.auth.phoneTooShort),
+        password: z.string().min(6, t.auth.passwordTooShort),
+    });
 
     const { mutate: signup, isPending } = usePost(
         '/auth/signup',
         [],
-        () => 'Account created successfully! Please sign in.'
+        () => t.auth.accountCreated
     );
 
     const { register, handleSubmit, formState: { errors }, setValue } = useForm({
@@ -81,20 +82,20 @@ export default function SignupPage() {
                 <div className="relative z-10 p-16 flex flex-col justify-between text-white h-full max-w-xl">
                     <div className="mt-20">
                         <h2 className="text-5xl font-black tracking-tighter mb-6 leading-tight">
-                            JOIN THE <br /> <span className="text-secondary italic">REVOLUTION.</span>
+                            {t.auth.joinRevolution}
                         </h2>
                         <p className="text-lg opacity-80 leading-relaxed font-medium">
-                            Create an account and unlock a world of exclusive fashion and tech deals tailored just for you.
+                            {t.auth.joinDescription}
                         </p>
                     </div>
                     <div className="flex gap-8 mb-20">
                         <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10">
                             <p className="text-3xl font-black mb-1">10k+</p>
-                            <p className="text-xs font-bold opacity-70 uppercase tracking-widest">Active Users</p>
+                            <p className="text-xs font-bold opacity-70 uppercase tracking-widest">{t.auth.activeUsers}</p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10">
                             <p className="text-3xl font-black mb-1">500+</p>
-                            <p className="text-xs font-bold opacity-70 uppercase tracking-widest">Global Brands</p>
+                            <p className="text-xs font-bold opacity-70 uppercase tracking-widest">{t.auth.globalBrands}</p>
                         </div>
                     </div>
                 </div>
@@ -106,8 +107,8 @@ export default function SignupPage() {
                         <Link href="/" className="text-2xl font-black tracking-tighter text-primary mb-8 inline-block hover:opacity-80 transition">
                             STORE<span className="text-secondary">.</span>
                         </Link>
-                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Get Started</h1>
-                        <p className="text-gray-500 mt-3 font-medium">Create your account in seconds.</p>
+                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{t.auth.getStarted}</h1>
+                        <p className="text-gray-500 mt-3 font-medium">{t.auth.createAccountInSeconds}</p>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -117,7 +118,7 @@ export default function SignupPage() {
                                 <input
                                     {...register("name")}
                                     type="text"
-                                    placeholder="name"
+                                    placeholder={t.auth.fullName}
                                     className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.name ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
                                 />
                             </div>
@@ -130,7 +131,7 @@ export default function SignupPage() {
                                 <input
                                     {...register("email")}
                                     type="email"
-                                    placeholder="Email Address"
+                                    placeholder={t.auth.email}
                                     className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.email ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
                                 />
                             </div>
@@ -143,7 +144,7 @@ export default function SignupPage() {
                                 <input
                                     {...register("phone")}
                                     type="tel"
-                                    placeholder="Phone Number"
+                                    placeholder={t.auth.phone}
                                     className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.phone ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
                                 />
                             </div>
@@ -156,7 +157,7 @@ export default function SignupPage() {
                                 <input
                                     {...register("password")}
                                     type="password"
-                                    placeholder="Password"
+                                    placeholder={t.auth.password}
                                     className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.password ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
                                 />
                             </div>
@@ -171,24 +172,24 @@ export default function SignupPage() {
                             {isPending ? (
                                 <Loader2 className="animate-spin" size={24} />
                             ) : (
-                                <>Create Account <ArrowRight size={22} /></>
+                                <>{t.auth.signUpButton} <ArrowRight size={22} className={isRtl ? 'rotate-180' : ''} /></>
                             )}
                         </button>
                     </form>
 
                     <div className="my-6 flex items-center gap-4">
                         <div className="flex-1 border-t border-gray-200" />
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">or</span>
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t.common.or}</span>
                         <div className="flex-1 border-t border-gray-200" />
                     </div>
 
-                    <GoogleLoginButton text="Sign up with Google" />
+                    <GoogleLoginButton text={t.auth.googleSignUp} />
 
                     <div className="mt-8 text-center border-t border-gray-100 pt-6">
                         <p className="text-gray-500 font-semibold italic">
-                            Already a member?
+                            {t.auth.alreadyMember}
                             <Link href="/login" className="text-secondary font-black ml-2 hover:underline tracking-tighter">
-                                SIGN IN
+                                {t.auth.signInButton}
                             </Link>
                         </p>
                     </div>

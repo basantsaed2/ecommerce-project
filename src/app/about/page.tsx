@@ -14,6 +14,7 @@ import {
     Youtube,
 } from 'lucide-react';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const socialIcons = {
     facebook: Facebook,
@@ -25,16 +26,17 @@ const socialIcons = {
 
 export default function AboutPage() {
     const { settings, storeName, logoUrl } = useStoreSettings();
+    const { t, isRtl } = useTranslation();
     const ecommerceData = settings.ecommerceData?.[0];
     const header = ecommerceData?.header;
     const footer = ecommerceData?.footer;
     const socialLinks = ecommerceData?.social_links || {};
     const aboutText = footer?.bio || ecommerceData?.bio ||
-        'We bring carefully selected products together with a simple, reliable shopping experience.';
+        t.aboutPage.fallbackBio;
     const contactItems = [
-        ecommerceData?.address ? { icon: MapPin, label: 'Address', value: ecommerceData.address } : null,
-        ecommerceData?.email ? { icon: Mail, label: 'Email', value: ecommerceData.email, href: `mailto:${ecommerceData.email}` } : null,
-        ecommerceData?.phone ? { icon: Phone, label: 'Phone', value: ecommerceData.phone, href: `tel:${ecommerceData.phone}` } : null,
+        ecommerceData?.address ? { icon: MapPin, label: t.aboutPage.address, value: ecommerceData.address } : null,
+        ecommerceData?.email ? { icon: Mail, label: t.aboutPage.email, value: ecommerceData.email, href: `mailto:${ecommerceData.email}` } : null,
+        ecommerceData?.phone ? { icon: Phone, label: t.aboutPage.phone, value: ecommerceData.phone, href: `tel:${ecommerceData.phone}` } : null,
     ].filter(Boolean) as Array<{
         icon: typeof MapPin;
         label: string;
@@ -53,10 +55,10 @@ export default function AboutPage() {
                 <div className="relative mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
                     <div className="max-w-3xl">
                         <p className="mb-5 text-xs font-black uppercase tracking-[0.3em] text-secondary">
-                            About {storeName || 'our store'}
+                            {t.aboutPage.about} {storeName || t.aboutPage.ourStore}
                         </p>
                         <h1 className="text-4xl font-black tracking-tight md:text-7xl">
-                            {header?.title || storeName || 'Our Store'}
+                            {header?.title || storeName || t.aboutPage.ourStore}
                         </h1>
                         <p className="mt-6 max-w-2xl text-base leading-8 text-white/75 md:text-lg">
                             {aboutText}
@@ -71,7 +73,7 @@ export default function AboutPage() {
                         {footer?.logo || logoUrl ? (
                             <img
                                 src={footer?.logo || logoUrl || undefined}
-                                alt={storeName || 'Store logo'}
+                                alt={storeName || t.aboutPage.ourStore}
                                 className="h-14 max-w-[220px] object-contain"
                             />
                         ) : (
@@ -81,10 +83,10 @@ export default function AboutPage() {
                         )}
                     </div>
                     <p className="mb-4 text-xs font-black uppercase tracking-[0.25em] text-secondary">
-                        Our story
+                        {t.aboutPage.story}
                     </p>
                     <h2 className="max-w-xl text-3xl font-black tracking-tight text-primary md:text-5xl">
-                        Thoughtful shopping, made for everyday life.
+                        {t.aboutPage.heading}
                     </h2>
                     <p className="mt-6 max-w-2xl text-base leading-8 text-gray-500">
                         {aboutText}
@@ -93,16 +95,16 @@ export default function AboutPage() {
                         href="/product"
                         className="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:shadow-lg"
                     >
-                        Explore products
-                        <ArrowRight size={17} />
+                        {t.aboutPage.exploreProducts}
+                        <ArrowRight size={17} className={isRtl ? 'rotate-180' : ''} />
                     </Link>
                 </div>
 
                 <div className="rounded-[2rem] bg-white p-8 shadow-xl shadow-gray-200/40 md:p-10">
                     <p className="mb-2 text-xs font-black uppercase tracking-[0.25em] text-secondary">
-                        Get in touch
+                        {t.aboutPage.getInTouch}
                     </p>
-                    <h2 className="text-3xl font-black tracking-tight text-primary">We are here to help.</h2>
+                    <h2 className="text-3xl font-black tracking-tight text-primary">{t.aboutPage.help}</h2>
                     <div className="mt-8 space-y-4">
                         {contactItems.length > 0 ? contactItems.map(({ icon: Icon, label, value, href }) => (
                             <div key={label} className="flex items-start gap-4 rounded-2xl bg-gray-50 p-4">
@@ -122,14 +124,14 @@ export default function AboutPage() {
                             </div>
                         )) : (
                             <p className="rounded-2xl bg-gray-50 p-5 text-sm leading-7 text-gray-500">
-                                Contact details will appear here once they are added to the store settings.
+                                {t.aboutPage.contactDetailsMissing}
                             </p>
                         )}
                     </div>
 
                     {activeSocialLinks.length > 0 && (
                         <div className="mt-8 border-t border-gray-100 pt-6">
-                            <p className="mb-4 text-xs font-black uppercase tracking-wider text-gray-400">Follow us</p>
+                            <p className="mb-4 text-xs font-black uppercase tracking-wider text-gray-400">{t.aboutPage.followUs}</p>
                             <div className="flex flex-wrap gap-3">
                                 {activeSocialLinks.map(([key, href]) => {
                                     const Icon = socialIcons[key];
@@ -155,11 +157,11 @@ export default function AboutPage() {
             <section className="mx-auto max-w-7xl px-6 pb-20 md:px-10">
                 <div className="flex flex-col items-start justify-between gap-6 rounded-[2rem] bg-secondary/10 p-8 md:flex-row md:items-center md:p-10">
                     <div>
-                        <p className="text-xs font-black uppercase tracking-[0.25em] text-secondary">Keep exploring</p>
-                        <h2 className="mt-2 text-2xl font-black text-primary md:text-3xl">Find something you will love.</h2>
+                        <p className="text-xs font-black uppercase tracking-[0.25em] text-secondary">{t.aboutPage.keepExploring}</p>
+                        <h2 className="mt-2 text-2xl font-black text-primary md:text-3xl">{t.aboutPage.findSomething}</h2>
                     </div>
                     <Link href="/categories" className="inline-flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-bold text-white transition hover:shadow-lg">
-                        Browse categories
+                        {t.aboutPage.browseCategories}
                         <Send size={16} />
                     </Link>
                 </div>

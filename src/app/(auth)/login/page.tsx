@@ -13,21 +13,22 @@ import { setCredentials, setIncompleteUser } from '@/store/slices/authSlice';
 import { fetchCart } from '@/store/slices/cartSlice';
 import { AppDispatch } from '@/store/store';
 import { useRouter } from 'next/navigation';
-
-const loginSchema = z.object({
-    identifier: z.string().min(1, "Email or phone number is required"),
-    password: z.string().optional(),
-});
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function LoginPage() {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
+    const { t, isRtl } = useTranslation();
+    const loginSchema = z.object({
+        identifier: z.string().min(1, t.auth.identifierRequired),
+        password: z.string().optional(),
+    });
 
     const { mutate: login, isPending } = usePost(
         '/auth/login',
         ['user'],
-        (response: any) => response?.data?.requires_otp ? 'Verification code sent!' : 'Welcome back!'
+        (response: any) => response?.data?.requires_otp ? t.auth.verificationSent : t.auth.welcomeBack
     );
 
     const { register, handleSubmit, formState: { errors }, watch } = useForm({
@@ -102,10 +103,10 @@ export default function LoginPage() {
 
                 <div className="relative z-10 text-white max-w-md">
                     <h2 className="text-5xl font-black leading-tight mb-6 tracking-tighter">
-                        Elevate Your <br /> Shopping <span className="text-secondary italic">Experience.</span>
+                        {t.auth.loginHero}
                     </h2>
                     <p className="text-lg opacity-80 leading-relaxed font-medium">
-                        Join our community and explore thousands of premium products with exclusive offers tailored for you.
+                        {t.auth.loginHeroDescription}
                     </p>
                 </div>
             </div>
@@ -116,20 +117,20 @@ export default function LoginPage() {
                         <Link href="/" className="text-2xl font-black tracking-tighter text-primary mb-8 inline-block hover:opacity-80 transition">
                             STORE<span className="text-secondary">.</span>
                         </Link>
-                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Sign In</h1>
-                        <p className="text-gray-500 mt-3 font-medium">Enter your credentials to access your account.</p>
+                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{t.auth.signInButton}</h1>
+                        <p className="text-gray-500 mt-3 font-medium">{t.auth.loginSubtitle}</p>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         <div className="flex flex-col gap-3">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Email or Phone Number</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t.auth.emailOrPhone}</label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                 <input
                                     {...register("identifier")}
                                     type="text"
                                     disabled={showPassword}
-                                    placeholder="email or phone number"
+                                    placeholder={t.auth.emailOrPhonePlaceholder}
                                     className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.identifier ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium ${showPassword ? 'opacity-50' : ''}`}
                                 />
                                 {showPassword && (
@@ -138,7 +139,7 @@ export default function LoginPage() {
                                         onClick={() => setShowPassword(false)}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-secondary hover:underline"
                                     >
-                                        Change
+                                        {t.auth.change}
                                     </button>
                                 )}
                             </div>
@@ -148,8 +149,8 @@ export default function LoginPage() {
                         {showPassword && (
                             <div className="space-y-2 animate-in fade-in slide-in-from-top-4 duration-300">
                                 <div className="flex justify-between items-center ml-1">
-                                    <label className="text-sm font-bold text-gray-700">Password</label>
-                                    <Link href="/forgot-password" className="text-xs font-black text-secondary hover:text-primary transition-colors">FORGOT PASSWORD?</Link>
+                                    <label className="text-sm font-bold text-gray-700">{t.auth.password}</label>
+                                    <Link href="/forgot-password" className="text-xs font-black text-secondary hover:text-primary transition-colors">{t.auth.forgotPassword}</Link>
                                 </div>
                                 <div className="relative group">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
@@ -173,24 +174,24 @@ export default function LoginPage() {
                             {isPending ? (
                                 <Loader2 className="animate-spin" size={24} />
                             ) : (
-                                <>{showPassword ? 'Sign In' : 'Continue'} <ArrowRight size={22} /></>
+                                <>{showPassword ? t.auth.signInButton : t.common.continue} <ArrowRight size={22} className={isRtl ? 'rotate-180' : ''} /></>
                             )}
                         </button>
                     </form>
 
                     <div className="my-6 flex items-center gap-4">
                         <div className="flex-1 border-t border-gray-200" />
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">or</span>
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t.common.or}</span>
                         <div className="flex-1 border-t border-gray-200" />
                     </div>
 
-                    <GoogleLoginButton text="Sign in with Google" />
+                    <GoogleLoginButton text={t.auth.googleSignIn} />
 
                     <div className="mt-10 text-center border-t border-gray-100 pt-8">
                         <p className="text-gray-500 font-semibold italic">
-                            New to our store?
+                            {t.auth.newToStore}
                             <Link href="/signup" className="text-secondary font-black ml-2 hover:underline tracking-tighter">
-                                CREATE AN ACCOUNT
+                                {t.auth.signUpButton}
                             </Link>
                         </p>
                     </div>

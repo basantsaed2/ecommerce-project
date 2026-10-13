@@ -12,6 +12,7 @@ import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 import { useRouter } from 'next/navigation';
 import { getProductPriceInfo } from '@/utils/productUtils';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ProductCardProps {
     product: Product;
@@ -19,6 +20,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
     const { logoUrl } = useStoreSettings();
+    const { t, getLocalized, formatPrice } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const token = useSelector((state: RootState) => state.auth.token);
@@ -40,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     const handleWishlistToggle = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!token) {
-            toast.error('Please login to save to wishlist');
+            toast.error(t.product.wishlistLogin);
             return;
         }
         toggleWishlist({ productId: product._id });
@@ -57,7 +59,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         dispatch(addItem({ product, quantity: 1 }));
         dispatch(syncCart());
-        toast.success(`${product.name} added to cart`);
+        toast.success(`${getLocalized(product)} ${t.product.addedToCartNamed}`);
     };
 
     const handleBuyNow = async (e: React.MouseEvent) => {
@@ -104,14 +106,14 @@ export default function ProductCard({ product }: ProductCardProps) {
                                 ) : (
                                     <Sparkles size={10} className="fill-current" />
                                 )}
-                                Hot
+                                {t.product.featuredLabel}
                             </span>
                         )}
 
                         {/* Low Stock Badge */}
                         {product.quantity > 0 && product.quantity < 5 && (
                             <span className="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase border border-red-100 shadow-sm">
-                                Only {product.quantity} left
+                                {t.product.onlyLeft} {product.quantity}
                             </span>
                         )}
                     </div>
@@ -121,7 +123,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         <button
                             onClick={handleWishlistToggle}
                             disabled={isTogglingWishlist}
-                            aria-label="Add to wishlist"
+                            aria-label={t.nav.wishlist}
                             className={`p-2.5 rounded-xl transition-all active:scale-90 shadow-sm border ${
                                 isInWishlist
                                     ? 'bg-red-50 border-red-100 text-red-500'
@@ -145,13 +147,13 @@ export default function ProductCard({ product }: ProductCardProps) {
                             className="bg-white text-gray-800 font-bold text-xs px-4 py-2.5 rounded-full flex items-center gap-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-black hover:text-white shadow-lg active:scale-95"
                         >
                             <Eye size={16} />
-                            Quick View
+                            {t.product.quickView}
                         </button>
                     </div>
 
                     <img
                         src={product.image || product.gallery_product?.[0] || logoUrl || undefined}
-                        alt={product.name || product.ar_name || 'Product'}
+                        alt={getLocalized(product) || t.nav.product}
                         loading="lazy"
                         className={`max-w-full max-h-full object-contain transition-transform duration-700 ease-out group-hover:scale-110 ${
                             product.quantity > 0 ? 'group-hover:scale-105' : 'grayscale opacity-40'
@@ -161,7 +163,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     {product.quantity <= 0 && (
                         <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-20">
                             <span className="bg-gray-900 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg border border-gray-700">
-                                Out of Stock
+                                {t.product.outOfStock}
                             </span>
                         </div>
                     )}
@@ -173,29 +175,29 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                         {product.brand?.name && (
                             <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider bg-gray-100 px-2 py-0.5 rounded-md">
-                                {product.brand.name}
+                                {getLocalized(product.brand)}
                             </span>
                         )}
                         {product.category?.name ? (
                             <span className="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                {product.category.name}
+                                {getLocalized(product.category)}
                             </span>
                         ) : product.categoryId && product.categoryId.length > 0 ? (
                             <span className="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                {product.categoryId[0].name}
+                                {getLocalized(product.categoryId[0])}
                             </span>
                         ) : null}
                     </div>
 
                     {/* Product Name */}
                     <h3 className="font-bold text-gray-900 text-sm md:text-base line-clamp-1 group-hover:text-secondary transition-colors mb-1">
-                        {product.name || product.ar_name}
+                        {getLocalized(product)}
                     </h3>
 
                     {/* Description preview */}
                     {product.description && (
                         <p className="text-gray-400 text-xs line-clamp-1 mb-2">
-                            {product.description}
+                            {getLocalized(product, 'description')}
                         </p>
                     )}
 
@@ -205,7 +207,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                             {product.variations!.map((v) => (
                                 <span key={v._id} className="text-[9px] font-semibold text-gray-600 bg-gray-50 px-2 py-0.5 rounded border border-gray-100 flex items-center gap-1">
                                     <Box size={10} className="text-gray-400" />
-                                    {v.name}: {v.options?.length || 0}
+                                    {getLocalized(v)}: {v.options?.length || 0}
                                 </span>
                             ))}
                         </div>
@@ -215,12 +217,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <div className="mt-auto pt-3 border-t border-gray-50">
                         <div className="flex items-baseline justify-between mb-3">
                             <div>
-                                <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Price</span>
+                                <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{t.product.price}</span>
                                 <div className="flex items-baseline gap-2">
                                     <span className="font-black text-xl text-gray-900">
-                                        {priceInfo.finalPrice.toLocaleString()}
+                                        {formatPrice(priceInfo.finalPrice)}
                                     </span>
-                                    <span className="text-xs font-bold text-gray-500">EGP</span>
 
                                     {priceInfo.hasDiscount && (
                                         <span className="text-xs font-bold text-gray-400 line-through">
@@ -234,7 +235,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                             <button
                                 onClick={handleAddToCart}
                                 disabled={product.quantity <= 0}
-                                aria-label="Add to cart"
+                                aria-label={t.product.addToCart}
                                 className={`relative overflow-hidden w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                                     product.quantity > 0
                                         ? 'bg-gray-900 text-white hover:bg-secondary hover:shadow-lg active:scale-95'
@@ -249,7 +250,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         <button
                             onClick={handleBuyNow}
                             disabled={product.quantity <= 0}
-                            aria-label="Buy now"
+                            aria-label={t.product.buyNow}
                             className={`w-full py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] ${
                                 product.quantity > 0
                                     ? 'bg-secondary text-white hover:bg-primary shadow-md shadow-secondary/20 hover:shadow-primary/20'
@@ -257,7 +258,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                             }`}
                         >
                             <Zap size={14} strokeWidth={2.5} />
-                            {hasVariations ? 'Select Options' : 'Buy Now'}
+                            {hasVariations ? t.product.selectOptions : t.product.buyNow}
                         </button>
                     </div>
                 </div>

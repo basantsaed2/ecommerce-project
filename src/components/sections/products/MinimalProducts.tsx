@@ -4,6 +4,7 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Product } from '@/types/api';
 import { Loader2 } from 'lucide-react';
 import ProductCard from '@/components/modules/products/ProductCard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MinimalProductsProps {
     searchQuery?: string;
@@ -16,6 +17,7 @@ export default function MinimalProducts({
     searchQuery = "",
     title,
 }: MinimalProductsProps) {
+    const { t } = useTranslation();
     const { data, isLoading, error } = useGet<ApiResponse<Product>>(['products'], '/product');
 
     if (isLoading) {
@@ -37,7 +39,7 @@ export default function MinimalProducts({
     return (
         <section className="w-full py-8">
             <h2 className="text-2xl font-bold text-primary mb-6">
-                {title || "Featured Products"}
+                {title || t.sections.featuredProducts}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {filtered.slice(0, 8).map((product) => (

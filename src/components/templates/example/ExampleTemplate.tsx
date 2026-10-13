@@ -8,6 +8,7 @@ import {
   Facebook, Twitter, Instagram, Youtube, Sun, Moon
 } from 'lucide-react';
 import { useGet } from '@/hooks/useGet';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import { ApiResponse, Banner, Brand, Category, Product } from '@/types/api';
 import StoreLoader from '@/components/common/StoreLoader';
@@ -40,6 +41,7 @@ export default function ExampleTemplate({
   className = '',
 }: ExampleTemplateProps) {
   const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings();
+  const { t, isRtl, getLocalized } = useTranslation();
   const isDarkMode = themeMode === 'dark';
   const activePrimary = isDarkMode ? colors?.primaryDark || colors?.primary : colors?.primary;
   const activeSecondary = isDarkMode ? colors?.secondaryDark || colors?.secondary : colors?.secondary;
@@ -53,13 +55,14 @@ export default function ExampleTemplate({
   const contactInfo = ecommerceData || {};
   const headerLinks = header.links || [];
   const headerLinkConfig: Record<string, { label: string; href: string }> = {
-    home: { label: 'Home', href: '/' },
-    category: { label: 'Categories', href: '/categories' },
-    categories: { label: 'Categories', href: '/categories' },
-    products: { label: 'Products', href: '/product' },
-    brands: { label: 'Brands', href: '/brands' },
-    'track-order': { label: 'Track Order', href: '/order-tracking' },
-    'order-tracking': { label: 'Track Order', href: '/order-tracking' },
+    home: { label: t.nav.home, href: '/' },
+    category: { label: t.nav.categories, href: '/categories' },
+    categories: { label: t.nav.categories, href: '/categories' },
+    products: { label: t.nav.products, href: '/product' },
+    brands: { label: t.nav.brands, href: '/brands' },
+    about: { label: t.nav.about, href: '/about' },
+    'track-order': { label: t.nav.trackOrder, href: '/order-tracking' },
+    'order-tracking': { label: t.nav.trackOrder, href: '/order-tracking' },
   };
   const dynamicHeaderLinks = headerLinks
     .map((link) => {
@@ -152,9 +155,9 @@ export default function ExampleTemplate({
           </div>
 
           <div className="flex items-center gap-6 font-medium">
-            <Link href="/order-tracking" className="hover:text-[var(--bs-primary)] transition-colors flex items-center gap-1 font-bold text-[var(--bs-primary)]">📦 Order Tracking</Link>
-            <Link href="/register" className="hover:text-[var(--bs-primary)] transition-colors">+ Register</Link>
-            <Link href="/login" className="hover:text-[var(--bs-primary)] transition-colors">Sign in</Link>
+            <Link href="/order-tracking" className="hover:text-[var(--bs-primary)] transition-colors flex items-center gap-1 font-bold text-[var(--bs-primary)]">📦 {t.nav.trackOrder}</Link>
+            <Link href="/register" className="hover:text-[var(--bs-primary)] transition-colors">+ {t.nav.register}</Link>
+            <Link href="/login" className="hover:text-[var(--bs-primary)] transition-colors">{t.nav.login}</Link>
           </div>
         </div>
       </div>
@@ -174,7 +177,7 @@ export default function ExampleTemplate({
             <div className="flex items-center border-2 border-[var(--bs-primary)] rounded-md overflow-hidden bg-white">
               <input
                 type="text"
-                placeholder="Search for Products..."
+                placeholder={t.common.searchPlaceholder}
                 value={currentSearch}
                 onChange={(e) => setCurrentSearch(e.target.value)}
                 className="w-full px-4 py-2.5 text-sm outline-none text-slate-800 placeholder:text-gray-400"
@@ -183,7 +186,7 @@ export default function ExampleTemplate({
                 type="button"
                 className="bg-[var(--bs-primary)] text-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:brightness-110 transition-all shrink-0"
               >
-                <Search size={15} /> SEARCH
+                <Search size={15} /> {t.common.search.replace('...', '')}
               </button>
             </div>
           </div>
@@ -233,7 +236,7 @@ export default function ExampleTemplate({
               className="bg-[var(--bs-primary)] text-white font-bold text-xs tracking-wider uppercase px-6 py-3.5 flex items-center gap-3 hover:brightness-110 transition-all w-full md:w-[240px] justify-between"
             >
               <span className="flex items-center gap-2">
-                <Menu size={16} /> TOP CATEGORIES
+                <Menu size={16} /> {t.nav.topCategories}
               </span>
               <ChevronDown size={14} className={`transition-transform ${catMenuOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -262,7 +265,7 @@ export default function ExampleTemplate({
                   href={`/categories?id=${cat._id}`}
                   className="block px-5 py-3 text-xs font-medium text-slate-700 hover:text-[var(--bs-primary)] hover:bg-gray-50 transition-colors"
                 >
-                  {cat.name}
+                  {getLocalized(cat, 'name')}
                 </Link>
               ))}
             </div>

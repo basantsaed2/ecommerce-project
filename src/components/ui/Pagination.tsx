@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface PaginationProps {
     currentPage: number;
@@ -17,6 +18,7 @@ export default function Pagination({
     isLoading = false,
     hasNextPage = true
 }: PaginationProps) {
+    const { t, isRtl } = useTranslation();
     const isFirstPage = currentPage === 1;
     const isLastPage = totalPages ? currentPage >= totalPages : !hasNextPage;
 
@@ -34,14 +36,14 @@ export default function Pagination({
                         : 'bg-white border-2 border-gray-100 text-primary hover:border-secondary hover:text-secondary shadow-sm active:scale-95'}
                 `}
             >
-                <ChevronLeft size={20} />
-                <span>Previous</span>
+                <ChevronLeft size={20} className={isRtl ? 'rotate-180' : ''} />
+                <span>{t.common.previous}</span>
             </button>
 
             <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-gray-400 uppercase tracking-widest px-4">
-                    Page <span className="text-primary">{currentPage}</span>
-                    {totalPages && <> <span className="mx-1">of</span> {totalPages}</>}
+                    {t.common.page} <span className="text-primary">{currentPage}</span>
+                    {totalPages && <> <span className="mx-1">{t.common.of}</span> {totalPages}</>}
                 </span>
             </div>
 
@@ -55,8 +57,8 @@ export default function Pagination({
                         : 'bg-primary text-white hover:bg-secondary shadow-lg shadow-primary/20 hover:scale-105 active:scale-95'}
                 `}
             >
-                <span>Next</span>
-                <ChevronRight size={20} />
+                <span>{t.common.next}</span>
+                <ChevronRight size={20} className={isRtl ? 'rotate-180' : ''} />
             </button>
         </div>
     );

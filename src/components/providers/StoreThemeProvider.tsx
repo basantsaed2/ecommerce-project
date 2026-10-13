@@ -77,7 +77,10 @@ export function StoreThemeProvider({
     }, []);
 
     useEffect(() => {
-        setLanguage(getCurrentLanguage());
+        const initialLang = getCurrentLanguage();
+        setLanguage(initialLang);
+        document.documentElement.lang = initialLang;
+        document.documentElement.dir = initialLang === 'ar' ? 'rtl' : 'ltr';
     }, []);
 
     useEffect(() => {

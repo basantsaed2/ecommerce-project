@@ -8,6 +8,7 @@ import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import DynamicSectionRenderer from '@/components/sections/DynamicSectionRenderer';
 import { ApiResponse, Banner, Category, Product } from '@/types/api';
 import StoreLoader from '@/components/common/StoreLoader';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MarwanTemplateProps {
   searchQuery?: string;
@@ -48,6 +49,7 @@ export default function MarwanTemplate({
   className = '',
 }: MarwanTemplateProps) {
   const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings() as any;
+  const { t, isRtl, getLocalized, formatPrice } = useTranslation();
 
   // ── Dynamic header data from backend ───────────────────────────────────
   const ecommerceData = settings?.ecommerceData?.[0] || {};
@@ -58,18 +60,18 @@ export default function MarwanTemplate({
 
   // Map backend link keys → { label, href }
   const linkConfig: Record<string, { label: string; href: string; scrollId?: string }> = {
-    home:            { label: 'Home',       href: '/' },
-    about:           { label: 'About',      href: '/about' },
-    products:        { label: 'Products',   href: '/product', scrollId: 'products' },
-    product:         { label: 'Products',   href: '/product', scrollId: 'products' },
-    categories:      { label: 'Categories', href: '/categories', scrollId: 'categories' },
-    category:        { label: 'Categories', href: '/categories', scrollId: 'categories' },
-    brands:          { label: 'Brands',     href: '/brands' },
-    brand:           { label: 'Brands',     href: '/brands' },
-    'track-order':   { label: 'Track Order', href: '/order-tracking' },
-    'order-tracking':{ label: 'Track Order', href: '/order-tracking' },
-    'why-us':        { label: 'Why Us',     href: '#why-us', scrollId: 'why-us' },
-    contact:         { label: 'Contact',    href: '/contact' },
+    home:            { label: t.nav.home,       href: '/' },
+    about:           { label: t.nav.about,      href: '/about' },
+    products:        { label: t.nav.products,   href: '/product', scrollId: 'products' },
+    product:         { label: t.nav.products,   href: '/product', scrollId: 'products' },
+    categories:      { label: t.nav.categories, href: '/categories', scrollId: 'categories' },
+    category:        { label: t.nav.categories, href: '/categories', scrollId: 'categories' },
+    brands:          { label: t.nav.brands,     href: '/brands' },
+    brand:           { label: t.nav.brands,     href: '/brands' },
+    'track-order':   { label: t.nav.trackOrder, href: '/order-tracking' },
+    'order-tracking':{ label: t.nav.trackOrder, href: '/order-tracking' },
+    'why-us':        { label: t.nav.whyUs,     href: '#why-us', scrollId: 'why-us' },
+    contact:         { label: t.nav.contact,    href: '/contact' },
   };
 
   // Build dynamic nav items; fall back to defaults if backend sends nothing
@@ -90,7 +92,7 @@ export default function MarwanTemplate({
   // Always ensure Track Order is present
   const hasTrackOrder = resolvedLinks.some((l) => l.key === 'track-order' || l.key === 'order-tracking');
   if (!hasTrackOrder) {
-    resolvedLinks.push({ key: 'track-order', label: 'Track Order', href: '/order-tracking', externalHref: '/order-tracking' });
+    resolvedLinks.push({ key: 'track-order', label: t.nav.trackOrder, href: '/order-tracking', externalHref: '/order-tracking' });
   }
 
   const isDarkMode = themeMode === 'dark';
@@ -239,7 +241,7 @@ export default function MarwanTemplate({
 
   const priceText = (product: Product) => {
     const raw = product.final_price ?? product.main_price ?? product.price ?? 0;
-    return `EGP ${Number(raw).toLocaleString()}`;
+    return formatPrice(raw);
   };
 
   const contactUser = settings?.ecommerceUsers?.[0] || {};
@@ -312,7 +314,7 @@ export default function MarwanTemplate({
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Search for products, categories, or brands..."
+                  placeholder={t.common.searchPlaceholder}
                   className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-text-muted)]"
                   style={{ color: 'var(--mw-text)' }}
                 />
@@ -380,7 +382,7 @@ export default function MarwanTemplate({
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Search..."
+                  placeholder={t.common.search}
                   className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-text-muted)]"
                   style={{ color: 'var(--mw-text)' }}
                 />
@@ -473,7 +475,7 @@ export default function MarwanTemplate({
                         className="inline-flex items-center gap-2 px-6 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider transition-transform hover:-translate-y-0.5"
                         style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)', boxShadow: '0 16px 36px color-mix(in srgb, var(--mw-primary) 40%, transparent)' }}
                       >
-                        Shop Now <ArrowRight size={17} />
+                        {t.home.shopNow} <ArrowRight size={17} className={isRtl ? 'rotate-180' : ''} />
                       </Link>
                     )}
                     {showCategories && (
@@ -481,7 +483,7 @@ export default function MarwanTemplate({
                         href="#categories"
                         className="inline-flex items-center gap-2 px-6 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider text-white bg-white/5 border border-white/30 transition-transform hover:-translate-y-0.5 hover:border-white"
                       >
-                        Browse Categories
+                        {t.home.browseCategories}
                       </Link>
                     )}
                   </div>
@@ -566,7 +568,7 @@ export default function MarwanTemplate({
                   className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full border text-[11px] font-extrabold uppercase tracking-wider transition-colors"
                   style={{ borderColor: 'var(--mw-border)' }}
                 >
-                  View all <ArrowRight size={15} />
+                  {t.common.viewAll} <ArrowRight size={15} className={isRtl ? 'rotate-180' : ''} />
                 </Link>
               </div>
 
@@ -582,14 +584,14 @@ export default function MarwanTemplate({
                     <div className="relative h-[210px] overflow-hidden">
                       <img
                         src={category.image || logoUrl || undefined}
-                        alt={category.name}
+                        alt={getLocalized(category, 'name')}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
                     </div>
                     <div className="absolute left-0 right-0 bottom-0 p-5 text-white">
-                      <h3 className="text-lg font-extrabold uppercase mb-1">{category.name}</h3>
-                      <span className="text-xs text-white/75">{category.product_quantity ?? 0} items</span>
+                      <h3 className="text-lg font-extrabold uppercase mb-1">{getLocalized(category, 'name')}</h3>
+                      <span className="text-xs text-white/75">{category.product_quantity ?? 0} {t.common.itemsCount}</span>
                     </div>
                     <div
                       className="absolute left-0 bottom-0 h-[3px] w-full scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300"
@@ -649,16 +651,16 @@ export default function MarwanTemplate({
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-base font-black" style={{ color: 'var(--mw-primary)' }}>{priceText(product)}</span>
                       </div>
-                      <h3 className="text-base font-extrabold mb-2">{product.name}</h3>
+                      <h3 className="text-base font-extrabold mb-2">{getLocalized(product, 'name')}</h3>
                       <p className="text-sm leading-relaxed mb-4 line-clamp-2" style={{ color: 'var(--mw-text-muted)' }}>
-                        {product.description || 'Quality build, everyday comfort, and a design made to last.'}
+                        {getLocalized(product, 'description') || (isRtl ? 'جودة عالية وتصميم عملي يدوم طويلاً.' : 'Quality build, everyday comfort, and a design made to last.')}
                       </p>
                       <div className="flex items-center justify-between">
                         <Link
                           href={`/product/${product._id}`}
                           className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider transition-all group-hover:gap-2.5"
                         >
-                          View Details <ArrowRight size={14} />
+                          {t.common.viewMore} <ArrowRight size={14} className={isRtl ? 'rotate-180' : ''} />
                         </Link>
                         <Star size={16} style={{ color: 'var(--mw-primary)' }} />
                       </div>

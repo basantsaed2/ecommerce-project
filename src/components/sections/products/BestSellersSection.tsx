@@ -5,6 +5,7 @@ import { Loader2, TrendingUp } from 'lucide-react';
 import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Product } from '@/types/api';
 import ProductCard from '@/components/modules/products/ProductCard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BestSellersSectionProps {
     title?: string;
@@ -18,6 +19,7 @@ export default function BestSellersSection({
     subtitle,
     searchQuery = '',
 }: BestSellersSectionProps) {
+    const { t } = useTranslation();
     const { data, isLoading, error } = useGet<ApiResponse<Product>>(
         ['best-sellers'],
         '/product/best-sellers'
@@ -42,10 +44,10 @@ export default function BestSellersSection({
                 <div className="flex items-end justify-between gap-4 mb-8">
                     <div>
                         <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-secondary mb-2">
-                            <TrendingUp size={15} /> {subtitle || 'Top performers'}
+                            <TrendingUp size={15} /> {subtitle || t.sections.topPerformers}
                         </span>
                         <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
-                            {title || 'Best Sellers'}
+                            {title || t.sections.bestSellers}
                         </h2>
                     </div>
                 </div>

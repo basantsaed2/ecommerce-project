@@ -21,6 +21,7 @@ import FrequentlyBoughtTogether from '@/components/modules/products/FrequentlyBo
 import ProductReviewsSection from '@/components/modules/products/ProductReviewsSection';
 import RelatedProducts from '@/components/modules/products/RelatedProducts';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function ProductDetailClient() {
     const params = useParams<{ id?: string }>();
@@ -30,6 +31,7 @@ export default function ProductDetailClient() {
     const dispatch = useDispatch<AppDispatch>();
     const token = useSelector((state: RootState) => state.auth.token);
     const { logoUrl } = useStoreSettings();
+    const { t, language, getLocalized, formatPrice, isRtl } = useTranslation();
 
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [quantity, setQuantity] = useState(1);
@@ -119,13 +121,13 @@ export default function ProductDetailClient() {
     };
 
     const handleWishlistToggle = () => {
-        if (!token) { toast.error('Please login to save to wishlist'); return; }
+        if (!token) { toast.error(t.product.wishlistLogin); return; }
         toggleWishlist({ productId: product!._id });
     };
 
     const handleAddToCart = async () => {
         if (!product || isOutOfStock) {
-            if (isOutOfStock) toast.error('This combination is currently sold out');
+            if (isOutOfStock) toast.error(t.product.soldOutCombination);
             return;
         }
         setIsAddingToCart(true);
@@ -136,12 +138,12 @@ export default function ProductDetailClient() {
         }));
         await dispatch(syncCart());
         setIsAddingToCart(false);
-        toast.success('Added to cart');
+        toast.success(t.product.addedToCartSimple);
     };
 
     const handleBuyNow = async () => {
         if (!product || isOutOfStock) {
-            if (isOutOfStock) toast.error('This combination is currently sold out');
+            if (isOutOfStock) toast.error(t.product.soldOutCombination);
             return;
         }
         setIsBuyingNow(true);
@@ -160,7 +162,7 @@ export default function ProductDetailClient() {
             await navigator.share({ title: product?.name, url: window.location.href });
         } else {
             navigator.clipboard.writeText(window.location.href);
-            toast.success('Link copied to clipboard!');
+            toast.success(t.product.linkCopied);
         }
     };
 
@@ -171,7 +173,7 @@ export default function ProductDetailClient() {
                     <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
                         <Loader2 className="animate-spin text-primary" size={36} />
                     </div>
-                    <p className="text-gray-500 font-bold">Loading product details...</p>
+                    <p className="text-gray-500 font-bold">{t.common.loading}</p>
                 </div>
             </div>
         );
@@ -184,10 +186,10 @@ export default function ProductDetailClient() {
                     <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Package size={40} className="text-red-300" />
                     </div>
-                    <h1 className="text-2xl font-black text-primary mb-3">Product Not Found</h1>
-                    <p className="text-gray-500 mb-8">This product doesn't exist or has been removed.</p>
+                    <h1 className="text-2xl font-black text-primary mb-3">{t.product.notFoundTitle}</h1>
+                    <p className="text-gray-500 mb-8">{t.product.notFoundDescription}</p>
                     <Link href="/" className="bg-primary text-white px-8 py-3 rounded-2xl font-bold hover:bg-black transition-all">
-                        Back to Home
+                        {t.product.backHome}
                     </Link>
                 </div>
             </div>
@@ -210,21 +212,21 @@ export default function ProductDetailClient() {
             {/* Breadcrumbs */}
             <div className="w-full px-4 md:px-12 py-4 border-b border-gray-100/60 bg-white">
                 <div className="flex items-center gap-2 text-xs md:text-sm text-gray-400 flex-wrap max-w-7xl mx-auto">
-                    <Link href="/" className="hover:text-primary font-semibold transition-colors">Home</Link>
+                    <Link href="/" className="hover:text-primary font-semibold transition-colors">{t.nav.home}</Link>
                     <span>/</span>
                     {product.brand?.name && (
                         <>
-                            <span className="font-semibold text-gray-600">{product.brand.name}</span>
+                            <span className="font-semibold text-gray-600">{getLocalized(product.brand)}</span>
                             <span>/</span>
                         </>
                     )}
                     {product.category && (
                         <>
-                            <span className="font-semibold text-gray-600">{product.category.name}</span>
+                            <span className="font-semibold text-gray-600">{getLocalized(product.category)}</span>
                             <span>/</span>
                         </>
                     )}
-                    <span className="text-primary font-bold truncate max-w-[200px]">{product.name || product.ar_name}</span>
+                    <span className="text-primary font-bold truncate max-w-[200px]">{getLocalized(product)}</span>
                 </div>
             </div>
 
@@ -234,8 +236,8 @@ export default function ProductDetailClient() {
                     onClick={() => router.back()}
                     className="flex items-center gap-2 text-gray-500 hover:text-primary font-bold transition-colors mb-6 group text-sm"
                 >
-                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    Back to Catalog
+                    <ArrowLeft size={18} className={`group-hover:-translate-x-1 transition-transform ${isRtl ? 'rotate-180' : ''}`} />
+                    {t.product.backCatalog}
                 </button>
 
                 {/* Discount Promo Banner */}
@@ -247,15 +249,15 @@ export default function ProductDetailClient() {
                             </span>
                             <div>
                                 <h4 className="font-black text-base uppercase tracking-wider">
-                                    {priceInfo.discountLabel || 'Special Discount'} Available!
+                                    {priceInfo.discountLabel || t.product.specialDiscount} {t.product.available}
                                 </h4>
                                 <p className="text-xs text-white/90 font-medium">
-                                    Get {priceInfo.discountPercent}% off this product today. Limited time offer.
+                                    {priceInfo.discountPercent}% {t.product.getDiscountToday}
                                 </p>
                             </div>
                         </div>
                         <span className="bg-white text-red-600 font-black text-xs px-4 py-2 rounded-xl uppercase tracking-wider shadow-sm">
-                            Save {priceInfo.discountAmount.toLocaleString()} EGP
+                            {t.product.save} {formatPrice(priceInfo.discountAmount)}
                         </span>
                     </div>
                 )}
@@ -268,18 +270,18 @@ export default function ProductDetailClient() {
                             {/* Badges */}
                             <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
                                 {priceInfo.hasDiscount && (
-                                    <span className="bg-red-500 text-white text-xs font-black px-3 py-1 rounded-xl uppercase tracking-wider shadow-md">
-                                        -{priceInfo.discountPercent}% OFF
+                                        <span className="bg-red-500 text-white text-xs font-black px-3 py-1 rounded-xl uppercase tracking-wider shadow-md">
+                                            -{priceInfo.discountPercent}% {t.product.discount}
                                     </span>
                                 )}
                                 {product.is_featured && (
                                     <span className="bg-amber-500 text-white text-xs font-black px-3 py-1 rounded-xl uppercase tracking-wider shadow-md flex items-center gap-1">
-                                        🔥 Featured
+                                        🔥 {t.product.featuredLabel}
                                     </span>
                                 )}
                                 {inStock && currentStock < 5 && (
                                     <span className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1 rounded-xl uppercase border border-red-100">
-                                        Low Stock ({currentStock})
+                                            {t.product.lowStock} ({currentStock})
                                     </span>
                                 )}
                             </div>
@@ -293,14 +295,14 @@ export default function ProductDetailClient() {
                                         ? 'bg-red-50 border-red-100 text-red-500'
                                         : 'bg-white/90 backdrop-blur-sm border-gray-100 text-gray-400 hover:text-red-500'
                                         }`}
-                                    aria-label="Wishlist"
+                                    aria-label={t.nav.wishlist}
                                 >
                                     <Heart size={20} className={isInWishlist ? 'fill-current' : ''} />
                                 </button>
                                 <button
                                     onClick={handleShare}
                                     className="p-3 rounded-2xl shadow-sm border bg-white/90 backdrop-blur-sm border-gray-100 text-gray-400 hover:text-primary transition-all active:scale-90"
-                                    aria-label="Share"
+                                    aria-label={t.common.share}
                                 >
                                     <Share2 size={20} />
                                 </button>
@@ -308,14 +310,14 @@ export default function ProductDetailClient() {
 
                             <img
                                 src={displayedImage}
-                                alt={product.name || product.ar_name}
+                                alt={getLocalized(product)}
                                 className={`max-w-full max-h-full object-contain transition-all duration-700 group-hover:scale-105 ${!inStock ? 'grayscale opacity-50' : ''}`}
                             />
 
                             {!inStock && (
                                 <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
                                     <span className="bg-gray-900 text-white px-6 py-2.5 rounded-full text-sm font-black uppercase tracking-widest rotate-[-12deg] shadow-2xl border-2 border-white">
-                                        Out of Stock
+                                        {t.product.outOfStock}
                                     </span>
                                 </div>
                             )}
@@ -349,22 +351,22 @@ export default function ProductDetailClient() {
                                 {product.brand?.name && (
                                     <span className="text-xs font-black text-gray-600 bg-gray-100 px-3 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1">
                                         <Award size={12} className="text-gray-400" />
-                                        {product.brand.name}
+                                        {getLocalized(product.brand)}
                                     </span>
                                 )}
                                 {product.category?.name && (
                                     <span className="text-xs font-black text-secondary bg-secondary/10 px-3 py-1 rounded-lg uppercase tracking-wider">
-                                        {product.category.name}
+                                        {getLocalized(product.category)}
                                     </span>
                                 )}
                             </div>
 
                             <h1 className="text-3xl md:text-4xl font-black text-primary leading-tight mb-2">
-                                {product.name || product.ar_name}
+                                {getLocalized(product)}
                             </h1>
                             {product.ar_name && product.name !== product.ar_name && (
                                 <p className="text-gray-400 font-semibold text-sm mb-3">
-                                    {product.ar_name}
+                                    {getLocalized(product)}
                                 </p>
                             )}
 
@@ -373,12 +375,12 @@ export default function ProductDetailClient() {
                                 <div className="flex items-center gap-1 text-amber-500">
                                     <Star size={16} className="fill-current" />
                                     <span className="text-gray-900 font-black">4.8</span>
-                                    <span className="text-gray-400">(Verified Product)</span>
+                                    <span className="text-gray-400">({t.product.verifiedProduct})</span>
                                 </div>
                                 <span>•</span>
                                 <div className="flex items-center gap-1 text-emerald-600">
                                     <CheckCircle2 size={16} />
-                                    <span>In Stock & Ready to Ship</span>
+                                    <span>{t.product.inStockReady}</span>
                                 </div>
                             </div>
                         </div>
@@ -387,13 +389,12 @@ export default function ProductDetailClient() {
                         <div className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-sm">
                             <div className="flex items-baseline gap-3 mb-2 flex-wrap">
                                 <span className="text-4xl md:text-5xl font-black text-secondary tracking-tight">
-                                    {priceInfo.finalPrice.toLocaleString()}
+                                    {formatPrice(priceInfo.finalPrice)}
                                 </span>
-                                <span className="text-xl font-bold text-gray-400">EGP</span>
 
                                 {priceInfo.hasDiscount && (
                                     <span className="text-xl font-bold text-gray-300 line-through">
-                                        {priceInfo.mainPrice.toLocaleString()} EGP
+                                        {formatPrice(priceInfo.mainPrice)}
                                     </span>
                                 )}
                             </div>
@@ -401,7 +402,7 @@ export default function ProductDetailClient() {
                             {priceInfo.hasDiscount && (
                                 <div className="flex items-center gap-2 mt-3">
                                     <span className="bg-emerald-50 text-emerald-700 text-xs font-black px-3 py-1 rounded-lg border border-emerald-200">
-                                        Save {priceInfo.discountAmount.toLocaleString()} EGP ({priceInfo.discountPercent}% OFF)
+                                        {t.product.save} {formatPrice(priceInfo.discountAmount)} ({priceInfo.discountPercent}% {t.product.discount})
                                     </span>
                                 </div>
                             )}
@@ -415,7 +416,7 @@ export default function ProductDetailClient() {
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-2">
                                                 <label className="text-xs font-black text-gray-700 uppercase tracking-wider">
-                                                    Select {variation.name}
+                                                    {t.product.selectOption} {getLocalized(variation)}
                                                 </label>
                                                 {variation.ar_name && variation.ar_name !== variation.name && (
                                                     <span className="text-xs text-gray-400 font-medium">
@@ -430,7 +431,7 @@ export default function ProductDetailClient() {
                                                     onClick={() => setSizeGuideOpen(true)}
                                                     className="text-xs font-bold text-secondary hover:underline flex items-center gap-1"
                                                 >
-                                                    <Ruler size={13} /> Size Guide
+                                                    <Ruler size={13} /> {t.product.sizeGuide}
                                                 </button>
                                             ) : null}
                                         </div>
@@ -449,8 +450,8 @@ export default function ProductDetailClient() {
                                                                 : 'bg-white border-gray-100 text-gray-700 hover:border-gray-300'
                                                             }`}
                                                     >
-                                                        <span>{option.name}</span>
-                                                        {!optionInStock && <span className="text-[9px] opacity-70">Sold Out</span>}
+                                                        <span>{getLocalized(option)}</span>
+                                                        {!optionInStock && <span className="text-[9px] opacity-70">{t.product.soldOut}</span>}
                                                     </button>
                                                 );
                                             })}
@@ -463,46 +464,46 @@ export default function ProductDetailClient() {
                         {/* Description */}
                         {(product.description || product.ar_description) && (
                             <div className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-sm">
-                                <h3 className="text-xs font-black text-gray-700 uppercase tracking-wider mb-2">Description</h3>
+                                <h3 className="text-xs font-black text-gray-700 uppercase tracking-wider mb-2">{t.product.description}</h3>
                                 <p className="text-gray-600 leading-relaxed text-sm">
-                                    {product.description || product.ar_description}
+                                    {getLocalized(product, 'description')}
                                 </p>
                             </div>
                         )}
 
                         {/* Specifications & SKU Grid */}
                         <div className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-sm">
-                            <h3 className="text-xs font-black text-gray-700 uppercase tracking-wider mb-4">Product Overview</h3>
+                            <h3 className="text-xs font-black text-gray-700 uppercase tracking-wider mb-4">{t.product.overview}</h3>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                                 {currentSkuObj?.code && (
                                     <div className="p-3 bg-gray-50 rounded-xl">
-                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">SKU Code</span>
+                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.skuCode}</span>
                                         <span className="font-black text-gray-800">{currentSkuObj.code}</span>
                                     </div>
                                 )}
                                 {product.brand?.name && (
                                     <div className="p-3 bg-gray-50 rounded-xl">
-                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">Brand</span>
-                                        <span className="font-black text-gray-800">{product.brand.name}</span>
+                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.brand}</span>
+                                        <span className="font-black text-gray-800">{getLocalized(product.brand)}</span>
                                     </div>
                                 )}
                                 {product.category?.name && (
                                     <div className="p-3 bg-gray-50 rounded-xl">
-                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">Category</span>
-                                        <span className="font-black text-gray-800">{product.category.name}</span>
+                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.category}</span>
+                                        <span className="font-black text-gray-800">{getLocalized(product.category)}</span>
                                     </div>
                                 )}
                                 <div className="p-3 bg-gray-50 rounded-xl">
-                                    <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">Availability</span>
+                                    <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.availability}</span>
                                     <span className={`font-black ${inStock ? 'text-emerald-600' : 'text-red-500'}`}>
-                                        {inStock ? `${currentStock} Available` : 'Out of Stock'}
+                                        {inStock ? `${currentStock} ${t.product.inStock}` : t.product.outOfStock}
                                     </span>
                                 </div>
                                 {(product.created_at || product.createdAt) && (
                                     <div className="p-3 bg-gray-50 rounded-xl">
-                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">Release Date</span>
+                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.releaseDate}</span>
                                         <span className="font-black text-gray-800">
-                                            {new Date(product.created_at || product.createdAt!).toLocaleDateString()}
+                                            {new Date(product.created_at || product.createdAt!).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
                                         </span>
                                     </div>
                                 )}
@@ -513,8 +514,8 @@ export default function ProductDetailClient() {
                         <div className={`space-y-4 ${!inStock ? 'opacity-40 pointer-events-none' : ''}`}>
                             <div className="flex items-center justify-between bg-white border border-gray-100 rounded-[28px] p-5 shadow-sm">
                                 <div>
-                                    <span className="text-xs font-black text-gray-700 uppercase tracking-wider block mb-1">Quantity</span>
-                                    <span className="text-xs text-gray-400 font-bold">Total: {totalPrice} EGP</span>
+                                    <span className="text-xs font-black text-gray-700 uppercase tracking-wider block mb-1">{t.product.quantity}</span>
+                                    <span className="text-xs text-gray-400 font-bold">{t.cart.total}: {formatPrice(priceInfo.finalPrice * quantity)}</span>
                                 </div>
                                 <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl p-1.5 shadow-inner">
                                     <button
@@ -547,7 +548,7 @@ export default function ProductDetailClient() {
                                         ? <Loader2 size={20} className="animate-spin" />
                                         : <ShoppingCart size={20} strokeWidth={2.5} />
                                     }
-                                    {isAddingToCart ? 'Adding...' : (!inStock ? 'OUT OF STOCK' : 'Add to Cart')}
+                                    {isAddingToCart ? t.product.addingToCart : (!inStock ? t.product.outOfStock : t.product.addToCart)}
                                 </button>
 
                                 <button
@@ -562,7 +563,7 @@ export default function ProductDetailClient() {
                                         ? <Loader2 size={20} className="animate-spin" />
                                         : <Zap size={20} strokeWidth={2.5} />
                                     }
-                                    {isBuyingNow ? 'Processing...' : (!inStock ? 'SOLD OUT' : 'Buy Now')}
+                                    {isBuyingNow ? t.product.processing : (!inStock ? t.product.soldOut : t.product.buyNow)}
                                 </button>
                             </div>
 

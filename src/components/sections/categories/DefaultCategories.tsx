@@ -5,6 +5,7 @@ import { ApiResponse, Category } from '@/types/api';
 import { Loader2, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface CategoriesSectionProps {
     searchQuery?: string;
@@ -19,6 +20,7 @@ export default function DefaultCategories({
     subtitle
 }: CategoriesSectionProps) {
     const { logoUrl } = useStoreSettings();
+    const { t, getLocalized } = useTranslation();
     const { data, isLoading, error } = useGet<ApiResponse<Category>>(['categories'], '/category');
 
     if (isLoading) {
@@ -46,17 +48,17 @@ export default function DefaultCategories({
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-4">
                 <div>
                     <span className="text-xs font-black uppercase tracking-widest text-secondary mb-1 block">
-                        {subtitle || "Curated Collections"}
+                        {subtitle || t.sections.curatedCollections}
                     </span>
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-primary tracking-tight">
-                        {title || "Featured Categories"}
+                        {title || t.sections.featuredCategories}
                     </h2>
                 </div>
                 <Link
                     href="/categories" 
                     className="px-5 py-2.5 bg-white border border-gray-200 text-primary hover:border-secondary hover:text-secondary rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-sm flex items-center gap-1.5"
                 >
-                    View All
+                    {t.sections.viewAll}
                     <ArrowRight size={16} />
                 </Link>
             </div>
@@ -74,18 +76,18 @@ export default function DefaultCategories({
                             <div className="absolute inset-2 bg-white rounded-[1.75rem] shadow-sm border border-gray-100 overflow-hidden flex items-center justify-center group-hover:border-secondary group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-300">
                                 <img
                                     src={category.image || logoUrl || undefined}
-                                    alt={category.name}
+                                    alt={getLocalized(category)}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 />
                             </div>
                         </div>
 
                         <span className="text-sm font-bold text-gray-800 group-hover:text-secondary transition-colors text-center line-clamp-1">
-                            {category.name || category.ar_name}
+                            {getLocalized(category)}
                         </span>
                         {category.product_quantity !== undefined && (
                             <span className="text-[11px] text-gray-400 font-medium">
-                                {category.product_quantity} items
+                                {category.product_quantity} {t.sections.productsCount}
                             </span>
                         )}
                     </Link>

@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
-import { Truck, ShieldCheck, RefreshCw, Headphones, CreditCard, Award } from 'lucide-react';
+import { Truck, ShieldCheck, RefreshCw, Headphones } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface FeaturesProps {
     title?: string;
@@ -9,30 +10,31 @@ interface FeaturesProps {
 }
 
 export default function DefaultFeatures({ title, subtitle }: FeaturesProps) {
+    const { t } = useTranslation();
     const features = [
         {
             icon: Truck,
-            title: "Free Fast Shipping",
-            description: "On all orders above $50",
-            badge: "Fast"
+            title: t.home.fastDelivery,
+            description: t.home.fastDeliveryDesc,
+            badge: t.home.fastDelivery
         },
         {
             icon: ShieldCheck,
-            title: "100% Secure Payment",
-            description: "Encrypted & safe checkout",
-            badge: "Secure"
+            title: t.home.securePayment,
+            description: t.home.securePaymentDesc,
+            badge: t.home.securePayment
         },
         {
             icon: RefreshCw,
-            title: "14 Days Free Returns",
-            description: "Hassle-free money back",
-            badge: "Easy"
+            title: t.home.easyReturns,
+            description: t.home.easyReturnsDesc,
+            badge: t.home.easyReturns
         },
         {
             icon: Headphones,
-            title: "24/7 Expert Support",
-            description: "Dedicated live assistance",
-            badge: "Online"
+            title: t.home.support247,
+            description: t.home.support247Desc,
+            badge: t.home.support247
         },
     ];
 

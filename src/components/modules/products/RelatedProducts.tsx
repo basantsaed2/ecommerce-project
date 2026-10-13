@@ -5,6 +5,7 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Product } from '@/types/api';
 import ProductCard from './ProductCard';
 import { Sparkles } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface RelatedProductsProps {
     currentProductId: string;
@@ -12,6 +13,7 @@ interface RelatedProductsProps {
 }
 
 export default function RelatedProducts({ currentProductId, categoryId }: RelatedProductsProps) {
+    const { t } = useTranslation();
     const { data } = useGet<ApiResponse<Product>>(['products'], '/product');
     const allProducts = data?.data?.data || [];
 
@@ -27,7 +29,7 @@ export default function RelatedProducts({ currentProductId, categoryId }: Relate
             <div className="flex items-center gap-2 mb-6">
                 <Sparkles size={20} className="text-secondary" />
                 <h3 className="text-2xl font-black text-primary tracking-tight">
-                    You May Also Like
+                    {t.sections.youMayAlsoLike}
                 </h3>
             </div>
 
