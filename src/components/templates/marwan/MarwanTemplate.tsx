@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Moon, ShieldCheck, Sparkles, Star, Sun, Truck, Undo2 } from 'lucide-react';
+import { ArrowRight, Moon, Package, ShieldCheck, Sparkles, Star, Sun, Truck, Undo2 } from 'lucide-react';
 import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import DynamicSectionRenderer from '@/components/sections/DynamicSectionRenderer';
@@ -48,6 +48,51 @@ export default function MarwanTemplate({
   className = '',
 }: MarwanTemplateProps) {
   const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings() as any;
+
+  // ── Dynamic header data from backend ───────────────────────────────────
+  const ecommerceData = settings?.ecommerceData?.[0] || {};
+  const headerData = ecommerceData?.header || {};
+  const headerLinks: string[] = headerData?.links || [];
+  const announcementText: string = headerData?.announcement || '';
+  const dynamicLogoUrl: string = headerData?.logo || logoUrl || '';
+
+  // Map backend link keys → { label, href }
+  const linkConfig: Record<string, { label: string; href: string; scrollId?: string }> = {
+    home:            { label: 'Home',       href: '/' },
+    about:           { label: 'About',      href: '/about' },
+    products:        { label: 'Products',   href: '/product', scrollId: 'products' },
+    product:         { label: 'Products',   href: '/product', scrollId: 'products' },
+    categories:      { label: 'Categories', href: '/categories', scrollId: 'categories' },
+    category:        { label: 'Categories', href: '/categories', scrollId: 'categories' },
+    brands:          { label: 'Brands',     href: '/brands' },
+    brand:           { label: 'Brands',     href: '/brands' },
+    'track-order':   { label: 'Track Order', href: '/order-tracking' },
+    'order-tracking':{ label: 'Track Order', href: '/order-tracking' },
+    'why-us':        { label: 'Why Us',     href: '#why-us', scrollId: 'why-us' },
+    contact:         { label: 'Contact',    href: '/contact' },
+  };
+
+  // Build dynamic nav items; fall back to defaults if backend sends nothing
+  const fallbackLinks = ['categories', 'products', 'why-us', 'track-order'];
+  const resolvedLinks = (headerLinks.length ? headerLinks : fallbackLinks).map((key) => {
+    const normalized = key.toLowerCase().trim();
+    const found = linkConfig[normalized];
+    return found
+      ? { key: normalized, label: found.label, href: found.scrollId ? `#${found.scrollId}` : found.href, externalHref: found.href }
+      : {
+          key: normalized,
+          label: normalized.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          href: `/${normalized}`,
+          externalHref: `/${normalized}`,
+        };
+  });
+
+  // Always ensure Track Order is present
+  const hasTrackOrder = resolvedLinks.some((l) => l.key === 'track-order' || l.key === 'order-tracking');
+  if (!hasTrackOrder) {
+    resolvedLinks.push({ key: 'track-order', label: 'Track Order', href: '/order-tracking', externalHref: '/order-tracking' });
+  }
+
   const isDarkMode = themeMode === 'dark';
   const activePrimary = isDarkMode ? colors?.primaryDark || colors?.primary : colors?.primary;
   const activeSecondary = isDarkMode ? colors?.secondaryDark || colors?.secondary : colors?.secondary;
@@ -212,11 +257,7 @@ export default function MarwanTemplate({
   }
 
   /* Reusable Tailwind fragments (kept as variables so the JSX below stays readable) */
-  const navItems = [
-    { key: 'categories', label: 'Categories', enabled: showCategories, href: '#categories' },
-    { key: 'products', label: 'Products', enabled: showProducts, href: '#products' },
-    { key: 'why-us', label: 'Why Us', enabled: showFeatures, href: '#why-us' },
-  ].filter((item) => item.enabled);
+  const navItems = resolvedLinks;
 
   const navLinkCls = (active: boolean) =>
     `text-[13px] font-bold uppercase tracking-wider pb-1 border-b-2 transition-colors ${
@@ -251,9 +292,9 @@ export default function MarwanTemplate({
         >
           <div className="max-w-[1460px] mx-auto px-4 flex items-center justify-between h-[72px] gap-4">
             <Link href="/" className="flex h-14 w-[150px] md:w-[220px] items-center shrink-0" aria-label={storeName || 'Store'}>
-              {logoUrl ? (
+              {dynamicLogoUrl || logoUrl ? (
                 <img
-                  src={logoUrl}
+                  src={dynamicLogoUrl || logoUrl}
                   alt={storeName || 'Store logo'}
                   className="max-h-14 max-w-full object-contain object-left"
                 />
@@ -344,9 +385,38 @@ export default function MarwanTemplate({
                   style={{ color: 'var(--mw-text)' }}
                 />
               </div>
-              {showCategories && <Link href="#categories" onClick={() => setMenuOpen(false)}>Categories</Link>}
-              {showProducts && <Link href="#products" onClick={() => setMenuOpen(false)}>Products</Link>}
-              {showFeatures && <Link href="#why-us" onClick={() => setMenuOpen(false)}>Why Us</Link>}
+              <div className="flex flex-col gap-2 pt-2">
+                {navItems.map((item) => {
+                  const isTrack = item.key === 'track-order' || item.key === 'order-tracking';
+                  const isActive = activeSection === item.key;
+                  return (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        if (item.href.startsWith('#')) {
+                          const elem = document.getElementById(item.href.substring(1));
+                          if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                      className={`flex items-center gap-2.5 py-1 text-[15px] font-semibold transition-colors hover:text-[var(--mw-primary)] ${
+                        isTrack ? 'font-bold' : ''
+                      }`}
+                      style={{
+                        color: isTrack
+                          ? 'var(--mw-primary)'
+                          : isActive
+                          ? 'var(--mw-primary)'
+                          : 'var(--mw-text)',
+                      }}
+                    >
+                      {isTrack && <Package size={16} />}
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           )}
         </header>
@@ -702,6 +772,15 @@ export default function MarwanTemplate({
                   <ul className="space-y-2.5">
                     <li><Link href="/product" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>All Products</Link></li>
                     <li><Link href="#why-us" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>Shipping &amp; Returns</Link></li>
+                    <li>
+                      <Link
+                        href="/order-tracking"
+                        className="text-sm hover:underline transition-colors flex items-center gap-1.5"
+                        style={{ color: 'var(--mw-primary)' }}
+                      >
+                        <Package size={13} /> Track Your Order
+                      </Link>
+                    </li>
                     <li><Link href="#" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>Contact Us</Link></li>
                   </ul>
                 </div>

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
     Home, Grid, Heart, ShoppingCart, User,
-    Menu, X, Briefcase, LogIn, LogOut, Package, Sun, Moon
+    Menu, X, Briefcase, LogIn, LogOut, Package, Sun, Moon, Info
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
@@ -39,6 +39,7 @@ export default function Navbar() {
     const headerLinks = settings.ecommerceData?.[0]?.header?.links || [];
     const linkConfig = {
         home: { name: 'Home', href: '/', icon: Home },
+        about: { name: 'About', href: '/about', icon: Info },
         category: { name: 'Category', href: '/categories', icon: Grid },
         categories: { name: 'Categories', href: '/categories', icon: Grid },
         products: { name: 'Products', href: '/product', icon: ShoppingCart },

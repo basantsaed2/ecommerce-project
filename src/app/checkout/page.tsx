@@ -189,9 +189,21 @@ export default function CheckoutPage() {
     const bostaZones = Array.from(new Map(
         bostaDistricts.map((district) => [district.zoneId, { _id: district.zoneId, name: district.zoneName }])
     ).values());
-    const filteredBostaDistricts = bostaDistricts
-        .filter((district) => district.zoneId === guestZone)
-        .map((district) => ({ _id: district._id, name: district.districtName }));
+    const bostaDistrictOptions = React.useMemo(() => {
+        const list = guestZone
+            ? bostaDistricts.filter((district) => district.zoneId === guestZone)
+            : bostaDistricts;
+        const nameCounts = new Map<string, number>();
+        list.forEach((d) => {
+            nameCounts.set(d.districtName, (nameCounts.get(d.districtName) || 0) + 1);
+        });
+        return list.map((district) => ({
+            _id: district._id,
+            name: (nameCounts.get(district.districtName) || 0) > 1
+                ? `${district.districtName} (${district.zoneName})`
+                : district.districtName,
+        }));
+    }, [bostaDistricts, guestZone]);
     const selectedBostaCity = bostaCities.find((city) => city._id === guestCity);
     const selectedBostaDistrict = bostaDistricts.find((district) => district._id === guestDistrict);
 
@@ -351,8 +363,8 @@ export default function CheckoutPage() {
                 return;
             }
 
-            if (isBostaShipping && (!guestCity || !guestZone || !guestDistrict || !guestStreet || !guestBuildingNumber)) {
-                toast.error("Please select a Bosta city, zone, and district and fill in the required address details");
+            if (isBostaShipping && (!guestCity || !guestDistrict || !guestZone || !guestStreet || !guestBuildingNumber)) {
+                toast.error("Please select a Bosta city, district, and zone and fill in the required address details");
                 return;
             }
 
@@ -598,20 +610,32 @@ export default function CheckoutPage() {
                                                 ) : (
                                                     <>
                                                         <SearchableSelect
+                                                            label="District"
+                                                            options={bostaDistrictOptions}
+                                                            value={guestDistrict}
+                                                            onChange={(val) => {
+                                                                setGuestDistrict(val);
+                                                                const matched = bostaDistricts.find((d) => d._id === val);
+                                                                if (matched) {
+                                                                    setGuestZone(matched.zoneId);
+                                                                }
+                                                            }}
+                                                            placeholder="Pick District"
+                                                            disabled={!bostaDistrictOptions.length}
+                                                        />
+                                                        <SearchableSelect
                                                             label="Zone"
                                                             options={bostaZones}
                                                             value={guestZone}
-                                                            onChange={(val) => { setGuestZone(val); setGuestDistrict(''); }}
+                                                            onChange={(val) => {
+                                                                setGuestZone(val);
+                                                                const currentDist = bostaDistricts.find((d) => d._id === guestDistrict);
+                                                                if (currentDist && currentDist.zoneId !== val) {
+                                                                    setGuestDistrict('');
+                                                                }
+                                                            }}
                                                             placeholder="Pick Zone"
                                                             disabled={!bostaZones.length}
-                                                        />
-                                                        <SearchableSelect
-                                                            label="District"
-                                                            options={filteredBostaDistricts}
-                                                            value={guestDistrict}
-                                                            onChange={setGuestDistrict}
-                                                            placeholder="Pick District"
-                                                            disabled={!guestZone || !filteredBostaDistricts.length}
                                                         />
                                                         {!bostaDistricts.length && (
                                                             <p className="md:col-span-2 text-sm font-bold text-amber-600">No Bosta delivery areas were returned for this city.</p>

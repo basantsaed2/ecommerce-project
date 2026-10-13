@@ -152,7 +152,7 @@ export default function ExampleTemplate({
           </div>
 
           <div className="flex items-center gap-6 font-medium">
-            <Link href="/orders" className="hover:text-[var(--bs-primary)] transition-colors">Order Tracking</Link>
+            <Link href="/order-tracking" className="hover:text-[var(--bs-primary)] transition-colors flex items-center gap-1 font-bold text-[var(--bs-primary)]">📦 Order Tracking</Link>
             <Link href="/register" className="hover:text-[var(--bs-primary)] transition-colors">+ Register</Link>
             <Link href="/login" className="hover:text-[var(--bs-primary)] transition-colors">Sign in</Link>
           </div>
@@ -226,11 +226,11 @@ export default function ExampleTemplate({
 
       {/* ── Navigation Bar ────────────────────────────────────────────── */}
       <nav className="bg-[#2a323d] text-white">
-        <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-8">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-8">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-8 w-full">
             <button
               onClick={() => setCatMenuOpen(!catMenuOpen)}
-              className="bg-[var(--bs-primary)] text-white font-bold text-xs tracking-wider uppercase px-6 py-3.5 flex items-center gap-3 hover:brightness-110 transition-all w-[240px] justify-between"
+              className="bg-[var(--bs-primary)] text-white font-bold text-xs tracking-wider uppercase px-6 py-3.5 flex items-center gap-3 hover:brightness-110 transition-all w-full md:w-[240px] justify-between"
             >
               <span className="flex items-center gap-2">
                 <Menu size={16} /> TOP CATEGORIES
@@ -238,9 +238,9 @@ export default function ExampleTemplate({
               <ChevronDown size={14} className={`transition-transform ${catMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-wider">
+            <div className="flex items-center gap-5 md:gap-8 text-xs font-bold uppercase tracking-wider overflow-x-auto pb-2 md:pb-0 scrollbar-none">
               {dynamicHeaderLinks.map((link) => (
-                <Link key={link.href} href={link.href} className="hover:text-[var(--bs-primary)] transition-colors">
+                <Link key={link.href} href={link.href} className="hover:text-[var(--bs-primary)] transition-colors whitespace-nowrap shrink-0">
                   {link.label}
                 </Link>
               ))}
@@ -306,7 +306,50 @@ export default function ExampleTemplate({
         </section>
       )}
 
-      {/* ── Dynamic 5-Grid Feature Banners Section (Matching Screenshot) ─ */}
+      {/* ── Shop by Category Section ────────────────────────────────── */}
+      {categories.length > 0 && (
+        <section className="max-w-[1400px] mx-auto px-6 pt-10">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--bs-primary)] mb-1">Explore Catalog</p>
+              <h2 className="text-2xl font-black text-slate-900">Shop By <span className="text-[var(--bs-primary)] italic">Collection.</span></h2>
+              <p className="text-xs text-gray-500 mt-1">Discover a curated range of premium products organized by lifestyle and preference.</p>
+            </div>
+            <Link href="/categories" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110 flex items-center gap-1.5">
+              View All
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {categories.map((cat) => (
+              <Link
+                key={cat._id}
+                href={`/categories?id=${cat._id}`}
+                className="group relative h-44 overflow-hidden rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              >
+                <img
+                  src={cat.image || logoUrl || undefined}
+                  alt={cat.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <h3 className="text-white font-black text-sm uppercase tracking-tight">{cat.name || cat.ar_name}</h3>
+                  {cat.product_quantity !== undefined && (
+                    <span className="text-white/70 text-[10px] font-medium">{cat.product_quantity} items</span>
+                  )}
+                </div>
+                <div
+                  className="absolute inset-x-0 bottom-0 h-[3px] scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300"
+                  style={{ background: 'var(--bs-primary)' }}
+                />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+
+      {/* ── Dynamic 5-Grid Feature Banners Section ─────────────────── */}
       <FeatureBannersGrid banners={banners.slice(1)} primaryColor="var(--bs-primary)" />
 
       {/* ── Shop by Brands ────────────────────────────────────────────── */}

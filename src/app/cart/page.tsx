@@ -199,21 +199,21 @@ export default function CartPage() {
 
                 {/* Summary */}
                 <div className="lg:col-span-1">
-                    <div className="bg-primary text-white rounded-[40px] p-10 sticky top-32 shadow-2xl shadow-primary/30">
+                    <div className="bg-[#111827] text-white rounded-[40px] p-10 sticky top-32 shadow-2xl shadow-black/30">
                         <h2 className="text-2xl font-black mb-8 italic tracking-tighter">Order Summary</h2>
 
                         {/* Order Type Selection in Cart */}
                         <div className="mb-8 p-1 bg-white/10 rounded-2xl flex">
                             <button
                                 onClick={() => dispatch(setOrderType('delivery'))}
-                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all ${orderType === 'delivery' ? 'bg-secondary text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-widest ${orderType === 'delivery' ? 'bg-white text-gray-900 shadow-lg' : 'text-white/50 hover:text-white'}`}
                             >
                                 <Truck size={18} />
                                 <span className="text-xs font-black uppercase tracking-widest">Delivery</span>
                             </button>
                             <button
                                 onClick={() => dispatch(setOrderType('pickup'))}
-                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all ${orderType === 'pickup' ? 'bg-secondary text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-widest ${orderType === 'pickup' ? 'bg-white text-gray-900 shadow-lg' : 'text-white/50 hover:text-white'}`}
                             >
                                 <Store size={18} />
                                 <span className="text-xs font-black uppercase tracking-widest">Pickup</span>
@@ -237,7 +237,7 @@ export default function CartPage() {
                                 <button
                                     onClick={handleApplyCoupon}
                                     disabled={isApplyingCoupon || !couponCode}
-                                    className="bg-white text-primary px-6 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-secondary hover:text-white transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                                    className="bg-white text-gray-900 px-6 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none shrink-0"
                                 >
                                     {isApplyingCoupon ? <Loader2 size={16} className="animate-spin" /> : 'Apply'}
                                 </button>
@@ -297,7 +297,7 @@ export default function CartPage() {
 
                         <button
                             onClick={handleCheckout}
-                            className="w-full bg-secondary text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-white hover:text-secondary transition-all active:scale-[0.98] shadow-xl shadow-black/10"
+                            className="w-full bg-white text-gray-900 py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-gray-100 transition-all active:scale-[0.98] shadow-xl shadow-black/10"
                         >
                             Checkout Now <ArrowRight size={20} />
                         </button>
