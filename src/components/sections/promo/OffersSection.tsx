@@ -6,6 +6,7 @@ import { Loader2, Tag } from 'lucide-react';
 import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Product } from '@/types/api';
 import ProductCard from '@/components/modules/products/ProductCard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface OfferRecord {
     _id: string;
@@ -25,6 +26,7 @@ interface OffersSectionProps {
 }
 
 export default function OffersSection({ title, subtitle }: OffersSectionProps) {
+    const { t, getLocalized } = useTranslation();
     const { data, isLoading, error } = useGet<ApiResponse<OfferRecord>>(['offers'], '/offer');
 
     if (isLoading) {
@@ -47,10 +49,10 @@ export default function OffersSection({ title, subtitle }: OffersSectionProps) {
                 <div className="flex items-end justify-between gap-4 mb-8">
                     <div>
                         <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-secondary mb-2">
-                            <Tag size={15} /> {subtitle || 'Limited time'}
+                            <Tag size={15} /> {subtitle || t.sections.limitedTimeDeal}
                         </span>
                         <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
-                            {title || 'Special Offers'}
+                            {title || t.sections.specialOffers}
                         </h2>
                     </div>
                 </div>
@@ -69,10 +71,10 @@ export default function OffersSection({ title, subtitle }: OffersSectionProps) {
                                 href={`/offer/${offer._id}`}
                                 className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                             >
-                                {offer.image && <img src={offer.image} alt={offer.title || offer.name || 'Offer'} className="mb-4 h-40 w-full rounded-xl object-cover" />}
-                                <h3 className="text-lg font-black text-primary">{offer.title || offer.name}</h3>
-                                {offer.description && <p className="mt-2 text-sm text-gray-500">{offer.description}</p>}
-                                {offer.discount && <p className="mt-4 font-black text-secondary">{offer.discount}% OFF</p>}
+                                {offer.image && <img src={offer.image} alt={getLocalized(offer, 'title') || getLocalized(offer) || t.sections.specialOffers} className="mb-4 h-40 w-full rounded-xl object-cover" />}
+                                <h3 className="text-lg font-black text-primary">{getLocalized(offer, 'title') || getLocalized(offer)}</h3>
+                                {offer.description && <p className="mt-2 text-sm text-gray-500">{getLocalized(offer, 'description')}</p>}
+                                {offer.discount && <p className="mt-4 font-black text-secondary">{offer.discount}% {t.product.discount}</p>}
                             </Link>
                         ))}
                     </div>

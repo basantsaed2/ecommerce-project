@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
-import { X, Trash2, AlertCircle } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface DeleteDialogProps {
     isOpen: boolean;
@@ -15,10 +16,11 @@ export default function DeleteDialog({
     isOpen,
     onClose,
     onConfirm,
-    title = "Delete Address",
-    message = "Are you sure you want to delete this address? This action cannot be undone.",
+    title,
+    message,
     isLoading = false
 }: DeleteDialogProps) {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     return (
@@ -32,10 +34,10 @@ export default function DeleteDialog({
                     </div>
 
                     <h3 className="text-2xl font-black text-primary tracking-tighter mb-2">
-                        {title}
+                        {title || t.profile.deleteAddress}
                     </h3>
                     <p className="text-gray-400 font-medium text-sm leading-relaxed mb-8">
-                        {message}
+                        {message || t.profile.deleteAddressConfirm}
                     </p>
 
                     <div className="flex justify-center items-center gap-3">
@@ -47,7 +49,7 @@ export default function DeleteDialog({
                             {isLoading ? (
                                 <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
-                                "Yes, Delete"
+                                t.profile.yesDelete
                             )}
                         </button>
                         <button
@@ -55,7 +57,7 @@ export default function DeleteDialog({
                             disabled={isLoading}
                             className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-lg hover:bg-gray-100 transition-all active:scale-[0.98]"
                         >
-                            Cancel
+                            {t.profile.cancel}
                         </button>
                     </div>
                 </div>

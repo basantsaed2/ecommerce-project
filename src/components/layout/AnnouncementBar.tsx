@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Truck, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface AnnouncementBarProps {
     message?: string;
@@ -12,11 +13,12 @@ interface AnnouncementBarProps {
 }
 
 export default function AnnouncementBar({
-    message = "Free Express Shipping on Orders Over 500 EGP",
+    message,
     couponCode = "SAVE20",
     linkUrl = "/categories",
-    linkText = "Shop Now"
+    linkText
 }: AnnouncementBarProps) {
+    const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(true);
 
     if (!isVisible) return null;
@@ -27,19 +29,19 @@ export default function AnnouncementBar({
                 {/* Left empty spacer for perfect center alignment on desktop */}
                 <div className="hidden md:flex items-center gap-2 text-white/70 text-[11px]">
                     <Truck size={14} className="text-secondary" />
-                    <span>Free Nationwide Delivery</span>
+                    <span>{t.sections.freeNationwideDelivery}</span>
                 </div>
 
                 {/* Center Content */}
                 <div className="flex-1 flex items-center justify-center gap-2 text-center flex-wrap">
                     <span className="flex items-center gap-1.5">
                         <Sparkles size={14} className="text-secondary animate-pulse" />
-                        <span>{message}</span>
+                        <span>{message || t.sections.announcementMessage}</span>
                     </span>
 
                     {couponCode && (
                         <span className="bg-white/20 text-white px-2 py-0.5 rounded font-black tracking-wider uppercase text-[10px]">
-                            Code: {couponCode}
+                            {t.sections.couponCode} {couponCode}
                         </span>
                     )}
 
@@ -48,7 +50,7 @@ export default function AnnouncementBar({
                             href={linkUrl} 
                             className="underline underline-offset-4 text-secondary hover:text-white font-bold ml-1 inline-flex items-center gap-0.5"
                         >
-                            {linkText} <ArrowRight size={12} />
+                            {linkText || t.home.shopNow} <ArrowRight size={12} />
                         </Link>
                     )}
                 </div>
@@ -56,7 +58,7 @@ export default function AnnouncementBar({
                 {/* Right Close Button */}
                 <button
                     onClick={() => setIsVisible(false)}
-                    aria-label="Close Announcement"
+                    aria-label={t.sections.closeAnnouncement}
                     className="text-white/60 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
                 >
                     <X size={14} />

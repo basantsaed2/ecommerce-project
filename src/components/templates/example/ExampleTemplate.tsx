@@ -314,9 +314,9 @@ export default function ExampleTemplate({
         <section className="max-w-[1400px] mx-auto px-6 pt-10">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--bs-primary)] mb-1">Explore Catalog</p>
-              <h2 className="text-2xl font-black text-slate-900">Shop By <span className="text-[var(--bs-primary)] italic">Collection.</span></h2>
-              <p className="text-xs text-gray-500 mt-1">Discover a curated range of premium products organized by lifestyle and preference.</p>
+              <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--bs-primary)] mb-1">{t.sections.exploreCatalogLabel}</p>
+              <h2 className="text-2xl font-black text-slate-900">{t.sections.shopBy} <span className="text-[var(--bs-primary)] italic">{t.sections.collection}.</span></h2>
+              <p className="text-xs text-gray-500 mt-1">{t.sections.catalogDescription}</p>
             </div>
             <Link href="/categories" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110 flex items-center gap-1.5">
               View All
@@ -338,7 +338,7 @@ export default function ExampleTemplate({
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <h3 className="text-white font-black text-sm uppercase tracking-tight">{cat.name || cat.ar_name}</h3>
                   {cat.product_quantity !== undefined && (
-                    <span className="text-white/70 text-[10px] font-medium">{cat.product_quantity} items</span>
+                    <span className="text-white/70 text-[10px] font-medium">                    {cat.product_quantity} {t.sections.itemsLabel}</span>
                   )}
                 </div>
                 <div
@@ -358,7 +358,7 @@ export default function ExampleTemplate({
       {/* ── Shop by Brands ────────────────────────────────────────────── */}
       {showBrands && brands.length > 0 && (
         <section className="max-w-[1400px] mx-auto px-6 pt-10">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Shop by Brands</h2>
+          <h2 className="text-xl font-bold text-slate-900 mb-6">{t.sections.shopByBrands}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             {brands.map((brand) => (
               <div key={brand._id} className="bg-white border border-gray-200 rounded-md p-4 flex items-center justify-center hover:shadow-md transition-shadow h-24">
@@ -377,15 +377,15 @@ export default function ExampleTemplate({
       {showProducts && newArrivals.length > 0 && (
         <section className="max-w-[1400px] mx-auto px-6 pt-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900">New Arrivals</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.sections.newArrivalsHeading}</h2>
             <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
-              SEE ALL
+              {t.sections.seeAll}
             </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {newArrivals.map((prod) => (
-              <ProductCard key={prod._id} product={prod} badge="NEW" logoUrl={logoUrl} />
+              <ProductCard key={prod._id} product={prod} badge={t.sections.newLabel} logoUrl={logoUrl} />
             ))}
           </div>
         </section>
@@ -395,9 +395,9 @@ export default function ExampleTemplate({
       {showProducts && trendingProducts.length > 0 && (
         <section className="max-w-[1400px] mx-auto px-6 pt-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900">Trending Products</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.sections.trendingProductsHeading}</h2>
             <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
-              SEE ALL
+              {t.sections.seeAll}
             </Link>
           </div>
 
@@ -409,8 +409,8 @@ export default function ExampleTemplate({
         </section>
       )}
 
-      {showBestSellers && <BestSellersSection title="Best Sellers" searchQuery={currentSearch} />}
-      {showOffers && <OffersSection title="Special Offers" />}
+      {showBestSellers && <BestSellersSection title={t.sections.bestSellers} searchQuery={currentSearch} />}
+      {showOffers && <OffersSection title={t.home.latestOffers} />}
 
       {/* ── Footer ────────────────────────────────────────────────────── */}
       {showFooter && (
@@ -421,10 +421,10 @@ export default function ExampleTemplate({
               {(footer.logo || logoUrl) && (
                 <img src={footer.logo || logoUrl || undefined} alt={storeName || 'Store logo'} className="h-10 w-auto object-contain mb-4" />
               )}
-              <h4 className="font-bold text-slate-900 text-sm mb-4">Contact Us</h4>
-              {contactInfo?.address && <p className="mb-2"><strong>Address:</strong> {contactInfo.address}</p>}
-              {contactInfo?.email && <p className="mb-2"><strong>Email:</strong> {contactInfo.email}</p>}
-              {contactInfo?.phone && <p className="mb-4"><strong>Phone:</strong> {contactInfo.phone}</p>}
+              <h4 className="font-bold text-slate-900 text-sm mb-4">{t.sections.contactUs}</h4>
+              {contactInfo?.address && <p className="mb-2"><strong>{t.sections.contactAddress}</strong> {contactInfo.address}</p>}
+              {contactInfo?.email && <p className="mb-2"><strong>{t.sections.emailLabel}</strong> {contactInfo.email}</p>}
+              {contactInfo?.phone && <p className="mb-4"><strong>{t.sections.phoneLabel}</strong> {contactInfo.phone}</p>}
               <div className="flex gap-3 text-slate-700">
                 <a href={socialLinks.facebook || '#'} aria-label="Facebook"><Facebook size={16} /></a>
                 <a href={socialLinks.twitter || '#'} aria-label="Twitter"><Twitter size={16} /></a>
@@ -434,36 +434,36 @@ export default function ExampleTemplate({
             </div>
 
             <div>
-              <h4 className="font-bold text-slate-900 text-sm mb-4">Quick links</h4>
+              <h4 className="font-bold text-slate-900 text-sm mb-4">{t.sections.quickLinks}</h4>
               <ul className="space-y-2">
-                <li><Link href="/privacy" className="hover:text-[var(--bs-primary)]">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-[var(--bs-primary)]">Terms and Conditions</Link></li>
-                <li><Link href="/purchasing" className="hover:text-[var(--bs-primary)]">Purchasing Policy</Link></li>
-                <li><Link href="/cookie" className="hover:text-[var(--bs-primary)]">Cookie Policy</Link></li>
+                <li><Link href="/privacy" className="hover:text-[var(--bs-primary)]">{t.sections.privacyPolicy}</Link></li>
+                <li><Link href="/terms" className="hover:text-[var(--bs-primary)]">{t.sections.termsConditions}</Link></li>
+                <li><Link href="/purchasing" className="hover:text-[var(--bs-primary)]">{t.sections.purchasingPolicy}</Link></li>
+                <li><Link href="/cookie" className="hover:text-[var(--bs-primary)]">{t.sections.cookiePolicy}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-slate-900 text-sm mb-4">Company</h4>
+              <h4 className="font-bold text-slate-900 text-sm mb-4">{t.sections.company}</h4>
               <ul className="space-y-2">
-                <li><Link href="/about" className="hover:text-[var(--bs-primary)]">About us</Link></li>
-                <li><Link href="/career" className="hover:text-[var(--bs-primary)]">Career</Link></li>
-                <li><Link href="/affiliate" className="hover:text-[var(--bs-primary)]">Affiliate</Link></li>
-                <li><Link href="/contact" className="hover:text-[var(--bs-primary)]">Contact us</Link></li>
+                <li><Link href="/about" className="hover:text-[var(--bs-primary)]">{t.sections.aboutUs}</Link></li>
+                <li><Link href="/career" className="hover:text-[var(--bs-primary)]">{t.sections.career}</Link></li>
+                <li><Link href="/affiliate" className="hover:text-[var(--bs-primary)]">{t.sections.affiliate}</Link></li>
+                <li><Link href="/contact" className="hover:text-[var(--bs-primary)]">{t.sections.contactUsLower}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-slate-900 text-sm mb-4">Subscribe our newsletter</h4>
+              <h4 className="font-bold text-slate-900 text-sm mb-4">{t.sections.subscribeNewsletter}</h4>
               {footer.bio && <p className="mb-4 text-gray-500">{footer.bio}</p>}
               <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
                 <input
                   type="email"
-                  placeholder="Enter your email address"
+                  placeholder={t.sections.emailAddressPlaceholder}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-xs outline-none focus:border-[var(--bs-primary)]"
                 />
                 <button type="submit" className="w-full bg-[var(--bs-primary)] text-white font-bold text-xs uppercase py-2.5 rounded">
-                  SUBMIT
+                  {t.sections.submit}
                 </button>
               </form>
             </div>
@@ -480,6 +480,7 @@ export default function ExampleTemplate({
 
 // ── 2. Dynamic Feature Banners Grid ─────────────────────────────────────
 function FeatureBannersGrid({ banners, primaryColor }: { banners: Banner[]; primaryColor: string }) {
+  const { t } = useTranslation();
   if (banners.length === 0) return null;
 
   return (
@@ -504,7 +505,7 @@ function FeatureBannersGrid({ banners, primaryColor }: { banners: Banner[]; prim
                 {title && <h3 className="text-xl font-black leading-tight">{title}</h3>}
                 {description && <p className="text-sm text-white/80">{description}</p>}
                 <span className="mt-2 inline-flex w-fit rounded-lg px-4 py-2 text-xs font-bold uppercase" style={{ backgroundColor: primaryColor }}>
-                  View Collection
+                  {t.sections.viewCollection}
                 </span>
               </div>
             </Link>

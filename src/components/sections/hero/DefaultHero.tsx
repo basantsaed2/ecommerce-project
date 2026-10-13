@@ -5,30 +5,31 @@ import { ApiResponse, Banner } from '@/types/api';
 import { Loader2, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import DynamicBanner from '@/components/common/DynamicBanner';
 import Link from 'next/link';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const FALLBACK_BANNERS = [
     {
         id: 1,
         image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop",
-        title: "Summer Sale Collection",
-        subtitle: "NEW SEASON EXCLUSIVES",
-        badge: "Up to 50% OFF"
+        titleKey: "summerSaleCollection",
+        subtitleKey: "newSeasonExclusives",
+        badgeKey: "upTo50Off"
     },
     {
         id: 2,
         image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop",
-        title: "Trending Fashion & Style",
-        subtitle: "CURATED FOR YOU",
-        badge: "Special Offers"
+        titleKey: "trendingFashionStyle",
+        subtitleKey: "curatedForYou",
+        badgeKey: "specialOffers"
     },
     {
         id: 3,
         image: "https://images.unsplash.com/photo-1509319117193-57bab727e09d?q=80&w=2070&auto=format&fit=crop",
-        title: "Premium Luxury Accessories",
-        subtitle: "BEST QUALITY GUARANTEED",
-        badge: "New Arrival"
+        titleKey: "premiumLuxuryAccessories",
+        subtitleKey: "bestQualityGuaranteed",
+        badgeKey: "newArrival"
     }
-];
+] as const;
 
 interface HeroProps {
     title?: string;
@@ -37,6 +38,7 @@ interface HeroProps {
 }
 
 export default function DefaultHero({ title, subtitle }: HeroProps) {
+    const { t, getLocalized } = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(0);
     const { data: bannersData, isLoading } = useGet<ApiResponse<Banner>>(['banners'], '/banner');
     
@@ -80,8 +82,8 @@ export default function DefaultHero({ title, subtitle }: HeroProps) {
             <div className="w-full h-[300px] sm:h-[380px] md:h-[480px] lg:h-[560px] relative rounded-3xl overflow-hidden shadow-2xl group">
                 {displayImages.map((image, index) => {
                     const fallbackData = FALLBACK_BANNERS[index] || FALLBACK_BANNERS[0];
-                    const displayTitle = title || homeBanner?.title || fallbackData.title;
-                    const displaySubtitle = subtitle || homeBanner?.description || fallbackData.subtitle;
+                    const displayTitle = title || getLocalized(homeBanner, 'title') || t.sections[fallbackData.titleKey];
+                    const displaySubtitle = subtitle || getLocalized(homeBanner, 'description') || t.sections[fallbackData.subtitleKey];
 
                     return (
                         <div
@@ -95,7 +97,7 @@ export default function DefaultHero({ title, subtitle }: HeroProps) {
                                 pageName="home"
                                 fallbackImage={fallbackData.image || image}
                                 imageIndex={index}
-                                alt={`Hero Slide ${index + 1}`}
+                                alt={`${t.sections.modernShopHero} ${index + 1}`}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                             />
                             
@@ -115,7 +117,7 @@ export default function DefaultHero({ title, subtitle }: HeroProps) {
                                             href="/categories" 
                                             className="bg-secondary text-white px-6 py-2.5 md:px-8 md:py-3.5 text-sm md:text-base rounded-2xl font-bold hover:brightness-110 active:scale-95 transition-all duration-300 shadow-xl shadow-secondary/30 flex items-center gap-2"
                                         >
-                                            Shop Now
+                                            {t.home.shopNow}
                                             <ArrowRight size={18} />
                                         </Link>
                                     </div>
@@ -130,14 +132,14 @@ export default function DefaultHero({ title, subtitle }: HeroProps) {
                     <>
                         <button
                             onClick={handlePrev}
-                            aria-label="Previous slide"
+                            aria-label={t.sections.previousSlide}
                             className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:text-black shadow-lg"
                         >
                             <ChevronLeft size={24} />
                         </button>
                         <button
                             onClick={handleNext}
-                            aria-label="Next slide"
+                            aria-label={t.sections.nextSlide}
                             className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:text-black shadow-lg"
                         >
                             <ChevronRight size={24} />
@@ -152,7 +154,7 @@ export default function DefaultHero({ title, subtitle }: HeroProps) {
                             <button
                                 key={idx}
                                 onClick={() => setCurrentIndex(idx)}
-                                aria-label={`Go to slide ${idx + 1}`}
+                                aria-label={`${t.sections.goToSlide} ${idx + 1}`}
                                 className={`h-2 rounded-full transition-all duration-300 ${
                                     idx === currentIndex ? "w-8 bg-secondary" : "w-2 bg-white/50 hover:bg-white"
                                 }`}

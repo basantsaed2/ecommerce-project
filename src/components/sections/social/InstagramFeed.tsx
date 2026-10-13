@@ -3,6 +3,7 @@
 import React from 'react';
 import { Instagram, Heart, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface UGCPost {
     id: number;
@@ -67,16 +68,17 @@ export default function InstagramFeed({
     title,
     subtitle
 }: InstagramFeedProps) {
+    const { t } = useTranslation();
     return (
         <section className="w-full py-10">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
                 <div>
                     <span className="text-xs font-black uppercase tracking-widest text-secondary block mb-1 flex items-center gap-1.5">
                         <Instagram size={14} />
-                        {subtitle || "#ShopTheLook"}
+                        {subtitle || t.sections.shopTheLook}
                     </span>
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-primary tracking-tight">
-                        {title || "Real Looks from Our Community"}
+                        {title || t.sections.communityLooks}
                     </h2>
                 </div>
                 <a
@@ -85,7 +87,7 @@ export default function InstagramFeed({
                     rel="noreferrer"
                     className="text-xs font-bold text-gray-500 hover:text-secondary flex items-center gap-1 transition-colors"
                 >
-                    Follow on Instagram &rarr;
+                    {t.sections.followOnInstagram} &rarr;
                 </a>
             </div>
 
@@ -110,7 +112,7 @@ export default function InstagramFeed({
                                 <span>{post.likes}</span>
                             </div>
                             <span className="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 mt-1">
-                                <ShoppingBag size={12} /> Shop Item
+                                <ShoppingBag size={12} /> {t.sections.shopItem}
                             </span>
                         </div>
                     </Link>

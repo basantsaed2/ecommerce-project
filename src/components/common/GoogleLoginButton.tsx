@@ -10,6 +10,7 @@ import { AppDispatch } from "@/store/store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 declare global {
   interface Window {
@@ -23,9 +24,11 @@ interface GoogleLoginButtonProps {
 }
 
 export default function GoogleLoginButton({
-  text = "Continue with Google",
+  text,
   className = "",
 }: GoogleLoginButtonProps) {
+  const { t } = useTranslation();
+  const buttonText = text || t.auth.continueWithGoogle;
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -37,7 +40,7 @@ export default function GoogleLoginButton({
   const processGoogleCredential = useCallback(
     (id_token: string) => {
       if (!id_token) {
-        toast.error("Failed to receive credentials from Google");
+        toast.error(t.auth.googleCredentialsError);
         return;
       }
 
@@ -57,14 +60,14 @@ export default function GoogleLoginButton({
                   status: data?.status,
                 } as any)
               );
-              toast.info("Verification required");
+              toast.info(t.auth.verificationRequired);
               router.push("/verify-otp");
               return;
             }
 
             if (action === "COMPLETE_PROFILE" || data?.incomplete_user) {
               dispatch(setIncompleteUser(data?.user || data?.incomplete_user));
-              toast.info("Please complete your profile");
+              toast.info(t.auth.completeProfilePrompt);
               router.push("/complete-profile");
               return;
             }
@@ -77,10 +80,10 @@ export default function GoogleLoginButton({
                 })
               );
               dispatch(fetchCart());
-              toast.success("Successfully logged in with Google!");
+              toast.success(t.auth.googleLoginSuccess);
               router.push("/");
             } else {
-              toast.error(data?.message || "Google authentication failed");
+              toast.error(data?.message || t.auth.googleLoginFailed);
             }
           },
           onError: (error: any) => {
@@ -88,13 +91,13 @@ export default function GoogleLoginButton({
             const errorMsg =
               error?.response?.data?.message ||
               error?.response?.data?.error?.message ||
-              "Google sign-in failed. Please try again.";
+              t.auth.googleSignInError;
             toast.error(errorMsg);
           },
         }
       );
     },
-    [dispatch, loginWithGoogle, router]
+    [dispatch, loginWithGoogle, router, t.auth]
   );
 
   const initializeAndRenderGoogleButton = useCallback(() => {
@@ -113,7 +116,7 @@ export default function GoogleLoginButton({
           if (response?.credential) {
             processGoogleCredential(response.credential);
           } else {
-            toast.error("No credential token returned by Google");
+            toast.error(t.auth.googleCredentialsMissing);
           }
         },
       });
@@ -121,18 +124,18 @@ export default function GoogleLoginButton({
       if (buttonRef.current) {
         buttonRef.current.replaceChildren();
 
-        let buttonText: "signin_with" | "signup_with" | "continue_with" = "continue_with";
-        const lowerText = text.toLowerCase();
+        let googleButtonText: "signin_with" | "signup_with" | "continue_with" = "continue_with";
+        const lowerText = buttonText.toLowerCase();
         if (lowerText.includes("sign in") || lowerText.includes("signin")) {
-          buttonText = "signin_with";
+          googleButtonText = "signin_with";
         } else if (lowerText.includes("sign up") || lowerText.includes("signup")) {
-          buttonText = "signup_with";
+          googleButtonText = "signup_with";
         }
 
         window.google.accounts.id.renderButton(buttonRef.current, {
           theme: "outline",
           size: "large",
-          text: buttonText,
+          text: googleButtonText,
           shape: "pill",
           width: 380,
         });
@@ -140,7 +143,7 @@ export default function GoogleLoginButton({
     } catch (err) {
       console.error("Error initializing Google Identity Services:", err);
     }
-  }, [text, processGoogleCredential]);
+  }, [buttonText, processGoogleCredential, t.auth]);
 
   useEffect(() => {
     if (window.google?.accounts?.id) {
@@ -164,13 +167,13 @@ export default function GoogleLoginButton({
       {isAuthenticating && (
         <div className="w-full bg-white border-2 border-gray-200 py-3.5 px-4 rounded-2xl flex items-center justify-center gap-3 text-gray-500 font-bold">
           <Loader2 className="animate-spin text-primary" size={20} />
-          <span>Authenticating...</span>
+          <span>{t.sections.authenticating}</span>
         </div>
       )}
       {!scriptLoaded && !isAuthenticating && (
         <div className="w-full bg-white border-2 border-gray-200 py-3.5 px-4 rounded-2xl flex items-center justify-center gap-3 text-gray-400 font-medium">
           <Loader2 className="animate-spin text-primary" size={18} />
-          <span>Loading Google Sign-In...</span>
+          <span>{t.sections.loadingGoogleSignIn}</span>
         </div>
       )}
       <div

@@ -17,11 +17,11 @@ interface MarwanTemplateProps {
 }
 
 const WHY_US = [
-  { icon: Truck, title: 'Fast Delivery', desc: 'Nationwide shipping with real-time order tracking to your door.' },
-  { icon: ShieldCheck, title: 'Secure Payments', desc: 'Every transaction is encrypted and protected end to end.' },
-  { icon: Undo2, title: 'Easy Returns', desc: 'Changed your mind? Return within 14 days, no questions asked.' },
-  { icon: Sparkles, title: 'Curated Quality', desc: 'Every product is checked for quality before it reaches you.' },
-];
+  { icon: Truck, titleKey: 'fastDelivery', descriptionKey: 'fastDeliveryWhyUs' },
+  { icon: ShieldCheck, titleKey: 'securePayment', descriptionKey: 'securePaymentsWhyUs' },
+  { icon: Undo2, titleKey: 'easyReturns', descriptionKey: 'easyReturnsWhyUs' },
+  { icon: Sparkles, titleKey: 'qualityGuaranteed', descriptionKey: 'curatedQualityWhyUs' },
+] as const;
 
 /* Shared Tailwind fragments for the "reveal on scroll" effect. We toggle the
    opacity/translate classes directly (no custom .mw-rev/.mw-in CSS needed). */
@@ -135,12 +135,12 @@ export default function MarwanTemplate({
       .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
     const fallbackSections = [
-      !hasBestSellersSection && { key: 'best-sellers', enabled: true, order: 6, title: 'Best Sellers' },
-      !hasOffersSection && { key: 'offers', enabled: true, order: 7, title: 'Special Offers' },
+      !hasBestSellersSection && { key: 'best-sellers', enabled: true, order: 6, title: t.sections.bestSellers },
+      !hasOffersSection && { key: 'offers', enabled: true, order: 7, title: t.home.latestOffers },
     ].filter(Boolean) as any[];
 
     return [...configuredSections, ...fallbackSections].sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [sections, hasBestSellersSection, hasOffersSection]);
+  }, [sections, hasBestSellersSection, hasOffersSection, t.sections.bestSellers, t.home.latestOffers]);
   /* ── Theme, fully driven by the backend response ────────────────────────
      These become plain CSS custom properties on the wrapper, so any
      Tailwind arbitrary-value class (e.g. bg-[var(--mw-primary)]) can read
@@ -253,7 +253,7 @@ export default function MarwanTemplate({
   if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <StoreLoader logoUrl={logoUrl} label="Loading your store..." size="lg" />
+        <StoreLoader logoUrl={logoUrl} label={t.common.loadingStore} size="lg" />
       </div>
     );
   }
@@ -333,8 +333,8 @@ export default function MarwanTemplate({
               <button
                 type="button"
                 onClick={toggleLanguage}
-                aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-                title={language === 'ar' ? 'English' : 'العربية'}
+                aria-label={language === 'ar' ? t.sections.switchToEnglish : t.sections.switchToArabic}
+                title={language === 'ar' ? t.sections.english : t.sections.arabic}
                 className="inline-flex h-9 min-w-9 items-center justify-center rounded-full border px-2 text-[10px] font-black transition-all duration-300 hover:scale-105"
                 style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
               >
@@ -343,9 +343,9 @@ export default function MarwanTemplate({
               <button
                 type="button"
                 onClick={toggleTheme}
-                aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={themeMode === 'dark' ? t.sections.switchToLightMode : t.sections.switchToDarkMode}
                 aria-pressed={themeMode === 'dark'}
-                title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
+                title={themeMode === 'dark' ? t.sections.lightMode : t.sections.darkMode}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
                 style={{
                   backgroundColor: 'var(--color-secondary)',
@@ -360,13 +360,13 @@ export default function MarwanTemplate({
                 className="hidden md:inline-flex items-center justify-center px-6 py-3 rounded-full text-[13px] font-extrabold uppercase tracking-wider transition-transform hover:-translate-y-0.5"
                 style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
               >
-                Test Ride →
+                {t.home.shopNow} →
               </Link>
             </div>
 
             <button
               className="md:hidden text-2xl leading-none"
-              aria-label="Toggle menu"
+              aria-label={t.nav.menu}
               onClick={() => setMenuOpen((v) => !v)}
               style={{ color: 'var(--mw-text)' }}
             >
@@ -429,7 +429,7 @@ export default function MarwanTemplate({
             <div className="absolute inset-0 z-0">
               <img
                 src={heroImages[0]}
-                alt={heroBanner?.name?.[0] || storeName || 'Hero banner'}
+                alt={t.sections.modernShopHero}
                 className="w-full h-full object-cover brightness-[.42] saturate-[1.05]"
               />
               <div
@@ -450,22 +450,22 @@ export default function MarwanTemplate({
                 <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN}`}>
                   <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.2em] uppercase mb-5" style={{ color: 'var(--mw-primary)' }}>
                     <span className="w-6 h-0.5" style={{ background: 'var(--mw-primary)' }} />
-                    Welcome to {storeName || 'our store'}
+                    {t.home.welcomeTo} {storeName || t.aboutPage.ourStore}
                   </div>
 
                   <h1 className="text-[2.6rem] md:text-[4rem] lg:text-[5.2rem] font-black leading-[.95] uppercase tracking-tight text-white mb-5">
-                    Shop the{' '}
+                    {t.home.heroTitlePart1}{' '}
                     <span
                       className="bg-clip-text text-transparent"
                       style={{ backgroundImage: 'linear-gradient(90deg, color-mix(in srgb, var(--mw-primary) 70%, white), var(--mw-primary))' }}
                     >
-                      latest
+                      {t.home.heroTitleHighlight}
                     </span>
-                    <br /> arrivals today
+                    <br /> {t.home.heroTitlePart2}
                   </h1>
 
                   <p className="max-w-[480px] text-base leading-[1.8] text-white/80 mb-8">
-                    {heroBanner?.description || 'Discover quality products picked for you, with fast delivery and secure checkout every time.'}
+                    {getLocalized(heroBanner, 'description') || t.home.heroSubtitle}
                   </p>
 
                   <div className="flex flex-wrap gap-4 mb-10">
@@ -491,15 +491,15 @@ export default function MarwanTemplate({
                   <div className="flex gap-9 pt-6 border-t border-white/15">
                     <div>
                       <b className="block text-3xl font-black" style={{ color: 'var(--mw-primary)' }}>{categories.length || '—'}</b>
-                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase text-white/65">Categories</span>
+                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase text-white/65">{t.sections.categoryCountLabel}</span>
                     </div>
                     <div>
                       <b className="block text-3xl font-black" style={{ color: 'var(--mw-primary)' }}>{products.length || '—'}</b>
-                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase text-white/65">Products</span>
+                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase text-white/65">{t.sections.productCountLabel}</span>
                     </div>
                     <div>
                       <b className="block text-3xl font-black" style={{ color: 'var(--mw-primary)' }}>24/7</b>
-                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase text-white/65">Support</span>
+                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase text-white/65">{t.sections.support247Label}</span>
                     </div>
                   </div>
                 </div>
@@ -557,10 +557,10 @@ export default function MarwanTemplate({
               <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} flex flex-wrap items-end justify-between gap-4 mb-8`}>
                 <div>
                   <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
-                    <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Curated collections
+                    <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> {t.sections.curatedCollections}
                   </div>
                   <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight">
-                    Shop by <span style={{ color: 'var(--mw-primary)' }}>category</span>
+                    {t.sections.shopBy} <span style={{ color: 'var(--mw-primary)' }}>{t.nav.categories}</span>
                   </h2>
                 </div>
                 <Link
@@ -611,10 +611,10 @@ export default function MarwanTemplate({
               <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} flex flex-wrap items-end justify-between gap-4 mb-8`}>
                 <div>
                   <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
-                    <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Best picks
+                    <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> {t.sections.bestPicks}
                   </div>
                   <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight">
-                    Featured <span style={{ color: 'var(--mw-primary)' }}>products</span>
+                    {t.sections.featuredLabel} <span style={{ color: 'var(--mw-primary)' }}>{t.nav.products}</span>
                   </h2>
                 </div>
                 <Link
@@ -622,7 +622,7 @@ export default function MarwanTemplate({
                   className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full border text-[11px] font-extrabold uppercase tracking-wider"
                   style={{ borderColor: 'var(--mw-border)' }}
                 >
-                  See more <ArrowRight size={15} />
+                  {t.sections.seeMore} <ArrowRight size={15} />
                 </Link>
               </div>
 
@@ -639,7 +639,7 @@ export default function MarwanTemplate({
                         className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
                         style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
                       >
-                        New
+                        {t.sections.newLabel}
                       </span>
                       <img
                         src={product.image || product.gallery_product?.[0] || logoUrl || undefined}
@@ -678,10 +678,10 @@ export default function MarwanTemplate({
             <div className="max-w-[1240px] mx-auto px-1 md:px-0">
               <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} mb-8`}>
                 <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
-                  <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Why choose us
+                  <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> {t.nav.whyUs}
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight">
-                  Built around <span style={{ color: 'var(--mw-primary)' }}>trust</span>
+                  {t.sections.trustTitle}
                 </h2>
               </div>
 
@@ -690,7 +690,7 @@ export default function MarwanTemplate({
                   const Icon = item.icon;
                   return (
                     <div
-                      key={item.title}
+                      key={item.titleKey}
                       data-reveal
                       style={{ transitionDelay: `${i * 80}ms`, background: 'var(--mw-bg)', borderColor: 'var(--mw-border)' }}
                       className={`${REVEAL_BASE} ${REVEAL_SHOWN} p-6 rounded-2xl border`}
@@ -701,8 +701,8 @@ export default function MarwanTemplate({
                       >
                         <Icon size={22} />
                       </div>
-                      <h4 className="text-base font-extrabold mb-2">{item.title}</h4>
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--mw-text-muted)' }}>{item.desc}</p>
+                      <h4 className="text-base font-extrabold mb-2">{t.home[item.titleKey]}</h4>
+                      <p className="text-sm leading-relaxed" style={{ color: 'var(--mw-text-muted)' }}>{t.sections[item.descriptionKey]}</p>
                     </div>
                   );
                 })}
@@ -724,8 +724,8 @@ export default function MarwanTemplate({
             <div className="max-w-[1240px] mx-auto px-5">
               <div className="rounded-[28px] border px-5 py-5 md:px-8 md:py-7 mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4" style={{ background: 'var(--mw-secondary)', borderColor: 'color-mix(in srgb, var(--mw-primary) 40%, transparent)', boxShadow: '0 18px 45px color-mix(in srgb, var(--mw-primary) 18%, transparent)' }}>
                 <div>
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] mb-2" style={{ color: 'var(--mw-primary)' }}>Stay in the loop</p>
-                  <h3 className="text-2xl md:text-3xl font-black text-white">Get exclusive deals & fresh arrivals</h3>
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] mb-2" style={{ color: 'var(--mw-primary)' }}>{t.sections.stayInLoop}</p>
+                  <h3 className="text-2xl md:text-3xl font-black text-white">{t.sections.exclusiveDealsFreshArrivals}</h3>
                 </div>
                 <div className="flex items-center gap-2 rounded-full bg-white/5 border px-2 py-2 md:min-w-[360px]" style={{ borderColor: 'color-mix(in srgb, var(--mw-primary) 35%, transparent)' }}>
                   <span className="px-3 text-sm" style={{ color: 'var(--mw-text-muted)' }}>⌕</span>
@@ -733,12 +733,12 @@ export default function MarwanTemplate({
                     type="text"
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
-                    placeholder="Search products or categories"
+                    placeholder={t.sections.searchProductsCategories}
                     className="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
                     style={{ color: 'white' }}
                   />
                   <button className="rounded-full px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider" style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}>
-                    Join
+                    {t.sections.join}
                   </button>
                 </div>
               </div>
@@ -746,22 +746,22 @@ export default function MarwanTemplate({
               <div className="grid grid-cols-1 md:grid-cols-[1.3fr_1fr_1fr_1.1fr] gap-10 pb-12 border-b" style={{ borderColor: 'var(--mw-border)' }}>
                 <div>
                   <div className="flex items-center gap-2 text-xl font-black uppercase mb-4">
-                    {logoUrl && <img src={logoUrl} alt={storeName || 'Store logo'} className="w-9 h-9 object-contain rounded-lg" />}
-                    <span>{storeName || 'STORE'}</span>
+                    {logoUrl && <img src={logoUrl} alt={storeName || t.sections.storeLogo} className="w-9 h-9 object-contain rounded-lg" />}
+                    <span>{storeName || t.sections.storeLabel}</span>
                   </div>
                   <p className="text-sm leading-relaxed max-w-[320px]" style={{ color: 'var(--mw-text-muted)' }}>
-                    Quality products, fast delivery, and a shopping experience built around you.
+                    {t.sections.qualityProductsFooter}
                   </p>
                 </div>
 
                 {showCategories && categories.length > 0 && (
                   <div>
-                    <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">Categories</h5>
+                    <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t.sections.categoriesLabel}</h5>
                     <ul className="space-y-2.5">
                       {categories.slice(0, 5).map((category) => (
                         <li key={category._id}>
                           <Link href={`/categories?id=${category._id}`} className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>
-                            {category.name}
+                            {getLocalized(category)}
                           </Link>
                         </li>
                       ))}
@@ -770,26 +770,26 @@ export default function MarwanTemplate({
                 )}
 
                 <div>
-                  <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">Support</h5>
+                  <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t.sections.supportLabel}</h5>
                   <ul className="space-y-2.5">
-                    <li><Link href="/product" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>All Products</Link></li>
-                    <li><Link href="#why-us" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>Shipping &amp; Returns</Link></li>
+                    <li><Link href="/product" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.allProducts}</Link></li>
+                    <li><Link href="#why-us" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.shippingReturns}</Link></li>
                     <li>
                       <Link
                         href="/order-tracking"
                         className="text-sm hover:underline transition-colors flex items-center gap-1.5"
                         style={{ color: 'var(--mw-primary)' }}
                       >
-                        <Package size={13} /> Track Your Order
+                        <Package size={13} /> {t.sections.trackYourOrder}
                       </Link>
                     </li>
-                    <li><Link href="#" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>Contact Us</Link></li>
+                    <li><Link href="#" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.contactUs}</Link></li>
                   </ul>
                 </div>
 
                 {hasContactInfo && (
                   <div>
-                    <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">Contact</h5>
+                    <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t.sections.contact}</h5>
                     <ul className="space-y-2.5 text-sm" style={{ color: 'var(--mw-text-muted)' }}>
                       {contactUser.name && <li className="font-semibold" style={{ color: 'var(--mw-text)' }}>{contactUser.name}</li>}
                       {contactUser.email && (
@@ -828,8 +828,8 @@ export default function MarwanTemplate({
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-2 py-6 text-xs" style={{ color: 'var(--mw-text-muted)' }}>
-                <span>© {new Date().getFullYear()} {storeName || 'Store'}. All rights reserved.</span>
-                <span>Made with care.</span>
+                <span>© {new Date().getFullYear()} {storeName || t.sections.storeLabel}. {t.sections.allRightsReserved}</span>
+                <span>{t.sections.madeWithCare}</span>
               </div>
             </div>
           </footer>

@@ -51,18 +51,18 @@ export default function DefaultProducts({
                     <div className="flex items-center gap-2 mb-2">
                         <Sparkles size={16} className="text-secondary" />
                         <span className="text-xs font-black uppercase tracking-widest text-secondary">
-                            {subtitle || "Handpicked For You"}
+                            {subtitle || t.sections.handpickedForYou}
                         </span>
                     </div>
                     <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
-                        {title || (searchQuery ? `Featured Search Results (${filteredProducts.length})` : "Featured Products")}
+                        {title || (searchQuery ? `${t.sections.featuredSearchResults} (${filteredProducts.length})` : t.sections.featuredProductsHeading)}
                     </h2>
                 </div>
             </div>
 
             {filteredProducts.length === 0 ? (
                 <div className="text-center py-16 bg-gray-50 rounded-3xl">
-                    <p className="text-gray-500 font-medium">No products found matching your criteria.</p>
+                    <p className="text-gray-500 font-medium">{t.sections.noProductsMatching}</p>
                 </div>
             ) : (
                 <>

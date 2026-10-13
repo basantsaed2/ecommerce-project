@@ -47,19 +47,19 @@ export default function ProductsSection({ searchQuery = "" }: ProductsSectionPro
                 <div>
                     <div className="flex items-center gap-2 mb-3">
                         <span className="w-8 h-[2px] bg-secondary" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary">Our Collection</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary">{t.home.collection}</span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-primary tracking-tighter leading-tight">
-                        {searchQuery ? 'Featured Search' : 'Featured'} <span className="text-secondary">Products</span>
+                        {searchQuery ? t.home.featuredSearch : t.home.featured} <span className="text-secondary">{t.nav.products}</span>
                     </h2>
                     {searchQuery && (
                         <p className="text-gray-500 mt-4 font-bold flex items-center gap-2">
-                            Showing results for <span className="text-secondary italic">"{searchQuery}"</span>
+                            {t.home.showingResultsFor} <span className="text-secondary italic">&ldquo;{searchQuery}&rdquo;</span>
                         </p>
                     )}
                 </div>
                 <Link href="/categories" className="group flex items-center gap-3 bg-white border border-gray-100 px-8 py-4 rounded-[1.5rem] text-sm font-black text-primary hover:border-secondary hover:text-secondary shadow-sm hover:shadow-xl transition-all active:scale-95 shrink-0">
-                    Browse Categories <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    {t.home.browseCategories} <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
                 </Link>
             </div>
 
@@ -68,9 +68,9 @@ export default function ProductsSection({ searchQuery = "" }: ProductsSectionPro
                     <div className="w-20 h-20 bg-white shadow-xl rounded-2xl flex items-center justify-center mb-6 text-gray-300">
                         <Search size={40} />
                     </div>
-                    <h3 className="text-2xl font-black text-primary mb-2">No products found</h3>
+                    <h3 className="text-2xl font-black text-primary mb-2">{t.home.noProductsFound}</h3>
                     <p className="text-gray-500 max-w-sm mx-auto font-medium">
-                        We couldn't find anything matching your search. Try adjusting your filters or search terms.
+                        {t.home.searchNoMatch}
                     </p>
                 </div>
             ) : (

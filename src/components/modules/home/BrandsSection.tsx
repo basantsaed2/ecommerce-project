@@ -4,8 +4,10 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Brand } from '@/types/api';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function BrandsSection() {
+    const { t, getLocalized } = useTranslation();
     const { data, isLoading, error } = useGet<ApiResponse<Brand>>(['brands'], '/brand');
 
     if (isLoading) return (
@@ -29,11 +31,11 @@ export default function BrandsSection() {
             <div className="flex flex-col items-center text-center mb-16 px-6">
                 <div className="flex items-center gap-3 mb-4">
                     <span className="w-12 h-[2px] bg-secondary/30" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.5em] text-secondary">Global Partners</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.5em] text-secondary">{t.home.globalPartners}</span>
                     <span className="w-12 h-[2px] bg-secondary/30" />
                 </div>
                 <h2 className="text-4xl md:text-6xl font-black text-primary tracking-tighter leading-tight">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-pulse">Featured Brands</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-pulse">{t.sections.featuredBrands}</span>
                 </h2>
             </div>
 
@@ -50,14 +52,14 @@ export default function BrandsSection() {
                                 <div className="absolute inset-0 bg-gradient-to-tr from-secondary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                                 <img
                                     src={brand.logo}
-                                    alt={brand.name || brand.ar_name}
+                                    alt={getLocalized(brand)}
                                     className="max-w-[100%] max-h-[100%] object-contain transition-all duration-700 group-hover:scale-110 relative z-10"
                                     onError={(event) => {
                                         event.currentTarget.style.display = 'none';
                                         event.currentTarget.nextElementSibling?.classList.remove('hidden');
                                     }}
                                 />
-                                <span className="hidden text-sm font-bold text-primary">{brand.name || brand.ar_name}</span>
+                                <span className="hidden text-sm font-bold text-primary">{getLocalized(brand)}</span>
                             </Link>
                         ))}
                     </div>
@@ -75,14 +77,14 @@ export default function BrandsSection() {
                                 <div className="absolute inset-0 bg-gradient-to-tr from-secondary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                                 <img
                                     src={brand.logo}
-                                    alt={brand.name || brand.ar_name}
+                                    alt={getLocalized(brand)}
                                     className="max-w-[100%] max-h-[100%] object-contain transition-all duration-700 group-hover:scale-110 relative z-10"
                                     onError={(event) => {
                                         event.currentTarget.style.display = 'none';
                                         event.currentTarget.nextElementSibling?.classList.remove('hidden');
                                     }}
                                 />
-                                <span className="hidden text-sm font-bold text-primary">{brand.name || brand.ar_name}</span>
+                                <span className="hidden text-sm font-bold text-primary">{getLocalized(brand)}</span>
                             </Link>
                         ))}
                     </div>

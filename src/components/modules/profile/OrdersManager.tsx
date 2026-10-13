@@ -4,9 +4,11 @@ import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { Loader2, Package, ChevronRight, FileText, X, CheckCircle2, Clock, MapPin, CreditCard, Store, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function OrdersManager() {
     const { logoUrl } = useStoreSettings();
+    const { t, language, getLocalized, formatPrice } = useTranslation();
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
     // Fetch My Orders
@@ -32,15 +34,15 @@ export default function OrdersManager() {
         return (
             <div className="p-12 border-2 border-dashed border-gray-200 rounded-3xl text-center bg-gray-50/50">
                 <Package className="mx-auto text-gray-300 mb-4" size={48} />
-                <p className="text-gray-500 font-black text-xl mb-2">No Orders Yet</p>
-                <p className="text-gray-400 text-sm max-w-xs mx-auto">You haven't placed any orders. Start shopping to see your history here!</p>
+                <p className="text-gray-500 font-black text-xl mb-2">{t.profile.orderEmptyTitle}</p>
+                <p className="text-gray-400 text-sm max-w-xs mx-auto">{t.profile.orderEmptyDescription}</p>
             </div>
         );
     }
 
     return (
         <div className="space-y-6 relative">
-            <h2 className="text-2xl font-black text-primary tracking-tight mb-6">Order History</h2>
+            <h2 className="text-2xl font-black text-primary tracking-tight mb-6">{t.profile.orderHistory}</h2>
             
             <div className="grid grid-cols-1 gap-4">
                 {orders.map((order: any) => (
@@ -56,14 +58,14 @@ export default function OrdersManager() {
                             <div>
                                 <p className="font-black text-primary text-lg">Order #{order._id.slice(-6).toUpperCase()}</p>
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                    {new Date(order.createdAt).toLocaleDateString()}
+                                    {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
                                 </p>
                             </div>
                         </div>
                         
                         <div className="flex items-center gap-6 justify-between md:justify-end">
                             <div className="text-left md:text-right">
-                                <p className="font-black text-secondary text-lg">{order.totalOrderPrice?.toLocaleString() || order.totalPrice?.toLocaleString() || order.totalAmount?.toLocaleString() || 0} EGP</p>
+                                <p className="font-black text-secondary text-lg">{formatPrice(order.totalOrderPrice || order.totalPrice || order.totalAmount || 0)}</p>
                                 <div className="mt-1 flex items-center gap-2">
                                     <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center gap-1 ${
                                         order.status === 'delivered' ? 'bg-green-100 text-green-600' :
@@ -72,14 +74,22 @@ export default function OrdersManager() {
                                     }`}>
                                         {order.status === 'pending' && <Clock size={10} />}
                                         {order.status === 'delivered' && <CheckCircle2 size={10} />}
-                                        {order.status || 'Processing'}
+                                        {order.status === 'pending' ? t.profile.pendingStatus
+                                            : order.status === 'delivered' ? t.tracking.delivered
+                                            : order.status === 'cancelled' || order.status === 'rejected' ? t.tracking.cancelled
+                                            : order.status === 'shipped' ? t.tracking.shipped
+                                            : order.status === 'processing' ? t.profile.processingStatus
+                                            : order.status || t.profile.processingStatus}
                                     </span>
                                     <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg ${
                                         order.paymentStatus === 'paid' ? 'bg-green-100 text-green-600' :
                                         ['failed', 'unpaid'].includes(order.paymentStatus) ? 'bg-red-100 text-red-600' :
                                         'bg-yellow-100 text-yellow-600'
                                     }`}>
-                                        {order.paymentStatus || 'Pending'}
+                                        {order.paymentStatus === 'paid' ? t.profile.paidStatus
+                                            : order.paymentStatus === 'failed' ? t.profile.failedStatus
+                                            : order.paymentStatus === 'unpaid' ? t.profile.unpaidStatus
+                                            : order.paymentStatus || t.profile.paymentPendingStatus}
                                     </span>
                                     {order.orderType === 'pickup' && order.warehouse && (
                                         <span className="px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg bg-gray-100 text-gray-600 flex items-center gap-1">
@@ -109,7 +119,7 @@ export default function OrdersManager() {
                             {isFetchingDetail ? (
                                 <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                                     <Loader2 className="animate-spin mb-4" size={40} />
-                                    <p className="font-bold uppercase tracking-widest text-xs">Loading Details...</p>
+                                    <p className="font-bold uppercase tracking-widest text-xs">{t.profile.orderDetailsLoading}</p>
                                 </div>
                             ) : orderDetails ? (
                                 <div>
@@ -118,7 +128,7 @@ export default function OrdersManager() {
                                             <FileText size={32} />
                                         </div>
                                         <div>
-                                            <h3 className="text-2xl font-black text-primary">Order Details</h3>
+                                            <h3 className="text-2xl font-black text-primary">{t.profile.orderDetailsTitle}</h3>
                                             <p className="text-gray-400 font-bold tracking-widest text-xs uppercase mt-1">
                                                 ID: {orderDetails._id}
                                             </p>
@@ -127,23 +137,23 @@ export default function OrdersManager() {
 
                                     {/* Products List */}
                                     <div className="space-y-4 mb-10">
-                                        <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Items</h4>
+                                        <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">{t.profile.items}</h4>
                                         {(orderDetails.cartItems || orderDetails.products || orderDetails.items || []).map((item: any) => {
                                             const isPopulated = item.product && typeof item.product === 'object';
-                                            const productName = isPopulated ? (item.product.name || item.product.ar_name) : `Product ID: ${item.product}`;
+                                            const productName = isPopulated ? getLocalized(item.product) : `${t.profile.productId}: ${item.product}`;
                                             const productImage = isPopulated && item.product.image ? item.product.image : logoUrl;
 
                                             return (
                                                 <div key={item._id || (isPopulated ? item.product._id : item.product)} className="flex gap-4 items-center bg-gray-50 p-4 rounded-2xl">
                                                     <div className="w-16 h-16 bg-white rounded-xl p-2 shrink-0">
-                                                        <img src={productImage} alt="Product" className="w-full h-full object-contain" />
+                                                        <img src={productImage} alt={productName} className="w-full h-full object-contain" />
                                                     </div>
                                                     <div className="flex-1">
                                                         <p className="font-bold text-sm line-clamp-1 text-primary">{productName}</p>
-                                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">QTY: {item.quantity}</p>
+                                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">{t.profile.quantityLabel}: {item.quantity}</p>
                                                     </div>
                                                     <div className="font-black text-secondary">
-                                                        {(item.price * item.quantity).toLocaleString()} EGP
+                                                        {formatPrice(item.price * item.quantity)}
                                                     </div>
                                                 </div>
                                             );
@@ -155,11 +165,11 @@ export default function OrdersManager() {
                                         <div>
                                             <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
                                                 {orderDetails.orderType === 'pickup' ? <Store size={12} /> : <MapPin size={12} />} 
-                                                {orderDetails.orderType === 'pickup' ? 'Pickup Branch' : 'Shipping details'}
+                                                {orderDetails.orderType === 'pickup' ? t.profile.pickupBranch : t.profile.shippingDetails}
                                             </p>
                                             {orderDetails.orderType === 'pickup' ? (
                                                 <div className="text-sm font-bold text-primary">
-                                                    <p>{orderDetails.warehouse?.name || 'Unknown Branch'}</p>
+                                                    <p>{orderDetails.warehouse?.name || t.profile.unknownBranch}</p>
                                                 </div>
                                             ) : orderDetails.shippingAddress ? (
                                                 <div className="text-sm font-bold text-primary">
@@ -170,27 +180,30 @@ export default function OrdersManager() {
                                                     </p>
                                                 </div>
                                             ) : (
-                                                <p className="text-sm font-bold text-gray-500">Address info unavailable</p>
+                                                <p className="text-sm font-bold text-gray-500">{t.profile.addressUnavailable}</p>
                                             )}
                                         </div>
                                         <div>
                                             <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
-                                                <CreditCard size={12} /> Payment
+                                                <CreditCard size={12} /> {t.profile.payment}
                                             </p>
                                             <div className="space-y-1">
                                                 {orderDetails.paymentMethod ? (
                                                     <p className="text-sm font-bold text-primary uppercase inline-block mr-3">
-                                                        {typeof orderDetails.paymentMethod === 'string' ? orderDetails.paymentMethod : orderDetails.paymentMethod.name || 'Manual'}
+                                                        {typeof orderDetails.paymentMethod === 'string' ? orderDetails.paymentMethod : orderDetails.paymentMethod.name || t.profile.manualPayment}
                                                     </p>
                                                 ) : (
-                                                    <p className="text-sm font-bold text-gray-500 inline-block mr-3">Not specified</p>
+                                                    <p className="text-sm font-bold text-gray-500 inline-block mr-3">{t.profile.notSpecified}</p>
                                                 )}
                                                 <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded inline-block align-middle ${
                                                     orderDetails.paymentStatus === 'paid' ? 'bg-green-100 text-green-600' :
                                                     ['failed'].includes(orderDetails.paymentStatus) ? 'bg-red-100 text-red-600' :
                                                     'bg-yellow-100 text-yellow-600'
                                                 }`}>
-                                                    {orderDetails.paymentStatus || 'Pending'}
+                                                    {orderDetails.paymentStatus === 'paid' ? t.profile.paidStatus
+                                                        : orderDetails.paymentStatus === 'failed' ? t.profile.failedStatus
+                                                        : orderDetails.paymentStatus === 'unpaid' ? t.profile.unpaidStatus
+                                                        : orderDetails.paymentStatus || t.profile.paymentPendingStatus}
                                                 </span>
                                             </div>
                                         </div>
@@ -198,14 +211,14 @@ export default function OrdersManager() {
 
                                     {/* Total */}
                                     <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-                                        <span className="text-lg font-black text-gray-400">Total Amount</span>
-                                        <span className="text-3xl font-black text-primary">{(orderDetails.totalOrderPrice || orderDetails.totalPrice || orderDetails.totalAmount || 0).toLocaleString()} <span className="text-base text-gray-400">EGP</span></span>
+                                        <span className="text-lg font-black text-gray-400">{t.profile.orderTotal}</span>
+                                        <span className="text-3xl font-black text-primary">{formatPrice(orderDetails.totalOrderPrice || orderDetails.totalPrice || orderDetails.totalAmount || 0)}</span>
                                     </div>
 
                                 </div>
                             ) : (
                                 <div className="text-center py-20 text-gray-400">
-                                    <p className="font-bold">Failed to load order details.</p>
+                                    <p className="font-bold">{t.profile.orderDetailsError}</p>
                                 </div>
                             )}
                         </div>

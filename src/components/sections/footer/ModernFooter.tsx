@@ -3,6 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import { Heart, Instagram, Facebook, Twitter } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ModernFooterProps {
     title?: string;
@@ -11,6 +12,7 @@ interface ModernFooterProps {
 }
 
 export default function ModernFooter({ title }: ModernFooterProps) {
+    const { t } = useTranslation();
     const { settings, storeName, logoUrl } = useStoreSettings();
     const ecommerceData = settings.ecommerceData?.[0];
     const socialLinks = ecommerceData?.social_links || {};
@@ -32,16 +34,16 @@ export default function ModernFooter({ title }: ModernFooterProps) {
                 </Link>
 
                 <p className="text-gray-400 text-sm max-w-md">
-                    {footer.bio || ecommerceData?.bio || 'Curated collections for modern living. Fast shipping, guaranteed satisfaction, and friendly customer support.'}
+                    {footer.bio || ecommerceData?.bio || t.sections.qualityProductsFooter}
                 </p>
 
                 {/* Nav Links */}
                 <div className="flex flex-wrap justify-center gap-6 text-sm font-semibold text-gray-300">
-                    <Link href="/" className="hover:text-secondary transition-colors">Home</Link>
-                    <Link href="/categories" className="hover:text-secondary transition-colors">Categories</Link>
-                    <Link href="/brands" className="hover:text-secondary transition-colors">Brands</Link>
-                    <Link href="/order-tracking" className="hover:text-secondary transition-colors">Track Order</Link>
-                    <Link href="/favourite" className="hover:text-secondary transition-colors">Favorites</Link>
+                    <Link href="/" className="hover:text-secondary transition-colors">{t.nav.home}</Link>
+                    <Link href="/categories" className="hover:text-secondary transition-colors">{t.nav.categories}</Link>
+                    <Link href="/brands" className="hover:text-secondary transition-colors">{t.nav.brands}</Link>
+                    <Link href="/order-tracking" className="hover:text-secondary transition-colors">{t.nav.trackOrder}</Link>
+                    <Link href="/favourite" className="hover:text-secondary transition-colors">{t.sections.favorites}</Link>
                 </div>
 
                 {/* Social Icons */}
@@ -58,9 +60,9 @@ export default function ModernFooter({ title }: ModernFooterProps) {
                 </div>
 
                 <div className="w-full border-t border-gray-800 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
-                    <p>&copy; {currentYear} {storeName || 'Store'}. {footer.copyright || 'All rights reserved.'}</p>
+                    <p>&copy; {currentYear} {storeName || 'Store'}. {footer.copyright || t.sections.allRightsReserved}</p>
                     <p className="flex items-center gap-1">
-                        Crafted with modern dynamic experience
+                        {t.sections.craftedWithModernExperience}
                     </p>
                 </div>
             </div>

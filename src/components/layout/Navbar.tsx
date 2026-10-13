@@ -157,8 +157,8 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center gap-3 ml-2">
                         {!isLoggedIn ? (
                             <>
-                                <Link href="/login" className="px-5 py-2.5 text-sm font-bold text-primary hover:bg-gray-50 rounded-xl transition">Login</Link>
-                                <Link href="/signup" className="px-5 py-2.5 text-sm font-bold bg-primary text-white rounded-xl hover:shadow-lg transition">Sign Up</Link>
+                                <Link href="/login" className="px-5 py-2.5 text-sm font-bold text-primary hover:bg-gray-50 rounded-xl transition">{t.nav.login}</Link>
+                                <Link href="/signup" className="px-5 py-2.5 text-sm font-bold bg-primary text-white rounded-xl hover:shadow-lg transition">{t.nav.register}</Link>
                             </>
                         ) : (
                             <div className="flex items-center gap-3">
