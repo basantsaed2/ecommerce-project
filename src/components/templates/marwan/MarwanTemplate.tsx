@@ -2,11 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Moon, Package, ShieldCheck, Sparkles, Star, Sun, Truck, Undo2 } from 'lucide-react';
 import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import DynamicSectionRenderer from '@/components/sections/DynamicSectionRenderer';
-import { ApiResponse, Banner, Category, Product } from '@/types/api';
+import { ApiResponse, Banner, Brand, Category, Product } from '@/types/api';
 import StoreLoader from '@/components/common/StoreLoader';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -50,6 +51,7 @@ export default function MarwanTemplate({
 }: MarwanTemplateProps) {
   const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings() as any;
   const { t, isRtl, getLocalized, formatPrice } = useTranslation();
+  const router = useRouter();
 
   // ── Dynamic header data from backend ───────────────────────────────────
   const ecommerceData = settings?.ecommerceData?.[0] || {};
@@ -62,8 +64,8 @@ export default function MarwanTemplate({
   const linkConfig: Record<string, { label: string; href: string; scrollId?: string }> = {
     home:            { label: t.nav.home,       href: '/' },
     about:           { label: t.nav.about,      href: '/about' },
-    products:        { label: t.nav.products,   href: '/product', scrollId: 'products' },
-    product:         { label: t.nav.products,   href: '/product', scrollId: 'products' },
+    products:        { label: t.nav.products,   href: '/products', scrollId: 'products' },
+    product:         { label: t.nav.products,   href: '/products', scrollId: 'products' },
     categories:      { label: t.nav.categories, href: '/categories', scrollId: 'categories' },
     category:        { label: t.nav.categories, href: '/categories', scrollId: 'categories' },
     brands:          { label: t.nav.brands,     href: '/brands' },
@@ -105,6 +107,7 @@ export default function MarwanTemplate({
   const { data: bannersData, isLoading: bannersLoading } = useGet<ApiResponse<Banner>>(['banners'], '/banner');
   const { data: categoriesData, isLoading: categoriesLoading } = useGet<ApiResponse<Category>>(['categories'], '/category');
   const { data: productsData, isLoading: productsLoading } = useGet<ApiResponse<Product>>(['products'], '/product');
+  const { data: brandsData } = useGet<ApiResponse<Brand>>(['brands'], '/brand');
 
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -202,6 +205,8 @@ export default function MarwanTemplate({
     return list.find((b) => b.name?.some((n) => /home|hero|main/i.test(String(n)))) || list[0];
   }, [bannersData]);
 
+  const heroTitle = getLocalized(heroBanner, 'title') || storeName || t.aboutPage.ourStore;
+
   const heroImages = heroBanner?.images?.length
     ? heroBanner.images
     : ['https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=1600'];
@@ -219,15 +224,36 @@ export default function MarwanTemplate({
   const products = useMemo(() => {
     const list = productsData?.data?.data || [];
     const q = activeSearch;
-    const featured = list.filter((product) => product.is_featured === true);
     const filtered = q
-      ? featured.filter((p) => p.name?.toLowerCase().includes(q) || p.ar_name?.toLowerCase().includes(q))
-      : featured;
+      ? list.filter((product) =>
+          [product.name, product.ar_name, product.brand?.name, product.brand?.ar_name]
+            .some((value) => value?.toLowerCase().includes(q))
+        )
+      : list.filter((product) => product.is_featured === true);
     return filtered.slice(0, 8);
   }, [productsData, activeSearch]);
 
+  const matchingBrand = useMemo(() => {
+    if (activeSearch.length < 2) return undefined;
+
+    const brands = brandsData?.data?.data || [];
+    const matches = (brand: Brand) =>
+      [brand.name, brand.ar_name].some((name) => name?.toLowerCase().includes(activeSearch));
+
+    return brands.find((brand) =>
+      [brand.name, brand.ar_name].some((name) => name?.toLowerCase() === activeSearch)
+    ) || brands.find(matches);
+  }, [brandsData, activeSearch]);
+
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (matchingBrand) {
+      router.push(`/brands#${matchingBrand._id}`);
+    }
+  };
+
   useEffect(() => {
-    if (!activeSearch) return;
+    if (!activeSearch || matchingBrand) return;
 
     if (showCategories && categories.length > 0) {
       document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -237,7 +263,7 @@ export default function MarwanTemplate({
     if (showProducts && products.length > 0) {
       document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [activeSearch, showCategories, showProducts, categories.length, products.length]);
+  }, [activeSearch, matchingBrand, showCategories, showProducts, categories.length, products.length]);
 
   const priceText = (product: Product) => {
     const raw = product.final_price ?? product.main_price ?? product.price ?? 0;
@@ -308,7 +334,7 @@ export default function MarwanTemplate({
             </Link>
 
             <div className="hidden md:flex flex-1 justify-center px-3">
-              <div className="flex w-full max-w-[500px] items-center gap-3 rounded-full border px-4 py-2.5" style={{ background: 'color-mix(in srgb, var(--mw-bg) 18%, transparent)', borderColor: 'color-mix(in srgb, var(--mw-primary) 35%, transparent)' }}>
+              <form onSubmit={handleSearchSubmit} className="relative flex w-full max-w-[500px] items-center gap-3 rounded-full border px-4 py-2.5" style={{ background: 'color-mix(in srgb, var(--mw-bg) 18%, transparent)', borderColor: 'color-mix(in srgb, var(--mw-primary) 35%, transparent)' }}>
                 <span style={{ color: 'var(--mw-text-muted)' }}>⌕</span>
                 <input
                   type="text"
@@ -316,9 +342,17 @@ export default function MarwanTemplate({
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder={t.common.searchPlaceholder}
                   className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-text-muted)]"
-                  style={{ color: 'var(--mw-text)' }}
+                  style={{ backgroundColor: 'transparent', color: 'var(--mw-text)' }}
                 />
-              </div>
+                {matchingBrand && (
+                  <Link
+                    href={`/brands#${matchingBrand._id}`}
+                    className="absolute inset-x-0 top-full z-50 mt-2 rounded-xl border bg-white px-4 py-3 text-sm font-bold text-gray-800 shadow-lg"
+                  >
+                    {getLocalized(matchingBrand)} <span className="font-normal text-gray-500">— {t.nav.brands}</span>
+                  </Link>
+                )}
+              </form>
             </div>
 
             <nav className="hidden md:flex items-center justify-center gap-8 shrink-0">
@@ -356,7 +390,7 @@ export default function MarwanTemplate({
                 {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
               </button>
               <Link
-                href="/product"
+                href="/products"
                 className="hidden md:inline-flex items-center justify-center px-6 py-3 rounded-full text-[13px] font-extrabold uppercase tracking-wider transition-transform hover:-translate-y-0.5"
                 style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
               >
@@ -376,7 +410,7 @@ export default function MarwanTemplate({
 
           {menuOpen && (
             <div className="md:hidden max-w-[1240px] mx-auto px-5 pb-4 flex flex-col gap-3">
-              <div className="flex items-center gap-2 rounded-full border px-3 py-2" style={{ background: 'var(--mw-bg)', borderColor: 'var(--mw-border)' }}>
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center gap-2 rounded-full border px-3 py-2" style={{ background: 'var(--mw-bg)', borderColor: 'var(--mw-border)' }}>
                 <span style={{ color: 'var(--mw-text-muted)' }}>⌕</span>
                 <input
                   type="text"
@@ -386,7 +420,16 @@ export default function MarwanTemplate({
                   className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-text-muted)]"
                   style={{ color: 'var(--mw-text)' }}
                 />
-              </div>
+                {matchingBrand && (
+                  <Link
+                    href={`/brands#${matchingBrand._id}`}
+                    className="absolute inset-x-0 top-full z-50 mt-2 rounded-xl border bg-white px-4 py-3 text-sm font-bold text-gray-800 shadow-lg"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {getLocalized(matchingBrand)} <span className="font-normal text-gray-500">— {t.nav.brands}</span>
+                  </Link>
+                )}
+              </form>
               <div className="flex flex-col gap-2 pt-2">
                 {navItems.map((item) => {
                   const isTrack = item.key === 'track-order' || item.key === 'order-tracking';
@@ -454,14 +497,7 @@ export default function MarwanTemplate({
                   </div>
 
                   <h1 className="text-[2.6rem] md:text-[4rem] lg:text-[5.2rem] font-black leading-[.95] uppercase tracking-tight text-white mb-5">
-                    {t.home.heroTitlePart1}{' '}
-                    <span
-                      className="bg-clip-text text-transparent"
-                      style={{ backgroundImage: 'linear-gradient(90deg, color-mix(in srgb, var(--mw-primary) 70%, white), var(--mw-primary))' }}
-                    >
-                      {t.home.heroTitleHighlight}
-                    </span>
-                    <br /> {t.home.heroTitlePart2}
+                    {heroTitle}
                   </h1>
 
                   <p className="max-w-[480px] text-base leading-[1.8] text-white/80 mb-8">
@@ -618,7 +654,7 @@ export default function MarwanTemplate({
                   </h2>
                 </div>
                 <Link
-                  href="/product"
+                  href="/products"
                   className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full border text-[11px] font-extrabold uppercase tracking-wider"
                   style={{ borderColor: 'var(--mw-border)' }}
                 >
@@ -772,8 +808,8 @@ export default function MarwanTemplate({
                 <div>
                   <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t.sections.supportLabel}</h5>
                   <ul className="space-y-2.5">
-                    <li><Link href="/product" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.allProducts}</Link></li>
-                    <li><Link href="#why-us" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.shippingReturns}</Link></li>
+                    <li><Link href="/products" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.allProducts}</Link></li>
+                    <li><Link href="/shipping-returns" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.shippingReturns}</Link></li>
                     <li>
                       <Link
                         href="/order-tracking"

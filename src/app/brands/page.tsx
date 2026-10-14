@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import { usePaginatedGet } from '@/hooks/usePaginatedGet';
 import { Brand, Product } from '@/types/api';
 import DynamicBanner from '@/components/common/DynamicBanner';
@@ -25,6 +25,19 @@ export default function BrandsPage() {
         hasNextPage: hasNextProductsPage,
         isFetchingNextPage: isFetchingNextProductsPage,
     } = usePaginatedGet<Product>(['products', 'brands-page'], '/product', 20);
+
+    useEffect(() => {
+        if (isLoadingBrands || isLoadingProds || !window.location.hash) return;
+
+        const brandElement = document.getElementById(window.location.hash.slice(1));
+        if (!brandElement) return;
+
+        const frame = window.requestAnimationFrame(() => {
+            brandElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        return () => window.cancelAnimationFrame(frame);
+    }, [isLoadingBrands, isLoadingProds, brandsData, productsData]);
 
     if (isLoadingBrands || isLoadingProds) {
         return (

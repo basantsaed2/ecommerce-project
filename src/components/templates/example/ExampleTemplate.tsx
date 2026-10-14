@@ -58,7 +58,7 @@ export default function ExampleTemplate({
     home: { label: t.nav.home, href: '/' },
     category: { label: t.nav.categories, href: '/categories' },
     categories: { label: t.nav.categories, href: '/categories' },
-    products: { label: t.nav.products, href: '/product' },
+    products: { label: t.nav.products, href: '/products' },
     brands: { label: t.nav.brands, href: '/brands' },
     about: { label: t.nav.about, href: '/about' },
     'track-order': { label: t.nav.trackOrder, href: '/order-tracking' },

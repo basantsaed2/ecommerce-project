@@ -117,10 +117,10 @@ export default function DefaultFooter({ title }: FooterProps) {
                         </h4>
                         <ul className="flex flex-col gap-2.5 text-sm text-gray-600">
                             <li><Link href="/order-tracking" className="hover:text-secondary transition-colors">{t.sections.trackYourOrder}</Link></li>
-                            <li><Link href="/categories" className="hover:text-secondary transition-colors">{t.sections.shippingReturns}</Link></li>
+                            <li><Link href="/shipping-returns" className="hover:text-secondary transition-colors">{t.sections.shippingReturns}</Link></li>
                             <li><Link href="/favourite" className="hover:text-secondary transition-colors">{t.sections.wishlistFavorites}</Link></li>
                             <li><Link href="/cart" className="hover:text-secondary transition-colors">{t.sections.cartCheckout}</Link></li>
-                            <li><a href="#" className="hover:text-secondary transition-colors">{t.sections.returnsPolicy}</a></li>
+                            <li><Link href="/shipping-returns" className="hover:text-secondary transition-colors">{t.sections.returnsPolicy}</Link></li>
                             <li><a href="#" className="hover:text-secondary transition-colors">{t.sections.helpCenterFaqs}</a></li>
                         </ul>
                     </div>

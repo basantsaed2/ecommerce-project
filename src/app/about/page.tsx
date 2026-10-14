@@ -92,7 +92,7 @@ export default function AboutPage() {
                         {aboutText}
                     </p>
                     <Link
-                        href="/product"
+                        href="/products"
                         className="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:shadow-lg"
                     >
                         {t.aboutPage.exploreProducts}
