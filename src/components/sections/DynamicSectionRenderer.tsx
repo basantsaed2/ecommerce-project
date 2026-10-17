@@ -105,48 +105,30 @@ export default function DynamicSectionRenderer({
             case 'newarrivals':
                 return <DefaultProducts key={componentKey} {...sectionProps} title={section.title || "New Arrivals"} />;
 
-            case 'promo-banner':
-            case 'special-offers':
-            case 'promo':
-            case 'offer':
-            case 'flash-sale':
-            case 'deals-of-the-day':
-                return <DefaultPromoBanner key={componentKey} {...sectionProps} />;
-
-            case 'promotional-banners':
-            case 'sub-banners':
-            case 'promo-grid':
-                return <PromotionalBanners key={componentKey} {...sectionProps} />;
-
             case 'brands':
             case 'brand':
             case 'brand-logos':
             case 'partners':
                 return <DefaultBrands key={componentKey} {...sectionProps} />;
 
+            // Static sections with no backend APIs are disabled
+            case 'promo-banner':
+            case 'promotional-banners':
             case 'testimonials':
             case 'reviews':
             case 'customer-reviews':
-                return <DefaultTestimonials key={componentKey} {...sectionProps} />;
-
             case 'instagram-feed':
             case 'social-proof':
             case 'ugc':
-                return <InstagramFeed key={componentKey} {...sectionProps} />;
-
             case 'shopping-guides':
             case 'blog-guides':
             case 'blog':
             case 'guides':
-                return <ShoppingGuides key={componentKey} {...sectionProps} />;
-
             case 'faq':
             case 'faqs':
-                return <FAQSection key={componentKey} {...sectionProps} />;
-
             case 'newsletter':
             case 'subscribe':
-                return <DefaultNewsletter key={componentKey} {...sectionProps} />;
+                return null;
 
             case 'footer':
                 if (slug === 'modern-shop') return <ModernFooter key={componentKey} {...sectionProps} />;

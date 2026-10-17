@@ -17,11 +17,15 @@ interface FooterProps {
 }
 
 export default function DefaultFooter({ title }: FooterProps) {
-    const { storeName, logoUrl } = useStoreSettings();
+    const { storeName, logoUrl, settings, ecommerceData } = useStoreSettings();
     const { data: categoriesData } = useGet<ApiResponse<Category>>(['categories'], '/category');
     const categories = (categoriesData?.data?.data || []).slice(0, 5);
 
     const currentYear = new Date().getFullYear();
+    const ecomData = ecommerceData?.[0] || settings?.ecommerceData?.[0];
+    const footerLogo = ecomData?.footer?.logo || logoUrl;
+    const footerBio = ecomData?.footer?.bio || "Your premier destination for modern lifestyle, curated essentials, and authentic products with nationwide express delivery.";
+    const socialLinks = ecomData?.social_links || {};
 
     return (
         <footer className="w-full bg-white border-t border-gray-100 mt-20 pt-16 pb-12">
@@ -31,8 +35,8 @@ export default function DefaultFooter({ title }: FooterProps) {
                     {/* Brand Info & App download */}
                     <div className="lg:col-span-4 flex flex-col items-start gap-4">
                         <Link href="/" className="flex items-center gap-2">
-                            {logoUrl ? (
-                                <img src={logoUrl} alt={storeName} className="h-10 max-w-[180px] object-contain" />
+                            {footerLogo ? (
+                                <img src={footerLogo} alt={storeName} className="h-10 max-w-[180px] object-contain" />
                             ) : (
                                 <span className="text-2xl font-black tracking-tighter text-primary">
                                     {storeName || 'STORE'}<span className="text-secondary">.</span>
@@ -41,23 +45,31 @@ export default function DefaultFooter({ title }: FooterProps) {
                         </Link>
 
                         <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                            Your premier destination for modern lifestyle, curated essentials, and authentic products with nationwide express delivery.
+                            {footerBio}
                         </p>
 
                         {/* Social Icons */}
                         <div className="flex items-center gap-2.5 pt-1">
-                            <a href="#" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
-                                <Instagram size={16} />
-                            </a>
-                            <a href="#" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
-                                <Facebook size={16} />
-                            </a>
-                            <a href="#" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
-                                <Twitter size={16} />
-                            </a>
-                            <a href="#" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
-                                <Youtube size={16} />
-                            </a>
+                            {socialLinks.instagram && (
+                                <a href={socialLinks.instagram} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                                    <Instagram size={16} />
+                                </a>
+                            )}
+                            {socialLinks.facebook && (
+                                <a href={socialLinks.facebook} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                                    <Facebook size={16} />
+                                </a>
+                            )}
+                            {socialLinks.twitter && (
+                                <a href={socialLinks.twitter} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                                    <Twitter size={16} />
+                                </a>
+                            )}
+                            {socialLinks.youtube && (
+                                <a href={socialLinks.youtube} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                                    <Youtube size={16} />
+                                </a>
+                            )}
                         </div>
 
                         {/* Mobile App Download Badges */}
@@ -122,24 +134,24 @@ export default function DefaultFooter({ title }: FooterProps) {
                         <h4 className="text-sm font-black uppercase tracking-wider text-primary mb-2">
                             Store Contact
                         </h4>
-                        <div className="flex items-start gap-2.5 text-sm text-gray-600">
-                            <MapPin size={18} className="text-secondary shrink-0 mt-0.5" />
-                            <span>123 Commercial Avenue, Suite 400</span>
-                        </div>
-                        <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                            <Phone size={18} className="text-secondary shrink-0" />
-                            <span>+1 (800) 123-4567</span>
-                        </div>
-                        <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                            <Mail size={18} className="text-secondary shrink-0" />
-                            <span>support@{storeName ? storeName.toLowerCase().replace(/\s+/g, '') : 'store'}.com</span>
-                        </div>
-
-                        {/* Working hours */}
-                        <div className="p-3 bg-gray-50 rounded-xl mt-2 text-xs text-gray-500">
-                            <strong className="text-primary block font-bold mb-0.5">Support Hours:</strong>
-                            Everyday 9:00 AM - 10:00 PM (GMT+2)
-                        </div>
+                        {ecomData?.address && (
+                            <div className="flex items-start gap-2.5 text-sm text-gray-600">
+                                <MapPin size={18} className="text-secondary shrink-0 mt-0.5" />
+                                <span>{ecomData.address}</span>
+                            </div>
+                        )}
+                        {ecomData?.phone && (
+                            <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                                <Phone size={18} className="text-secondary shrink-0" />
+                                <a href={`tel:${ecomData.phone}`} className="hover:text-secondary">{ecomData.phone}</a>
+                            </div>
+                        )}
+                        {ecomData?.email && (
+                            <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                                <Mail size={18} className="text-secondary shrink-0" />
+                                <a href={`mailto:${ecomData.email}`} className="hover:text-secondary">{ecomData.email}</a>
+                            </div>
+                        )}
                     </div>
                 </div>
 

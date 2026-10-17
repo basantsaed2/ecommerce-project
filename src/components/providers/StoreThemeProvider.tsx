@@ -7,6 +7,7 @@ import {
     StoreSettings,
     StoreColors,
     StoreSection,
+    EcommerceData,
     UpdateStoreSettingsPayload
 } from '@/types/storeSettings';
 import {
@@ -27,6 +28,7 @@ interface StoreThemeContextType {
     fontStyle: string;
     templateSlug: string;
     sections: StoreSection[];
+    ecommerceData?: EcommerceData[];
     isLoading: boolean;
     isError: boolean;
     refetch: () => void;
@@ -42,6 +44,7 @@ const StoreThemeContext = createContext<StoreThemeContextType>({
     fontStyle: DEFAULT_STORE_SETTINGS.fontStyle,
     templateSlug: DEFAULT_STORE_SETTINGS.templateSlug,
     sections: DEFAULT_STORE_SECTIONS,
+    ecommerceData: undefined,
     isLoading: false,
     isError: false,
     refetch: () => {},
@@ -195,6 +198,7 @@ export function StoreThemeProvider({
             fontStyle: mergedSettings.fontStyle,
             templateSlug: mergedSettings.templateSlug,
             sections: mergedSettings.sections,
+            ecommerceData: mergedSettings.ecommerceData,
             isLoading,
             isError,
             refetch,

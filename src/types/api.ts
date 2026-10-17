@@ -14,6 +14,7 @@ export interface Category {
     name: string;
     ar_name?: string;
     image: string;
+    banner?: string;
     product_quantity: number;
     parentId?: string;
     createdAt: string;
@@ -80,6 +81,7 @@ export interface Product {
     image: string;
     gallery_product?: string[];
     categoryId?: Category[];
+    categories?: Category[];
     category?: Category;
     brand?: ProductBrand;
     price?: number;
