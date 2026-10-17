@@ -4,12 +4,16 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Category } from '@/types/api';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface CategoriesSectionProps {
     searchQuery?: string;
 }
 
 export default function CategoriesSection({ searchQuery = "" }: CategoriesSectionProps) {
+    const { logoUrl } = useStoreSettings();
+    const { t, getLocalized } = useTranslation();
     const { data, isLoading, error } = useGet<ApiResponse<Category>>(['categories'], '/category');
 
     if (isLoading) return (
@@ -20,7 +24,7 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
     
     if (error) return null;
 
-    const allCategories = data?.data?.data || [];
+    const allCategories = (data?.data?.data || []).filter((category) => category.is_featured === true);
 
     // Client-side filtering
     const categories = allCategories.filter(c => 
@@ -36,12 +40,12 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
             <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
                 <div className="text-center md:text-left">
                     <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight mb-2">
-                        Browse by <span className="text-secondary underline decoration-secondary/20 underline-offset-8">Category</span>
+                        {t.sections.featuredCategories}
                     </h2>
-                    <p className="text-gray-400 font-medium text-sm">Discover our handpicked collections for you</p>
+                    <p className="text-gray-400 font-medium text-sm">{t.home.discoverCollections}</p>
                 </div>
                 <Link href="/categories" className="px-6 py-3 bg-gray-50 text-gray-900 rounded-2xl text-sm font-bold hover:bg-secondary hover:text-white transition-all active:scale-95 shadow-sm">
-                    View All Categories
+                    {t.home.viewAllCategories}
                 </Link>
             </div>
 
@@ -58,8 +62,8 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
                             
                             <div className="absolute inset-2 bg-white rounded-[1.75rem] shadow-sm border border-gray-100 transition-all duration-500 overflow-hidden flex items-center justify-center group-hover:border-secondary group-hover:scale-105 group-hover:-translate-y-2">
                                 <img
-                                    src={category.image}
-                                    alt={category.name || category.ar_name}
+                                    src={category.image || logoUrl || undefined}
+                                    alt={getLocalized(category)}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
                                 
@@ -69,11 +73,11 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
                         </div>
                         
                         <span className="text-sm font-black text-primary text-center group-hover:text-secondary uppercase tracking-wider transition-colors">
-                            {category.name || category.ar_name}
+                            {getLocalized(category)}
                         </span>
                         
                         <span className="text-[10px] font-bold text-gray-400 mt-1 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                            Explore Collection &rarr;
+                            {t.home.exploreCollection} &rarr;
                         </span>
                     </Link>
                 ))}

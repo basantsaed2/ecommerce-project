@@ -9,6 +9,7 @@ import {
     SingleThemeResponse,
     UpdateStoreSettingsPayload
 } from '@/types/storeSettings';
+import { getCurrentLanguage } from '@/utils/language';
 
 const getApiBaseUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL || '';
@@ -38,24 +39,32 @@ export const getStoreSettingsApi = async (): Promise<StoreSettingsResponse> => {
     console.log('[store-settings] request fired', { baseUrl, url });
 
     try {
-        const { data } = await axios.get<StoreSettingsResponse>(url, { headers: getAuthHeaders() });
+        const { data } = await axios.get<StoreSettingsResponse>(url, {
+            headers: getAuthHeaders(),
+            params: { lang: getCurrentLanguage() },
+        });
         console.log('[store-settings] success', data);
         return data;
     } catch (storeError: any) {
         console.error('[store-settings] failed', {
-            message: storeError?.message,
+            message: storeError?.message || 'Unknown request error',
+            code: storeError?.code,
             status: storeError?.response?.status,
             data: storeError?.response?.data,
             url,
         });
 
         try {
-            const { data } = await axios.get<StoreSettingsResponse>(url, { headers: getAuthHeaders() });
+            const { data } = await axios.get<StoreSettingsResponse>(url, {
+                headers: getAuthHeaders(),
+                params: { lang: getCurrentLanguage() },
+            });
             console.log('[store-settings] retry success', data);
             return data;
         } catch (retryError: any) {
             console.error('[store-settings] retry failed', {
-                message: retryError?.message,
+                message: retryError?.message || 'Unknown retry error',
+                code: retryError?.code,
                 status: retryError?.response?.status,
                 data: retryError?.response?.data,
                 url,

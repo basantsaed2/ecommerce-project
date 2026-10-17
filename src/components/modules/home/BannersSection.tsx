@@ -4,29 +4,31 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Banner } from '@/types/api';
 import { Loader2 } from 'lucide-react';
 import DynamicBanner from '@/components/common/DynamicBanner';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const BANNERS = [
     {
         id: 1,
         image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop",
-        title: "Summer Sale",
-        subtitle: "NEW COLLECTION"
+        titleKey: "summerSale",
+        subtitleKey: "newCollection"
     },
     {
         id: 2,
         image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop",
-        title: "Women's Fashion",
-        subtitle: "UP TO 50% OFF"
+        titleKey: "womensFashion",
+        subtitleKey: "upTo50Off"
     },
     {
         id: 3,
         image: "https://images.unsplash.com/photo-1509319117193-57bab727e09d?q=80&w=2070&auto=format&fit=crop", // Updated image
-        title: "Accessories",
-        subtitle: "TRENDING NOW"
+        titleKey: "accessories",
+        subtitleKey: "trendingNowBadge"
     }
-];
+] as const;
 
 export default function BannersSection() {
+    const { t, getLocalized } = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(0);
     const { data: bannersData, isLoading } = useGet<ApiResponse<Banner>>(['banners'], '/banner');
     
@@ -62,9 +64,9 @@ export default function BannersSection() {
         <section className="w-full px-4 py-6">
             <div className="w-full h-[250px] md:h-[450px] lg:h-[550px] relative rounded-3xl overflow-hidden shadow-2xl group">
                 {displayImages.map((image, index) => {
-                    const fallbackData = BANNERS[index] || { title: "", subtitle: "" };
-                    const displayTitle = homeBanner?.title || fallbackData.title;
-                    const displaySubtitle = homeBanner?.description || fallbackData.subtitle;
+                    const fallbackData = BANNERS[index] || BANNERS[0];
+                    const displayTitle = getLocalized(homeBanner, 'title') || t.sections[fallbackData.titleKey];
+                    const displaySubtitle = getLocalized(homeBanner, 'description') || t.sections[fallbackData.subtitleKey];
 
                     return (
                     <div
@@ -78,7 +80,7 @@ export default function BannersSection() {
                             pageName="home"
                             fallbackImage={fallbackData.image || image}
                             imageIndex={index}
-                            alt={`Banner ${index}`}
+                            alt={t.sections.bannerNumber.replace('{number}', String(index + 1))}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                         />
                         
@@ -96,7 +98,7 @@ export default function BannersSection() {
                                     </h2>
                                 )}
                                 <button className="mt-3 md:mt-6 bg-secondary text-white px-5 py-2 md:px-8 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl font-bold hover:bg-white hover:text-black transition-colors duration-300 shadow-lg shadow-secondary/30">
-                                    Shop Now
+                                    {t.home.shopNow}
                                 </button>
                             </div>
                         </div>
@@ -113,7 +115,7 @@ export default function BannersSection() {
                                 className={`transition-all duration-300 rounded-full h-2 ${
                                     index === currentIndex ? "w-8 bg-secondary" : "w-2 bg-white/50 hover:bg-white"
                                 }`}
-                                aria-label={`Go to slide ${index + 1}`}
+                                aria-label={`${t.sections.goToSlide} ${index + 1}`}
                             />
                         ))}
                     </div>

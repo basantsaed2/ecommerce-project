@@ -4,16 +4,18 @@ import React, { useState } from 'react';
 import { Search, Package, MapPin, Truck, CheckCircle, Clock, ShoppingBag, CreditCard, Calendar, Store } from 'lucide-react';
 import axiosInstance from '@/api/axiosInstance';
 import { toast } from 'sonner';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function OrderTrackingPage() {
     const [referenceId, setReferenceId] = useState('');
     const [loading, setLoading] = useState(false);
     const [orderData, setOrderData] = useState<any>(null);
+    const { t, language } = useTranslation();
 
     const handleTrackOrder = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!referenceId.trim()) {
-            toast.error('Please enter an order reference');
+            toast.error(t.tracking.enterReference);
             return;
         }
 
@@ -24,9 +26,9 @@ export default function OrderTrackingPage() {
             // التعامل مع شكل الـ Data القادمة من الـ API
             const fetchedOrder = response.data.order || response.data.data?.order || response.data.data || response.data;
             setOrderData(fetchedOrder);
-            toast.success('Order status retrieved successfully');
+            toast.success(t.tracking.retrievalSuccess);
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to track order. Please check your reference ID.');
+            toast.error(error.response?.data?.message || t.tracking.retrievalError);
         } finally {
             setLoading(false);
         }
@@ -37,6 +39,17 @@ export default function OrderTrackingPage() {
     
     const getCurrentStepIndex = (currentStatus: string) => {
         return steps.indexOf(currentStatus?.toLowerCase() || 'pending');
+    };
+
+    const getStatusLabel = (status: string) => {
+        switch (status?.toLowerCase()) {
+            case 'pending': return t.tracking.orderPlaced;
+            case 'processing': return t.tracking.processing;
+            case 'shipped': return t.tracking.shipped;
+            case 'delivered': return t.tracking.delivered;
+            case 'cancelled': return t.tracking.cancelled;
+            default: return status;
+        }
     };
 
     const getStatusTheme = (status: string) => {
@@ -56,10 +69,10 @@ export default function OrderTrackingPage() {
                 {/* Header Section */}
                 <div className="text-center space-y-2">
                     <h2 className="text-4xl font-black text-slate-900 tracking-tight">
-                        Track Your Order
+                        {t.tracking.title}
                     </h2>
                     <p className="text-sm text-slate-500 font-medium max-w-md mx-auto">
-                        Enter your unique 8-digit order reference ID to check your order's journey and fulfillment status.
+                        {t.tracking.subtitle}
                     </p>
                 </div>
 
@@ -75,7 +88,7 @@ export default function OrderTrackingPage() {
                                 value={referenceId}
                                 onChange={(e) => setReferenceId(e.target.value)}
                                 className="block w-full pl-12 pr-4 py-3.5 text-slate-900 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black focus:border-black transition-all text-base font-medium outline-none placeholder:text-slate-400"
-                                placeholder="Enter Reference Number (e.g., 07208124)"
+                                placeholder={`${t.tracking.referencePlaceholder} (e.g., 07208124)`}
                                 required
                             />
                         </div>
@@ -90,9 +103,9 @@ export default function OrderTrackingPage() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Tracking...
+                                    {t.tracking.tracking}
                                 </span>
-                            ) : 'Track Order'}
+                            ) : t.tracking.trackButton}
                         </button>
                     </form>
                 </div>
@@ -106,17 +119,17 @@ export default function OrderTrackingPage() {
                             <div className="p-6 sm:p-8 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                        <span>Order Reference</span>
+                                        <span>{t.tracking.reference}</span>
                                         <span className="px-2 py-0.5 bg-slate-200 text-slate-700 rounded-md text-[10px]">{orderData.orderType}</span>
                                     </div>
                                     <p className="text-2xl font-black text-slate-900">{orderData.reference || referenceId}</p>
                                     <p className="text-xs text-slate-500 flex items-center gap-1.5 font-medium">
-                                        <Calendar size={13} /> Placed on {orderData.createdAt ? new Date(orderData.createdAt).toLocaleString() : 'N/A'}
+                                        <Calendar size={13} /> {t.tracking.placedOn} {orderData.createdAt ? new Date(orderData.createdAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US') : 'N/A'}
                                     </p>
                                 </div>
                                 <div className={`flex items-center gap-2.5 px-4 py-2 rounded-2xl border text-sm font-bold ${getStatusTheme(orderData.status).bg}`}>
                                     {getStatusTheme(orderData.status).icon}
-                                    <span className="capitalize">{orderData.status}</span>
+                                    <span className="capitalize">{getStatusLabel(orderData.status)}</span>
                                 </div>
                             </div>
 
@@ -124,7 +137,7 @@ export default function OrderTrackingPage() {
                             {orderData.statusDescription && (
                                 <div className="px-6 py-3 bg-amber-50/60 border-b border-slate-100 flex items-center gap-2 text-sm text-amber-800 font-medium">
                                     <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                                    Live Update: {orderData.statusDescription}
+                                    {t.tracking.liveUpdate}: {orderData.statusDescription}
                                 </div>
                             )}
 
@@ -146,7 +159,7 @@ export default function OrderTrackingPage() {
                                             <Clock size={18} />
                                         </div>
                                         <div className="text-left sm:text-center">
-                                            <p className="text-xs font-bold text-slate-900">Order Placed</p>
+                                            <p className="text-xs font-bold text-slate-900">{t.tracking.orderPlaced}</p>
                                         </div>
                                     </div>
 
@@ -156,7 +169,7 @@ export default function OrderTrackingPage() {
                                             <Package size={18} />
                                         </div>
                                         <div className="text-left sm:text-center">
-                                            <p className="text-xs font-bold text-slate-900">Processing</p>
+                                            <p className="text-xs font-bold text-slate-900">{t.tracking.processing}</p>
                                         </div>
                                     </div>
 
@@ -167,7 +180,7 @@ export default function OrderTrackingPage() {
                                         </div>
                                         <div className="text-left sm:text-center">
                                             <p className="text-xs font-bold text-slate-900">
-                                                {orderData.orderType === 'pickup' ? 'Ready for Pickup' : 'Shipped Out'}
+                                                {orderData.orderType === 'pickup' ? t.tracking.readyPickup : t.tracking.shippedOut}
                                             </p>
                                         </div>
                                     </div>
@@ -178,7 +191,7 @@ export default function OrderTrackingPage() {
                                             <CheckCircle size={18} />
                                         </div>
                                         <div className="text-left sm:text-center">
-                                            <p className="text-xs font-bold text-slate-900">Completed</p>
+                                            <p className="text-xs font-bold text-slate-900">{t.tracking.completed}</p>
                                         </div>
                                     </div>
 
@@ -192,16 +205,16 @@ export default function OrderTrackingPage() {
                                 <div className="space-y-4">
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                         {orderData.orderType === 'pickup' ? <Store size={14} /> : <MapPin size={14} />} 
-                                        {orderData.orderType === 'pickup' ? 'Pickup Location' : 'Shipping Address'}
+                                        {orderData.orderType === 'pickup' ? t.tracking.pickupLocation : t.tracking.shippingAddress}
                                     </h3>
                                     
                                     <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
                                         {orderData.orderType === 'pickup' ? (
                                             <div className="space-y-1">
-                                                <p className="text-slate-900 font-bold">Self-Pickup From Warehouse</p>
-                                                <p className="text-slate-500 text-sm font-medium">Warehouse ID: {orderData.warehouse || 'Main Branch'}</p>
+                                                <p className="text-slate-900 font-bold">{t.tracking.selfPickup}</p>
+                                                <p className="text-slate-500 text-sm font-medium">{t.tracking.warehouseId}: {orderData.warehouse || t.tracking.mainBranch}</p>
                                                 <span className="inline-block mt-2 px-2.5 py-1 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-lg">
-                                                    Bring Reference ID during pickup
+                                                    {t.tracking.bringReference}
                                                 </span>
                                             </div>
                                         ) : orderData.shippingAddress ? (
@@ -211,7 +224,7 @@ export default function OrderTrackingPage() {
                                                 <span className="font-bold text-slate-900">{orderData.shippingAddress.country}</span>
                                             </p>
                                         ) : (
-                                            <p className="text-slate-400 text-sm italic">No delivery address provided.</p>
+                                            <p className="text-slate-400 text-sm italic">{t.tracking.noAddress}</p>
                                         )}
                                     </div>
                                 </div>
@@ -219,37 +232,37 @@ export default function OrderTrackingPage() {
                                 {/* Right Side: Payment Info */}
                                 <div className="space-y-4">
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                        <CreditCard size={14} /> Payment & Billing
+                                        <CreditCard size={14} /> {t.tracking.paymentBilling}
                                     </h3>
                                     <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-3 text-sm">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-slate-500 font-medium">Gateway</span>
+                                            <span className="text-slate-500 font-medium">{t.tracking.gateway}</span>
                                             <span className="text-slate-900 font-bold uppercase">{orderData.paymentGateway}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-slate-500 font-medium">Payment Status</span>
+                                            <span className="text-slate-500 font-medium">{t.tracking.paymentStatus}</span>
                                             <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${orderData.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
                                                 {orderData.paymentStatus}
                                             </span>
                                         </div>
                                         <hr className="border-slate-200/60" />
                                         <div className="flex justify-between items-center text-xs text-slate-500">
-                                            <span>Subtotal</span>
-                                            <span>EGP {orderData.totalOrderPrice}</span>
+                                            <span>{t.tracking.subtotal}</span>
+                                            <span>{t.common.currency} {orderData.totalOrderPrice}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-xs text-slate-500">
-                                            <span>Service Fee</span>
-                                            <span>EGP {orderData.serviceFee || 0}</span>
+                                            <span>{t.tracking.serviceFee}</span>
+                                            <span>{t.common.currency} {orderData.serviceFee || 0}</span>
                                         </div>
                                         {orderData.shippingPrice > 0 && (
                                             <div className="flex justify-between items-center text-xs text-slate-500">
-                                                <span>Shipping</span>
-                                                <span>EGP {orderData.shippingPrice}</span>
+                                                <span>{t.cart.shipping}</span>
+                                                <span>{t.common.currency} {orderData.shippingPrice}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between items-center text-slate-900 font-black text-base pt-1">
-                                            <span>Total Paid</span>
-                                            <span>EGP {orderData.totalPriceAfterDiscount}</span>
+                                            <span>{t.tracking.totalPaid}</span>
+                                            <span>{t.common.currency} {orderData.totalPriceAfterDiscount}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -260,16 +273,16 @@ export default function OrderTrackingPage() {
                         {orderData.cartItems && orderData.cartItems.length > 0 && (
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-4">
                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                    <ShoppingBag size={14} /> Items Ordered ({orderData.cartItems.length})
+                                    <ShoppingBag size={14} /> {t.tracking.itemsOrdered} ({orderData.cartItems.length})
                                 </h3>
                                 <div className="divide-y divide-slate-100">
                                     {orderData.cartItems.map((item: any, idx: number) => (
                                         <div key={item._id || idx} className="py-4 first:pt-0 last:pb-0 flex justify-between items-center">
                                             <div className="space-y-0.5">
-                                                <p className="text-sm font-bold text-slate-900">Product ID: {item.product}</p>
-                                                <p className="text-xs text-slate-400 font-medium">Quantity: {item.quantity}</p>
+                                                <p className="text-sm font-bold text-slate-900">{t.tracking.productId}: {item.product}</p>
+                                                <p className="text-xs text-slate-400 font-medium">{t.tracking.quantity}: {item.quantity}</p>
                                             </div>
-                                            <p className="text-sm font-black text-slate-900">EGP {item.price * item.quantity}</p>
+                                            <p className="text-sm font-black text-slate-900">{t.common.currency} {item.price * item.quantity}</p>
                                         </div>
                                     ))}
                                 </div>

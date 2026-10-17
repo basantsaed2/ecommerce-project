@@ -11,9 +11,11 @@ import "./globals.css";
 import { Toaster } from 'sonner';
 import axiosInstance from "@/api/axiosInstance";
 
+export const dynamic = 'force-dynamic';
+
 const getInitialStoreSettings = async (): Promise<StoreSettings | undefined> => {
     try {
-        const { data } = await axiosInstance.get('/api/store/store-settings', {
+        const { data } = await axiosInstance.get('/store-settings', {
             headers: { Accept: 'application/json' },
         });
 

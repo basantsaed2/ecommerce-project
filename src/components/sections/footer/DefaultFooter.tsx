@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Category } from '@/types/api';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
     MapPin, Phone, Mail, ShieldCheck, Heart,
     Facebook, Twitter, Instagram, Youtube, CreditCard,
@@ -17,14 +18,16 @@ interface FooterProps {
 }
 
 export default function DefaultFooter({ title }: FooterProps) {
+    const { t, getLocalized } = useTranslation();
     const { storeName, logoUrl, settings, ecommerceData } = useStoreSettings();
     const { data: categoriesData } = useGet<ApiResponse<Category>>(['categories'], '/category');
     const categories = (categoriesData?.data?.data || []).slice(0, 5);
 
     const currentYear = new Date().getFullYear();
     const ecomData = ecommerceData?.[0] || settings?.ecommerceData?.[0];
-    const footerLogo = ecomData?.footer?.logo || logoUrl;
-    const footerBio = ecomData?.footer?.bio || "Your premier destination for modern lifestyle, curated essentials, and authentic products with nationwide express delivery.";
+    const footer = ecomData?.footer || {};
+    const footerLogo = footer?.logo || logoUrl;
+    const footerBio = footer?.bio || ecomData?.bio || t.sections.qualityProductsFooter;
     const socialLinks = ecomData?.social_links || {};
 
     return (
@@ -75,16 +78,16 @@ export default function DefaultFooter({ title }: FooterProps) {
                         {/* Mobile App Download Badges */}
                         <div className="pt-3">
                             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">
-                                Download Mobile App
+                                {t.sections.downloadMobileApp}
                             </span>
                             <div className="flex items-center gap-2">
                                 <a href="#" className="flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors text-[11px] font-bold">
                                     <Smartphone size={14} />
-                                    <span>App Store</span>
+                                    <span>{t.sections.appStore}</span>
                                 </a>
                                 <a href="#" className="flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors text-[11px] font-bold">
                                     <Smartphone size={14} />
-                                    <span>Google Play</span>
+                                    <span>{t.sections.googlePlay}</span>
                                 </a>
                             </div>
                         </div>
@@ -93,7 +96,7 @@ export default function DefaultFooter({ title }: FooterProps) {
                     {/* Categories Links */}
                     <div className="lg:col-span-3">
                         <h4 className="text-sm font-black uppercase tracking-wider text-primary mb-4">
-                            Categories
+                            {t.sections.categoriesLabel}
                         </h4>
                         <ul className="flex flex-col gap-2.5 text-sm text-gray-600">
                             {categories.map((cat) => (
@@ -102,13 +105,16 @@ export default function DefaultFooter({ title }: FooterProps) {
                                         href={`/categories?id=${cat._id}`}
                                         className="hover:text-secondary transition-colors"
                                     >
-                                        {cat.name || cat.ar_name}
+                                        {getLocalized(cat)}
                                     </Link>
                                 </li>
                             ))}
+                            <span className="px-3 py-1 bg-gray-50 rounded-lg text-xs font-bold text-gray-700 border border-gray-200/80 shadow-xs">
+                                {t.sections.cashOnDelivery}
+                            </span>
                             <li>
                                 <Link href="/categories" className="text-secondary font-bold hover:underline inline-flex items-center gap-1">
-                                    View All Categories &rarr;
+                                    {t.sections.viewAllCategories} &rarr;
                                 </Link>
                             </li>
                         </ul>
@@ -117,41 +123,49 @@ export default function DefaultFooter({ title }: FooterProps) {
                     {/* Customer Support & Policies */}
                     <div className="lg:col-span-2">
                         <h4 className="text-sm font-black uppercase tracking-wider text-primary mb-4">
-                            Customer Care
+                            {t.sections.customerCare}
                         </h4>
                         <ul className="flex flex-col gap-2.5 text-sm text-gray-600">
-                            <li><Link href="/order-tracking" className="hover:text-secondary transition-colors">Track Your Order</Link></li>
-                            <li><Link href="/categories" className="hover:text-secondary transition-colors">Shipping & Delivery</Link></li>
-                            <li><Link href="/favourite" className="hover:text-secondary transition-colors">Wishlist & Favorites</Link></li>
-                            <li><Link href="/cart" className="hover:text-secondary transition-colors">Cart & Checkout</Link></li>
-                            <li><a href="#" className="hover:text-secondary transition-colors">14-Day Returns Policy</a></li>
-                            <li><a href="#" className="hover:text-secondary transition-colors">Help Center & FAQs</a></li>
+                            <li><Link href="/order-tracking" className="hover:text-secondary transition-colors">{t.sections.trackYourOrder}</Link></li>
+                            <li><Link href="/shipping-returns" className="hover:text-secondary transition-colors">{t.sections.shippingReturns}</Link></li>
+                            <li><Link href="/favourite" className="hover:text-secondary transition-colors">{t.sections.wishlistFavorites}</Link></li>
+                            <li><Link href="/cart" className="hover:text-secondary transition-colors">{t.sections.cartCheckout}</Link></li>
+                            <li><Link href="/shipping-returns" className="hover:text-secondary transition-colors">{t.sections.returnsPolicy}</Link></li>
+                            <li><a href="#" className="hover:text-secondary transition-colors">{t.sections.helpCenterFaqs}</a></li>
                         </ul>
                     </div>
 
                     {/* Contact Info & Hours */}
                     <div className="lg:col-span-3 flex flex-col gap-3">
                         <h4 className="text-sm font-black uppercase tracking-wider text-primary mb-2">
-                            Store Contact
+                            {t.sections.storeContact}
                         </h4>
-                        {ecomData?.address && (
-                            <div className="flex items-start gap-2.5 text-sm text-gray-600">
-                                <MapPin size={18} className="text-secondary shrink-0 mt-0.5" />
-                                <span>{ecomData.address}</span>
-                            </div>
-                        )}
-                        {ecomData?.phone && (
-                            <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                                <Phone size={18} className="text-secondary shrink-0" />
+                        <div className="flex items-start gap-2.5 text-sm text-gray-600">
+                            <MapPin size={18} className="text-secondary shrink-0 mt-0.5" />
+                            <span>{ecomData?.address || '123 Commercial Avenue, Suite 400'}</span>
+                        </div>
+                        <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                            <Phone size={18} className="text-secondary shrink-0" />
+                            {ecomData?.phone ? (
                                 <a href={`tel:${ecomData.phone}`} className="hover:text-secondary">{ecomData.phone}</a>
-                            </div>
-                        )}
-                        {ecomData?.email && (
-                            <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                                <Mail size={18} className="text-secondary shrink-0" />
+                            ) : (
+                                <span>+1 (800) 123-4567</span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                            <Mail size={18} className="text-secondary shrink-0" />
+                            {ecomData?.email ? (
                                 <a href={`mailto:${ecomData.email}`} className="hover:text-secondary">{ecomData.email}</a>
-                            </div>
-                        )}
+                            ) : (
+                                <span>{`support@${storeName ? storeName.toLowerCase().replace(/\s+/g, '') : 'store'}.com`}</span>
+                            )}
+                        </div>
+
+                        {/* Working hours */}
+                        <div className="p-3 bg-gray-50 rounded-xl mt-2 text-xs text-gray-500">
+                            <strong className="text-primary block font-bold mb-0.5">{t.sections.supportHours}</strong>
+                            {t.sections.everydaySupportHours}
+                        </div>
                     </div>
                 </div>
 
@@ -159,11 +173,11 @@ export default function DefaultFooter({ title }: FooterProps) {
                 <div className="py-6 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-600">
                         <CreditCard size={16} className="text-secondary" />
-                        <span>Accepted Payment Methods:</span>
+                        <span>{t.sections.acceptedPaymentMethods}</span>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                        {['Visa', 'MasterCard', 'Meeza', 'Apple Pay', 'Cash on Delivery'].map((method) => (
+                        {['Visa', 'MasterCard', 'Meeza', 'Apple Pay'].map((method) => (
                             <span
                                 key={method}
                                 className="px-3 py-1 bg-gray-50 rounded-lg text-xs font-bold text-gray-700 border border-gray-200/80 shadow-xs"
@@ -177,17 +191,17 @@ export default function DefaultFooter({ title }: FooterProps) {
                 {/* 3. Bottom Copyright & Security */}
                 <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
                     <p className="flex items-center gap-1">
-                        &copy; {currentYear} {storeName || 'Store'}. All rights reserved.
+                        &copy; {currentYear} {storeName || 'Store'}. {footer.copyright || t.sections.allRightsReserved}
                     </p>
 
                     <div className="flex flex-wrap items-center gap-4 text-gray-500 font-medium">
                         <span className="flex items-center gap-1 text-emerald-600 font-bold">
-                            <ShieldCheck size={14} /> 256-Bit SSL Secured
+                        <ShieldCheck size={14} /> {t.sections.sslSecured}
                         </span>
                         <span>&bull;</span>
-                        <a href="#" className="hover:underline">Privacy Policy</a>
+                        <a href="#" className="hover:underline">{t.sections.privacyPolicy}</a>
                         <span>&bull;</span>
-                        <a href="#" className="hover:underline">Terms & Conditions</a>
+                        <a href="#" className="hover:underline">{t.sections.termsConditions}</a>
                     </div>
                 </div>
             </div>

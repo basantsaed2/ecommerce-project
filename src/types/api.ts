@@ -15,6 +15,7 @@ export interface Category {
     ar_name?: string;
     image: string;
     banner?: string;
+    is_featured?: boolean;
     product_quantity: number;
     parentId?: string;
     createdAt: string;
@@ -105,6 +106,7 @@ export interface Brand {
     name: string;
     ar_name?: string;
     logo: string;
+    is_featured?: boolean;
     createdAt: string;
     updatedAt: string;
 }

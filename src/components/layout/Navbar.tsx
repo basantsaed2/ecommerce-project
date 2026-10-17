@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
     Home, Grid, Heart, ShoppingCart, User,
-    Menu, X, Briefcase, LogIn, LogOut, Package
+    Menu, X, Briefcase, LogIn, LogOut, Package, Sun, Moon, Info
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import { logout } from '@/store/slices/authSlice';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -18,7 +19,8 @@ export default function Navbar() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    const { storeName, logoUrl, templateSlug } = useStoreSettings();
+    const { settings, storeName, logoUrl, templateSlug, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings();
+    const { t } = useTranslation();
 
     const token = useSelector((state: RootState) => state.auth.token);
     const user = useSelector((state: RootState) => state.auth.user);
@@ -36,12 +38,29 @@ export default function Navbar() {
         return pathname?.startsWith(path);
     };
 
-    const navLinks = [
-        { name: 'Home', href: '/', icon: Home },
-        { name: 'Category', href: '/categories', icon: Grid },
-        { name: 'Brands', href: '/brands', icon: Briefcase },
-        { name: 'Track Order', href: '/order-tracking', icon: Package },
-    ];
+    const headerLinks = settings.ecommerceData?.[0]?.header?.links || [];
+    const linkConfig: Record<string, { name: string; href: string; icon: any }> = {
+        home: { name: t.nav.home, href: '/', icon: Home },
+        about: { name: t.nav.about, href: '/about', icon: Info },
+        category: { name: t.nav.categories, href: '/categories', icon: Grid },
+        categories: { name: t.nav.categories, href: '/categories', icon: Grid },
+        products: { name: t.nav.products, href: '/products', icon: ShoppingCart },
+        product: { name: t.nav.products, href: '/products', icon: ShoppingCart },
+        brands: { name: t.nav.brands, href: '/brands', icon: Briefcase },
+        brand: { name: t.nav.brands, href: '/brands', icon: Briefcase },
+        'track-order': { name: t.nav.trackOrder, href: '/order-tracking', icon: Package },
+        'order-tracking': { name: t.nav.trackOrder, href: '/order-tracking', icon: Package },
+    };
+    const fallbackLinks = ['home', 'category', 'brands', 'track-order'];
+    const navLinks = (headerLinks.length ? headerLinks : fallbackLinks)
+        .map((link) => {
+            const normalizedLink = link.toLowerCase().trim();
+            return linkConfig[normalizedLink as keyof typeof linkConfig] || {
+                name: normalizedLink.replace(/-/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
+                href: `/${normalizedLink.replace(/\s+/g, '-')}`,
+                icon: Grid,
+            };
+        });
 
     const handleLogout = () => {
         dispatch(logout());
@@ -51,7 +70,7 @@ export default function Navbar() {
 
     const authRoutes = ["/login", "/signup"];
     if (authRoutes.includes(pathname)) return null;
-    if (templateSlug === 'marwan') return null;
+    if (templateSlug === 'marwan' || templateSlug === 'example') return null;
 
     // منع الرندر غير المتوافق مع السيرفر حتى يكتمل التحميل
     if (!mounted) return <nav className="h-20 bg-white border-b border-gray-100" />;
@@ -88,7 +107,35 @@ export default function Navbar() {
                     ))}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 ">
+                    <button
+                        type="button"
+                        onClick={toggleLanguage}
+                        aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                        title={language === 'ar' ? 'English' : 'العربية'}
+                        className="h-10 min-w-10 rounded-xl border border-gray-200 bg-white px-2 text-xs font-black text-primary transition hover:border-secondary hover:text-secondary"
+                    >
+                        {language.toUpperCase()}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                        aria-pressed={themeMode === 'dark'}
+                        title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
+                        style={{
+                            backgroundColor: 'var(--color-secondary)',
+                            borderColor: 'var(--color-primary)',
+                            color: 'var(--color-primary)',
+                        }}
+                    >
+                        {themeMode === 'dark' ? (
+                            <Sun size={18} className="transition-transform duration-300 rotate-0" />
+                        ) : (
+                            <Moon size={18} className="transition-transform duration-300 rotate-[-18deg]" />
+                        )}
+                    </button>
                     {/* Icons (Desktop/Tablet) */}
                     <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1">
                         {isLoggedIn && (
@@ -110,8 +157,8 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center gap-3 ml-2">
                         {!isLoggedIn ? (
                             <>
-                                <Link href="/login" className="px-5 py-2.5 text-sm font-bold text-primary hover:bg-gray-50 rounded-xl transition">Login</Link>
-                                <Link href="/signup" className="px-5 py-2.5 text-sm font-bold bg-primary text-white rounded-xl hover:shadow-lg transition">Sign Up</Link>
+                                <Link href="/login" className="px-5 py-2.5 text-sm font-bold text-primary hover:bg-gray-50 rounded-xl transition">{t.nav.login}</Link>
+                                <Link href="/signup" className="px-5 py-2.5 text-sm font-bold bg-primary text-white rounded-xl hover:shadow-lg transition">{t.nav.register}</Link>
                             </>
                         ) : (
                             <div className="flex items-center gap-3">
@@ -144,15 +191,15 @@ export default function Navbar() {
             <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 px-4 py-3 z-50 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 <Link href="/" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/') ? 'text-secondary' : 'text-gray-400'}`}>
                     <Home size={22} />
-                    <span className="text-[10px] font-bold">Home</span>
+                    <span className="text-[10px] font-bold">{t.nav.home}</span>
                 </Link>
                 <Link href="/categories" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/categories') ? 'text-secondary' : 'text-gray-400'}`}>
                     <Grid size={22} />
-                    <span className="text-[10px] font-bold">Menu</span>
+                    <span className="text-[10px] font-bold">{t.nav.categories}</span>
                 </Link>
                 <Link href="/cart" className={`relative flex flex-col items-center gap-1 transition-colors ${isActive('/cart') || isActive('/checkout') ? 'text-secondary' : 'text-gray-400'}`}>
                     <ShoppingCart size={22} />
-                    <span className="text-[10px] font-bold">Cart</span>
+                    <span className="text-[10px] font-bold">{t.nav.cart}</span>
                     {cartCount > 0 && (
                         <span className="absolute -top-1 right-0 bg-secondary text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                             {cartCount}
@@ -162,12 +209,12 @@ export default function Navbar() {
                 {isLoggedIn && (
                     <Link href="/favourite" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/favourite') ? 'text-secondary' : 'text-gray-400'}`}>
                         <Heart size={22} />
-                        <span className="text-[10px] font-bold">Wishlist</span>
+                        <span className="text-[10px] font-bold">{t.nav.wishlist}</span>
                     </Link>
                 )}
                 <Link href={isLoggedIn ? "/profile" : "/login"} className={`flex flex-col items-center gap-1 transition-colors ${isActive('/profile') || isActive('/login') ? 'text-secondary' : 'text-gray-400'}`}>
                     <User size={22} />
-                    <span className="text-[10px] font-bold">{isLoggedIn ? "Profile" : "Account"}</span>
+                    <span className="text-[10px] font-bold">{isLoggedIn ? t.nav.profile : t.nav.account}</span>
                 </Link>
             </div>
 
@@ -200,9 +247,9 @@ export default function Navbar() {
                         {!isLoggedIn ? (
                             <div className="flex flex-col gap-3">
                                 <Link href="/login" onClick={() => setSidebarOpen(false)} className="w-full py-4 text-center font-bold border border-gray-200 rounded-2xl flex items-center justify-center gap-2 hover:bg-gray-50 transition">
-                                    <LogIn size={18} /> Login
+                                    <LogIn size={18} /> {t.nav.login}
                                 </Link>
-                                <Link href="/signup" onClick={() => setSidebarOpen(false)} className="w-full py-4 text-center font-bold bg-primary text-white rounded-2xl">Create Account</Link>
+                                <Link href="/signup" onClick={() => setSidebarOpen(false)} className="w-full py-4 text-center font-bold bg-primary text-white rounded-2xl">{t.auth.signUpButton}</Link>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -220,7 +267,7 @@ export default function Navbar() {
                                     </div>
                                 </div>
                                 <button onClick={handleLogout} className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-bold flex items-center justify-center gap-2">
-                                    <LogOut size={18} /> Logout
+                                    <LogOut size={18} /> {t.nav.logout}
                                 </button>
                             </div>
                         )}

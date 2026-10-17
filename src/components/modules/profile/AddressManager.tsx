@@ -15,19 +15,20 @@ import {
 import { Address, AddressListsResponse } from '@/types/address';
 import SearchableSelect from '@/components/ui/SearchableSelect';
 import DeleteDialog from '@/components/ui/DeleteDialog';
-
-const addressSchema = z.object({
-    country: z.string().min(1, "Country is required"),
-    city: z.string().min(1, "City is required"),
-    zone: z.string().min(1, "Zone is required"),
-    street: z.string().min(3, "Street must be at least 3 characters"),
-    buildingNumber: z.string().min(1, "Building number is required"),
-    floorNumber: z.string().optional(),
-    apartmentNumber: z.string().optional(),
-    uniqueIdentifier: z.string().optional(),
-});
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function AddressManager() {
+    const { t } = useTranslation();
+    const addressSchema = z.object({
+        country: z.string().min(1, t.profile.countryRequired),
+        city: z.string().min(1, t.profile.cityRequired),
+        zone: z.string().min(1, t.profile.zoneRequired),
+        street: z.string().min(3, t.profile.streetRequired),
+        buildingNumber: z.string().min(1, t.profile.buildingRequired),
+        floorNumber: z.string().optional(),
+        apartmentNumber: z.string().optional(),
+        uniqueIdentifier: z.string().optional(),
+    });
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
@@ -46,19 +47,19 @@ export default function AddressManager() {
     const { mutate: addAddress, isPending: isAdding } = usePost(
         '/address',
         ['addresses'],
-        'Address added successfully'
+        t.profile.addressAdded
     );
 
     const { mutate: updateAddress, isPending: isUpdating } = useUpdate(
         '/address',
         ['addresses'],
-        'Address updated successfully'
+        t.profile.addressUpdated
     );
 
     const { mutate: deleteAddress, isPending: isDeleting } = useDelete(
         '/address',
         ['addresses'],
-        'Address deleted successfully'
+        t.profile.addressDeleted
     );
 
     const addresses: Address[] = addressesData?.data?.addresses || addressesData?.addresses || [];
@@ -151,8 +152,8 @@ export default function AddressManager() {
                         <MapPin size={24} />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-primary tracking-tight">Shipping Addresses</h2>
-                        <p className="text-gray-400 text-sm font-medium">Manage your delivery locations</p>
+                        <h2 className="text-2xl font-black text-primary tracking-tight">{t.profile.addresses}</h2>
+                        <p className="text-gray-400 text-sm font-medium">{t.profile.addressSubtitle}</p>
                     </div>
                 </div>
                 <button
@@ -163,29 +164,29 @@ export default function AddressManager() {
                     className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl font-bold hover:bg-black transition-all active:scale-95 shadow-lg shadow-primary/20"
                 >
                     <Plus size={20} />
-                    Add New
+                    {t.profile.addNew}
                 </button>
             </div>
 
             {isFetching ? (
                 <div className="flex flex-col items-center justify-center py-20 grayscale opacity-20">
                     <Loader2 className="animate-spin mb-4" size={40} />
-                    <p className="font-bold uppercase tracking-widest text-xs">Loading addresses...</p>
+                    <p className="font-bold uppercase tracking-widest text-xs">{t.profile.loadingAddresses}</p>
                 </div>
             ) : addresses.length === 0 ? (
                 <div className="bg-white rounded-[40px] p-16 text-center border-2 border-dashed border-gray-100">
                     <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
                         <MapPin size={40} />
                     </div>
-                    <h3 className="text-xl font-black text-primary mb-2">No addresses yet</h3>
+                    <h3 className="text-xl font-black text-primary mb-2">{t.profile.noAddresses}</h3>
                     <p className="text-gray-400 font-medium max-w-xs mx-auto mb-8">
-                        Add your first shipping address to experience faster checkouts.
+                        {t.profile.firstAddressPrompt}
                     </p>
                     <button
                         onClick={() => setIsFormOpen(true)}
                         className="px-8 py-3 bg-secondary text-white rounded-xl font-bold hover:shadow-lg transition-all"
                     >
-                        Create Address
+                        {t.profile.createAddress}
                     </button>
                 </div>
             ) : (
@@ -223,12 +224,12 @@ export default function AddressManager() {
                                     {addr.street}
                                 </p>
                                 <p className="text-gray-400 font-medium text-sm">
-                                    Building {addr.buildingNumber}
-                                    {addr.floorNumber && `, Floor ${addr.floorNumber}`}
-                                    {addr.apartmentNumber && `, Apt ${addr.apartmentNumber}`}
+                                    {t.profile.addressBuilding} {addr.buildingNumber}
+                                    {addr.floorNumber && `, ${t.profile.floorShort} ${addr.floorNumber}`}
+                                    {addr.apartmentNumber && `, ${t.profile.apartmentShort} ${addr.apartmentNumber}`}
                                 </p>
                                 <p className="text-gray-500 font-bold text-xs uppercase tracking-wider pt-2">
-                                    {addr.zone?.name || 'Zone'}, {addr.city?.name || 'City'}, {addr.country?.name || 'Country'}
+                                    {addr.zone?.name || t.profile.unknownZone}, {addr.city?.name || t.profile.unknownCity}, {addr.country?.name || t.profile.unknownCountry}
                                 </p>
                             </div>
                         </div>
@@ -246,9 +247,9 @@ export default function AddressManager() {
                             <div className="flex items-center justify-between mb-10">
                                 <div>
                                     <h3 className="text-3xl font-black text-primary tracking-tighter">
-                                        {editingAddress ? 'Edit' : 'New'} <span className="text-secondary italic">Address.</span>
+                                        {editingAddress ? t.profile.editAddress : t.profile.newAddress}
                                     </h3>
-                                    <p className="text-gray-400 font-medium text-sm mt-1">Please fill in the details below</p>
+                                    <p className="text-gray-400 font-medium text-sm mt-1">{t.profile.addressFormPrompt}</p>
                                 </div>
                                 <button
                                     onClick={() => setIsFormOpen(false)}
@@ -262,7 +263,7 @@ export default function AddressManager() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* Country */}
                                     <SearchableSelect
-                                        label="Country"
+                                        label={t.profile.country}
                                         options={lists.countries || []}
                                         value={selectedCountry}
                                         onChange={(val) => {
@@ -271,12 +272,12 @@ export default function AddressManager() {
                                             setValue('zone', '');
                                         }}
                                         error={errors.country?.message as string}
-                                        placeholder="Pick Country"
+                                        placeholder={t.profile.pickCountry}
                                     />
 
                                     {/* City */}
                                     <SearchableSelect
-                                        label="City"
+                                        label={t.profile.city}
                                         options={filteredCities}
                                         value={selectedCity}
                                         onChange={(val) => {
@@ -284,65 +285,65 @@ export default function AddressManager() {
                                             setValue('zone', '');
                                         }}
                                         error={errors.city?.message as string}
-                                        placeholder="Pick City"
+                                        placeholder={t.profile.pickCity}
                                         disabled={!selectedCountry}
                                     />
 
                                     {/* Zone */}
                                     <SearchableSelect
-                                        label="Zone"
+                                        label={t.profile.zone}
                                         options={filteredZones}
                                         value={watch('zone')}
                                         onChange={(val) => setValue('zone', val)}
                                         error={errors.zone?.message as string}
-                                        placeholder="Pick Zone"
+                                        placeholder={t.profile.pickZone}
                                         disabled={!selectedCity}
                                     />
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Street Name</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.profile.streetName}</label>
                                         <input
                                             {...register('street')}
                                             className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium text-sm"
-                                            placeholder="e.g. Al-Hamra St."
+                                            placeholder={t.profile.streetPlaceholder}
                                         />
                                         {errors.street && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.street.message as string}</p>}
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Building Number</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.profile.buildingNumber}</label>
                                         <input
                                             {...register('buildingNumber')}
                                             className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium text-sm"
-                                            placeholder="e.g. 42"
+                                            placeholder={t.profile.buildingPlaceholder}
                                         />
                                         {errors.buildingNumber && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.buildingNumber.message as string}</p>}
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Floor</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.profile.floor}</label>
                                         <input
                                             {...register('floorNumber')}
                                             type="number"
-                                            placeholder='e.g. 12'
+                                            placeholder={t.profile.floorPlaceholder}
                                             className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium text-sm"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Apartment</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.profile.apartment}</label>
                                         <input
                                             type="number"
-                                            placeholder='e.g. 12'
+                                            placeholder={t.profile.apartmentPlaceholder}
                                             {...register('apartmentNumber')}
                                             className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium text-sm"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Landmark</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.profile.landmark}</label>
                                         <input
                                             {...register('uniqueIdentifier')}
                                             className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium text-sm"
-                                            placeholder="e.g. Near Mosque"
+                                            placeholder={t.profile.landmarkPlaceholder}
                                         />
                                     </div>
                                 </div>
@@ -353,7 +354,7 @@ export default function AddressManager() {
                                         disabled={isAdding || isUpdating}
                                         className="w-full py-4 bg-primary text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-70 shadow-xl shadow-primary/20"
                                     >
-                                        {isAdding || isUpdating ? <Loader2 className="animate-spin" size={24} /> : editingAddress ? 'Update Base' : 'Save Address'}
+                                        {isAdding || isUpdating ? <Loader2 className="animate-spin" size={24} /> : editingAddress ? t.profile.updateAddress : t.profile.saveAddress}
                                     </button>
                                 </div>
                             </form>
@@ -364,6 +365,8 @@ export default function AddressManager() {
             {/* Delete Confirmation */}
             <DeleteDialog
                 isOpen={isDeleteDialogOpen}
+                title={t.profile.deleteAddress}
+                message={t.profile.deleteAddressConfirm}
                 onClose={() => {
                     setIsDeleteDialogOpen(false);
                     setAddressToDelete(null);

@@ -18,9 +18,11 @@ import MinimalCategories from './categories/MinimalCategories';
 import DefaultProducts from './products/DefaultProducts';
 import ModernProducts from './products/ModernProducts';
 import MinimalProducts from './products/MinimalProducts';
+import BestSellersSection from './products/BestSellersSection';
 
 import DefaultPromoBanner from './promo/DefaultPromoBanner';
 import PromotionalBanners from './promo/PromotionalBanners';
+import OffersSection from './promo/OffersSection';
 
 import DefaultBrands from './brands/DefaultBrands';
 import DefaultTestimonials from './testimonials/DefaultTestimonials';
@@ -99,11 +101,29 @@ export default function DynamicSectionRenderer({
 
             case 'best-sellers':
             case 'bestsellers':
-                return <ModernProducts key={componentKey} {...sectionProps} title={section.title || "Best Selling Products"} />;
+            case 'best-seller':
+                return <BestSellersSection key={componentKey} {...sectionProps} title={section.title || "Best Sellers"} />;
 
             case 'new-arrivals':
             case 'newarrivals':
                 return <DefaultProducts key={componentKey} {...sectionProps} title={section.title || "New Arrivals"} />;
+
+            case 'promo-banner':
+            case 'offer':
+            case 'offers':
+            case 'offer-products':
+            case 'special-offers':
+                return <OffersSection key={componentKey} {...sectionProps} />;
+
+            case 'promo':
+            case 'flash-sale':
+            case 'deals-of-the-day':
+                return <DefaultPromoBanner key={componentKey} {...sectionProps} />;
+
+            case 'promotional-banners':
+            case 'sub-banners':
+            case 'promo-grid':
+                return <PromotionalBanners key={componentKey} {...sectionProps} />;
 
             case 'brands':
             case 'brand':
@@ -112,8 +132,6 @@ export default function DynamicSectionRenderer({
                 return <DefaultBrands key={componentKey} {...sectionProps} />;
 
             // Static sections with no backend APIs are disabled
-            case 'promo-banner':
-            case 'promotional-banners':
             case 'testimonials':
             case 'reviews':
             case 'customer-reviews':

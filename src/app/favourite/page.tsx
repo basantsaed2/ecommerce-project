@@ -7,9 +7,11 @@ import { Heart, Trash2, HeartOff } from 'lucide-react';
 import Link from 'next/link';
 import ProductCard from '@/components/modules/products/ProductCard';
 import { Product } from '@/types/api';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function FavouritePage() {
     const token = useSelector((state: RootState) => state.auth.token);
+    const { t } = useTranslation();
 
     const { data, isLoading } = useGetWishlist(!!token);
     const { mutate: clearWishlist, isPending: isClearing } = useClearWishlist();
@@ -22,10 +24,10 @@ export default function FavouritePage() {
                 <div className="w-24 h-24 rounded-full bg-red-50 flex items-center justify-center">
                     <Heart size={40} className="text-red-400" />
                 </div>
-                <h1 className="text-2xl font-black text-primary">Login to see your Wishlist</h1>
-                <p className="text-gray-400 max-w-xs">Save your favourite products and access them anytime.</p>
+                <h1 className="text-2xl font-black text-primary">{t.wishlist.loginTitle}</h1>
+                <p className="text-gray-400 max-w-xs">{t.wishlist.loginDescription}</p>
                 <Link href="/login" className="px-8 py-3 bg-primary text-white rounded-2xl font-bold hover:shadow-xl transition">
-                    Login
+                    {t.auth.signInButton}
                 </Link>
             </div>
         );
@@ -38,10 +40,10 @@ export default function FavouritePage() {
                 <div>
                     <h1 className="text-3xl font-black text-primary tracking-tighter flex items-center gap-3">
                         <Heart size={28} className="text-red-500 fill-red-500" />
-                        My Wishlist
+                        {t.wishlist.title}
                     </h1>
                     <p className="text-gray-400 text-sm mt-1">
-                        {wishlistItems.length} saved {wishlistItems.length === 1 ? 'item' : 'items'}
+                        {wishlistItems.length} {wishlistItems.length === 1 ? t.wishlist.savedItem : t.wishlist.savedItems}
                     </p>
                 </div>
                 {wishlistItems.length > 0 && (
@@ -51,7 +53,7 @@ export default function FavouritePage() {
                         className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-500 font-bold rounded-2xl hover:bg-red-100 transition-all disabled:opacity-50"
                     >
                         <Trash2 size={16} />
-                        Clear All
+                        {t.wishlist.clearAll}
                     </button>
                 )}
             </div>
@@ -71,10 +73,10 @@ export default function FavouritePage() {
                     <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
                         <HeartOff size={40} className="text-gray-300" />
                     </div>
-                    <h2 className="text-xl font-black text-gray-500">Your wishlist is empty</h2>
-                    <p className="text-gray-400 max-w-xs text-sm">Browse our products and add your favourites here.</p>
+                    <h2 className="text-xl font-black text-gray-500">{t.wishlist.emptyTitle}</h2>
+                    <p className="text-gray-400 max-w-xs text-sm">{t.wishlist.emptyDescription}</p>
                     <Link href="/" className="px-8 py-3 bg-primary text-white rounded-2xl font-bold hover:shadow-xl transition">
-                        Shop Now
+                        {t.home.shopNow}
                     </Link>
                 </div>
             )}

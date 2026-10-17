@@ -5,6 +5,7 @@ import { ApiResponse, Product } from '@/types/api';
 import { Loader2, Flame, Sparkles, Tag, ArrowRight } from 'lucide-react';
 import ProductCard from '@/components/modules/products/ProductCard';
 import Link from 'next/link';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ModernProductsProps {
     searchQuery?: string;
@@ -18,6 +19,7 @@ export default function ModernProducts({
     title,
     subtitle
 }: ModernProductsProps) {
+    const { t } = useTranslation();
     const { data, isLoading, error } = useGet<ApiResponse<Product>>(['products'], '/product');
     const [activeTab, setActiveTab] = useState<'all' | 'featured' | 'sale'>('all');
 
@@ -30,7 +32,7 @@ export default function ModernProducts({
     }
     if (error) return null;
 
-    const allProducts = data?.data?.data || [];
+    const allProducts = (data?.data?.data || []).filter((product) => product.is_featured === true);
 
     const searchFiltered = allProducts.filter(p =>
         !searchQuery ||
@@ -39,7 +41,7 @@ export default function ModernProducts({
     );
 
     const filtered = searchFiltered.filter(p => {
-        if (activeTab === 'featured') return p.is_featured === true || Boolean(p.discount);
+        if (activeTab === 'featured') return true;
         if (activeTab === 'sale') return Boolean(p.discount || (p.main_price && p.final_price && p.final_price < p.main_price));
         return true;
     });
@@ -49,10 +51,10 @@ export default function ModernProducts({
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
                 <div>
                     <span className="text-xs font-black uppercase tracking-widest text-secondary block mb-1">
-                        {subtitle || "Curated Showcase"}
+                        {subtitle || t.sections.curatedShowcase}
                     </span>
                     <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
-                        {title || "Featured Collections"}
+                        {title || t.sections.featuredCollections}
                     </h2>
                 </div>
 
@@ -64,7 +66,7 @@ export default function ModernProducts({
                             activeTab === 'all' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-primary'
                         }`}
                     >
-                        All ({searchFiltered.length})
+                        {t.sections.featuredCount} ({searchFiltered.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('featured')}
@@ -73,7 +75,7 @@ export default function ModernProducts({
                         }`}
                     >
                         <Sparkles size={14} className="text-secondary" />
-                        Featured
+                        {t.sections.featuredCount}
                     </button>
                     <button
                         onClick={() => setActiveTab('sale')}
@@ -82,14 +84,14 @@ export default function ModernProducts({
                         }`}
                     >
                         <Tag size={14} className="text-secondary" />
-                        On Sale
+                        {t.sections.onSale}
                     </button>
                 </div>
             </div>
 
             {filtered.length === 0 ? (
                 <div className="text-center py-16 bg-gray-50 rounded-3xl">
-                    <p className="text-gray-500 font-medium">No products in this category.</p>
+                    <p className="text-gray-500 font-medium">{t.sections.noProductsInCategory}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">

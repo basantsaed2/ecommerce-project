@@ -1,32 +1,32 @@
 "use client";
-import React, { useState } from 'react';
-import { useGet } from '@/hooks/useGet';
-import { ApiResponse, Product } from '@/types/api';
+import React from 'react';
+import { usePaginatedGet } from '@/hooks/usePaginatedGet';
+import { Product } from '@/types/api';
 import { Loader2, Search, Plus } from 'lucide-react';
 import Link from 'next/link';
 import ProductCard from '../products/ProductCard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ProductsSectionProps {
     searchQuery?: string;
 }
 
 export default function ProductsSection({ searchQuery = "" }: ProductsSectionProps) {
-    const { data, isLoading, error } = useGet<ApiResponse<Product>>(
-        ['products'],
-        '/product'
-    );
-    const [visibleItems, setVisibleItems] = useState(10);
+    const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
+        usePaginatedGet<Product>(['products', 'home-section'], '/product', 10);
+    const { t } = useTranslation();
 
     if (isLoading) return (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Loader2 className="animate-spin text-secondary" size={48} />
-            <p className="text-gray-400 font-bold animate-pulse">Loading amazing products...</p>
+            <p className="text-gray-400 font-bold animate-pulse">{t.common.loading}</p>
         </div>
     );
 
-    if (error) return null;
+    if (error) return <p role="alert" className="py-8 text-center text-red-600">{t.common.error}</p>;
 
-    const allProducts = data?.data?.data || [];
+    const allProducts = (data?.pages.flatMap((page) => page.data?.data || []) || [])
+        .filter((product) => product.is_featured === true);
 
     // Client-side filtering
     const filteredProducts = allProducts.filter(p =>
@@ -35,14 +35,7 @@ export default function ProductsSection({ searchQuery = "" }: ProductsSectionPro
         (p.ar_name && p.ar_name.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    const products = filteredProducts.slice(0, visibleItems);
-    const hasMore = visibleItems < filteredProducts.length;
-
-    const handleLoadMore = () => {
-        setVisibleItems(prev => prev + 10);
-    };
-
-    if (allProducts.length === 0) return null;
+    if (allProducts.length === 0 && !hasNextPage) return null;
 
     return (
         <section className="w-full px-2 md:px-6 py-12 relative overflow-hidden">
@@ -54,19 +47,19 @@ export default function ProductsSection({ searchQuery = "" }: ProductsSectionPro
                 <div>
                     <div className="flex items-center gap-2 mb-3">
                         <span className="w-8 h-[2px] bg-secondary" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary">Our Collection</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary">{t.home.collection}</span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-primary tracking-tighter leading-tight">
-                        {searchQuery ? 'Search' : 'Trending'} <span className="text-secondary">Products</span>
+                        {searchQuery ? t.home.featuredSearch : t.home.featured} <span className="text-secondary">{t.nav.products}</span>
                     </h2>
                     {searchQuery && (
                         <p className="text-gray-500 mt-4 font-bold flex items-center gap-2">
-                            Showing results for <span className="text-secondary italic">"{searchQuery}"</span>
+                            {t.home.showingResultsFor} <span className="text-secondary italic">&ldquo;{searchQuery}&rdquo;</span>
                         </p>
                     )}
                 </div>
                 <Link href="/categories" className="group flex items-center gap-3 bg-white border border-gray-100 px-8 py-4 rounded-[1.5rem] text-sm font-black text-primary hover:border-secondary hover:text-secondary shadow-sm hover:shadow-xl transition-all active:scale-95 shrink-0">
-                    Browse Categories <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    {t.home.browseCategories} <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
                 </Link>
             </div>
 
@@ -75,35 +68,36 @@ export default function ProductsSection({ searchQuery = "" }: ProductsSectionPro
                     <div className="w-20 h-20 bg-white shadow-xl rounded-2xl flex items-center justify-center mb-6 text-gray-300">
                         <Search size={40} />
                     </div>
-                    <h3 className="text-2xl font-black text-primary mb-2">No products found</h3>
+                    <h3 className="text-2xl font-black text-primary mb-2">{t.home.noProductsFound}</h3>
                     <p className="text-gray-500 max-w-sm mx-auto font-medium">
-                        We couldn't find anything matching your search. Try adjusting your filters or search terms.
+                        {t.home.searchNoMatch}
                     </p>
                 </div>
             ) : (
                 <>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8 lg:gap-10">
-                        {products.map((product) => (
+                        {filteredProducts.map((product) => (
                             <ProductCard key={product._id} product={product} />
                         ))}
                     </div>
-
-                    {hasMore && (
-                        <div className="mt-20 flex justify-center">
-                            <button
-                                onClick={handleLoadMore}
-                                className="group relative px-12 py-5 bg-primary text-white rounded-[2rem] font-black text-lg overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-primary/20"
-                            >
-                                <span className="relative z-10 flex items-center gap-3">
-                                    Load More Products
-                                    <Plus size={24} className="group-hover:rotate-90 transition-transform duration-500" />
-                                </span>
-                                <div className="absolute inset-0 bg-secondary translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-                            </button>
-                        </div>
-                    )}
                 </>
             )}
+            {hasNextPage && (
+                <div className="mt-20 flex justify-center">
+                    <button
+                        onClick={() => void fetchNextPage()}
+                        disabled={isFetchingNextPage}
+                        className="group relative px-12 py-5 bg-primary text-white rounded-[2rem] font-black text-lg overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-primary/20 disabled:cursor-wait disabled:opacity-70"
+                    >
+                        <span className="relative z-10 flex items-center gap-3">
+                            {isFetchingNextPage ? t.common.loadingMore : t.product.loadMore}
+                            <Plus size={24} className="group-hover:rotate-90 transition-transform duration-500" />
+                        </span>
+                        <div className="absolute inset-0 bg-secondary translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                    </button>
+                </div>
+            )}
+            {error && <p role="alert" className="mt-4 text-center text-red-600">{t.common.error}</p>}
         </section>
     );
 }

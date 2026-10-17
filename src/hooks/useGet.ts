@@ -1,5 +1,6 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import axiosInstance from '@/api/axiosInstance';
+import { getCurrentLanguage } from '@/utils/language';
 
 export const useGet = <T>(
     key: any[],
@@ -7,7 +8,7 @@ export const useGet = <T>(
     options?: Omit<UseQueryOptions<T, Error>, 'queryKey' | 'queryFn'>
 ) => {
     return useQuery<T, Error>({
-        queryKey: key,
+        queryKey: [...key, getCurrentLanguage()],
         queryFn: async () => {
             const { data } = await axiosInstance.get<T>(url);
             return data;

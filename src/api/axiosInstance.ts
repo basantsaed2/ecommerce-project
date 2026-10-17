@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getCookie, deleteCookie } from 'cookies-next';
 import { getSessionId } from '@/utils/session';
+import { getCurrentLanguage } from '@/utils/language';
 
 const axiosInstance = axios.create({
     baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api/store`,
@@ -13,7 +14,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = getCookie('token');
+        const token = typeof window !== 'undefined' ? getCookie('token') : undefined;
         if (config.headers) {
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
@@ -22,6 +23,10 @@ axiosInstance.interceptors.request.use(
             if (sessionId) {
                 config.headers['x-session-id'] = sessionId;
             }
+            config.params = {
+                ...config.params,
+                lang: getCurrentLanguage(),
+            };
         }
         return config;
     },

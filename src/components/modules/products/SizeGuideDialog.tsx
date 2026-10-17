@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, Ruler, Sparkles } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SizeGuideDialogProps {
     isOpen: boolean;
@@ -9,6 +10,7 @@ interface SizeGuideDialogProps {
 }
 
 export default function SizeGuideDialog({ isOpen, onClose }: SizeGuideDialogProps) {
+    const { t } = useTranslation();
     const [unit, setUnit] = useState<'cm' | 'in'>('cm');
     const [categoryTab, setCategoryTab] = useState<'tops' | 'bottoms' | 'shoes'>('tops');
 
@@ -37,7 +39,7 @@ export default function SizeGuideDialog({ isOpen, onClose }: SizeGuideDialogProp
                 <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
                     <div className="flex items-center gap-2 text-primary">
                         <Ruler className="text-secondary" size={24} />
-                        <h3 className="text-xl font-black">Size & Fit Guide</h3>
+                        <h3 className="text-xl font-black">{t.sections.fitGuide}</h3>
                     </div>
                     <button
                         onClick={onClose}
@@ -56,7 +58,7 @@ export default function SizeGuideDialog({ isOpen, onClose }: SizeGuideDialogProp
                                 categoryTab === 'tops' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'
                             }`}
                         >
-                            Shirts & Tops
+                            {t.sections.shirtsTops}
                         </button>
                         <button
                             onClick={() => setCategoryTab('shoes')}
@@ -64,7 +66,7 @@ export default function SizeGuideDialog({ isOpen, onClose }: SizeGuideDialogProp
                                 categoryTab === 'shoes' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'
                             }`}
                         >
-                            Shoes & Footwear
+                            {t.sections.shoesFootwear}
                         </button>
                     </div>
 
@@ -83,7 +85,7 @@ export default function SizeGuideDialog({ isOpen, onClose }: SizeGuideDialogProp
                                 unit === 'in' ? 'bg-secondary text-white' : 'text-gray-500'
                             }`}
                         >
-                            Inches
+                            {t.sections.inches}
                         </button>
                     </div>
                 </div>
@@ -94,9 +96,9 @@ export default function SizeGuideDialog({ isOpen, onClose }: SizeGuideDialogProp
                         <table className="w-full text-left text-xs sm:text-sm">
                             <thead>
                                 <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold uppercase text-[11px]">
-                                    <th className="py-3 px-4 rounded-l-xl">Size</th>
-                                    <th className="py-3 px-4">Chest ({unit.toUpperCase()})</th>
-                                    <th className="py-3 px-4 rounded-r-xl">Waist ({unit.toUpperCase()})</th>
+                                    <th className="py-3 px-4 rounded-l-xl">{t.sections.size}</th>
+                                    <th className="py-3 px-4">{t.sections.chest} ({unit.toUpperCase()})</th>
+                                    <th className="py-3 px-4 rounded-r-xl">{t.sections.waist} ({unit.toUpperCase()})</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
@@ -118,7 +120,7 @@ export default function SizeGuideDialog({ isOpen, onClose }: SizeGuideDialogProp
                                     <th className="py-3 px-4 rounded-l-xl">EU</th>
                                     <th className="py-3 px-4">US</th>
                                     <th className="py-3 px-4">UK</th>
-                                    <th className="py-3 px-4 rounded-r-xl">Foot Length ({unit.toUpperCase()})</th>
+                                    <th className="py-3 px-4 rounded-r-xl">{t.sections.footLength} ({unit.toUpperCase()})</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
@@ -138,7 +140,7 @@ export default function SizeGuideDialog({ isOpen, onClose }: SizeGuideDialogProp
                 <div className="mt-6 p-4 bg-secondary/5 rounded-2xl border border-secondary/10 flex items-start gap-3 text-xs text-gray-600">
                     <Sparkles size={18} className="text-secondary shrink-0 mt-0.5" />
                     <p>
-                        <strong className="text-primary">Fit Tip:</strong> If you are between two sizes, we recommend sizing up for a relaxed fit, or sizing down for a tailored silhouette.
+                        <strong className="text-primary">{t.sections.fitTip}</strong> {t.sections.fitTipDesc}
                     </p>
                 </div>
             </div>

@@ -5,6 +5,7 @@ import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import DefaultTemplate from '@/components/templates/default/DefaultTemplate';
 import ExampleTemplate from '@/components/templates/example/ExampleTemplate';
 import MarwanTemplate from '@/components/templates/marwan/MarwanTemplate';
+import StoreLoader from '@/components/common/StoreLoader';
 
 interface TemplateRouterProps {
     searchQuery?: string;
@@ -17,12 +18,12 @@ export default function TemplateRouter({
     excludeKeys = [],
     className = '',
 }: TemplateRouterProps) {
-    const { templateSlug, isLoading } = useStoreSettings();
+    const { templateSlug, logoUrl, isLoading } = useStoreSettings();
 
     if (isLoading && !templateSlug) {
         return (
             <div className="flex min-h-[40vh] items-center justify-center">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-sky-200 border-t-sky-500" />
+                <StoreLoader logoUrl={logoUrl} label="Loading your store..." size="lg" />
             </div>
         );
     }

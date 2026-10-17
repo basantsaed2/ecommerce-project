@@ -8,12 +8,16 @@ import { useDispatch } from 'react-redux';
 import { addItem, syncCart } from '@/store/slices/cartSlice';
 import { AppDispatch } from '@/store/store';
 import { toast } from 'sonner';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface FrequentlyBoughtTogetherProps {
     currentProduct: Product;
 }
 
 export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyBoughtTogetherProps) {
+    const { logoUrl } = useStoreSettings();
+    const { t, getLocalized, formatPrice } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
     const { data } = useGet<ApiResponse<Product>>(['products'], '/product');
     const allProducts = data?.data?.data || [];
@@ -65,9 +69,9 @@ export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyB
                 }));
             }
             await dispatch(syncCart());
-            toast.success(`Successfully added ${activeBundleItems.length} bundle items to cart!`);
+            toast.success(t.sections.bundleSuccess);
         } catch (error) {
-            toast.error('Failed to add bundle to cart');
+            toast.error(t.sections.bundleError);
         } finally {
             setIsAddingBundle(false);
         }
@@ -78,7 +82,7 @@ export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyB
             <div className="flex items-center gap-2 mb-6">
                 <Sparkles size={20} className="text-secondary" />
                 <h3 className="text-lg sm:text-xl font-black text-primary">
-                    Frequently Bought Together
+                    {t.sections.frequentlyBought}
                 </h3>
             </div>
 
@@ -90,7 +94,7 @@ export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyB
                         const isMain = item._id === currentProduct._id;
 
                         return (
-                            <React.Fragment key={item._id}>
+                            <React.Fragment key={`${item._id}-${idx}`}>
                                 {idx > 0 && (
                                     <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold shrink-0">
                                         <Plus size={16} />
@@ -111,18 +115,18 @@ export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyB
 
                                     <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
                                         <img
-                                            src={item.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300"}
-                                            alt={item.name}
+                                            src={item.image || item.gallery_product?.[0] || logoUrl || undefined}
+                                            alt={getLocalized(item)}
                                             className="w-full h-full object-cover"
                                         />
                                     </div>
 
                                     <div className="text-center w-full">
                                         <p className="text-[11px] font-bold text-gray-800 line-clamp-1">
-                                            {isMain ? 'This Item' : (item.name || item.ar_name)}
+                                            {isMain ? t.sections.thisItem : getLocalized(item)}
                                         </p>
                                         <p className="text-xs font-black text-secondary mt-0.5">
-                                            {(item.final_price || item.price || item.main_price || 0).toLocaleString()} EGP
+                                            {formatPrice(item.final_price || item.price || item.main_price || 0)}
                                         </p>
                                     </div>
                                 </div>
@@ -134,21 +138,20 @@ export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyB
                 {/* Bundle Summary & Add Button */}
                 <div className="lg:col-span-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-3">
                     <div>
-                        <span className="text-xs font-bold text-gray-500 block">Total for {activeBundleItems.length} items:</span>
+                        <span className="text-xs font-bold text-gray-500 block">{t.sections.totalFor} {activeBundleItems.length} {t.sections.items}:</span>
                         <div className="flex items-baseline gap-2 mt-1">
                             <span className="text-2xl font-black text-secondary">
-                                {bundleTotal.toLocaleString()}
+                                {formatPrice(bundleTotal)}
                             </span>
-                            <span className="text-sm font-bold text-gray-400">EGP</span>
                             {discountAmount > 0 && (
                                 <span className="text-xs text-gray-400 line-through">
-                                    {originalTotal.toLocaleString()} EGP
+                                    {formatPrice(originalTotal)}
                                 </span>
                             )}
                         </div>
                         {discountAmount > 0 && (
                             <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md mt-1 inline-block">
-                                Save {discountAmount.toLocaleString()} EGP on this bundle
+                                {t.product.save} {formatPrice(discountAmount)} {t.sections.saveBundle}
                             </span>
                         )}
                     </div>
@@ -163,7 +166,7 @@ export default function FrequentlyBoughtTogether({ currentProduct }: FrequentlyB
                         ) : (
                             <ShoppingCart size={16} />
                         )}
-                        <span>Add Bundle to Cart</span>
+                        <span>{isAddingBundle ? t.sections.addingBundle : t.sections.addBundle}</span>
                     </button>
                 </div>
             </div>

@@ -10,16 +10,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials, setIncompleteUser } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-
-const otpSchema = z.object({
-    otp: z.string().length(6, "OTP must be 6 digits"),
-});
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function VerifyOtpPage() {
     const dispatch = useDispatch();
     const router = useRouter();
     const incompleteUser = useSelector((state: any) => state.auth.incompleteUser);
     const [timer, setTimer] = useState(60);
+    const { t, isRtl } = useTranslation();
+    const otpSchema = z.object({
+        otp: z.string().length(6, t.auth.codeLabel),
+    });
 
     useEffect(() => {
         if (!incompleteUser) {
@@ -37,13 +38,13 @@ export default function VerifyOtpPage() {
     const { mutate: verifyOtp, isPending: isVerifying } = usePost(
         '/auth/verify-otp',
         ['user'],
-        'OTP Verified Successfully!'
+        t.auth.otpVerified
     );
 
     const { mutate: resendOtp, isPending: isResending } = usePost(
         '/auth/resend-otp',
         [],
-        'New OTP sent to your email/phone'
+        t.auth.otpResent
     );
 
     const { register, handleSubmit, formState: { errors } } = useForm({
@@ -103,10 +104,10 @@ export default function VerifyOtpPage() {
                 <div className="relative z-10 text-white max-w-md">
                     <ShieldCheck className="w-24 h-24 text-secondary mb-8" />
                     <h2 className="text-5xl font-black leading-tight mb-6 tracking-tighter">
-                        Secure Your <br /> <span className="text-secondary italic">Account.</span>
+                        {t.auth.secureYourAccount}
                     </h2>
                     <p className="text-lg opacity-80 leading-relaxed font-medium">
-                        Verification helps us ensure that your account remains safe and exclusively accessible by you.
+                        {t.auth.securityDescription}
                     </p>
                 </div>
             </div>
@@ -117,15 +118,15 @@ export default function VerifyOtpPage() {
                         <Link href="/" className="text-2xl font-black tracking-tighter text-primary mb-8 inline-block hover:opacity-80 transition">
                             STORE<span className="text-secondary">.</span>
                         </Link>
-                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Verify OTP</h1>
+                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{t.auth.verifyOtp}</h1>
                         <p className="text-gray-500 mt-3 font-medium">
-                            We've sent a 6-digit code to <span className="text-primary font-bold">{incompleteUser.identifier}</span>
+                            {t.auth.sentCode} <span className="text-primary font-bold">{incompleteUser.identifier}</span>
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         <div className="flex flex-col gap-3">
-                            <label className="text-sm font-bold text-gray-700 ml-1">6-Digit Code</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t.auth.codeLabel}</label>
                             <div className="relative group">
                                 <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                 <input
@@ -147,14 +148,14 @@ export default function VerifyOtpPage() {
                             {isVerifying ? (
                                 <Loader2 className="animate-spin" size={24} />
                             ) : (
-                                <>Verify & Continue <ArrowRight size={22} /></>
+                                <>{t.auth.verifyContinue} <ArrowRight size={22} className={isRtl ? 'rotate-180' : ''} /></>
                             )}
                         </button>
                     </form>
 
                     <div className="mt-12 text-center border-t border-gray-100 pt-8">
                         <p className="text-gray-500 font-semibold italic mb-4">
-                            Didn't receive the code?
+                            {t.auth.didntReceiveCode}
                         </p>
                         <button
                             onClick={handleResend}
@@ -166,7 +167,7 @@ export default function VerifyOtpPage() {
                             ) : (
                                 <RefreshCw size={20} className={timer > 0 ? '' : 'animate-pulse'} />
                             )}
-                            RESEND CODE {timer > 0 && `(${timer}s)`}
+                            {t.auth.resendCode} {timer > 0 && `(${timer}s)`}
                         </button>
                     </div>
                 </div>

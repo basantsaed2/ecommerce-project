@@ -4,6 +4,8 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Category } from '@/types/api';
 import { Loader2, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ModernCategoriesProps {
     searchQuery?: string;
@@ -17,6 +19,8 @@ export default function ModernCategories({
     title,
     subtitle
 }: ModernCategoriesProps) {
+    const { logoUrl } = useStoreSettings();
+    const { t, getLocalized } = useTranslation();
     const { data, isLoading, error } = useGet<ApiResponse<Category>>(['categories'], '/category');
 
     if (isLoading) {
@@ -28,7 +32,7 @@ export default function ModernCategories({
     }
     if (error) return null;
 
-    const allCategories = data?.data?.data || [];
+    const allCategories = (data?.data?.data || []).filter((category) => category.is_featured === true);
     const categories = allCategories.filter(c => 
         !searchQuery || 
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -42,17 +46,17 @@ export default function ModernCategories({
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
                 <div>
                     <span className="text-xs font-black uppercase tracking-widest text-secondary block mb-1">
-                        {subtitle || "Categories Overview"}
+                        {subtitle || t.sections.categoryOverview}
                     </span>
                     <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
-                        {title || "Shop by Category"}
+                        {title || t.sections.featuredCategories}
                     </h2>
                 </div>
                 <Link 
                     href="/categories" 
                     className="text-sm font-bold text-secondary hover:underline flex items-center gap-1"
                 >
-                    Explore all categories <ArrowUpRight size={16} />
+                    {t.sections.exploreAllCategories} <ArrowUpRight size={16} />
                 </Link>
             </div>
 
@@ -64,16 +68,16 @@ export default function ModernCategories({
                         className="group relative h-48 sm:h-56 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100"
                     >
                         <img
-                            src={cat.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60"}
-                            alt={cat.name}
+                            src={cat.image || logoUrl || undefined}
+                            alt={getLocalized(cat)}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-5 text-white">
                             <h3 className="text-base sm:text-lg font-black tracking-tight group-hover:text-secondary transition-colors">
-                                {cat.name || cat.ar_name}
+                                {getLocalized(cat)}
                             </h3>
                             <div className="flex items-center justify-between text-xs text-gray-300 mt-1">
-                                <span>{cat.product_quantity ? `${cat.product_quantity} Products` : 'Explore'}</span>
+                                <span>{cat.product_quantity ? `${cat.product_quantity} ${t.sections.productsCount}` : t.sections.explore}</span>
                                 <span className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white group-hover:bg-secondary transition-colors">
                                     <ArrowUpRight size={14} />
                                 </span>

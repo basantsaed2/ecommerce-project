@@ -9,21 +9,22 @@ import { usePost } from '@/hooks/usePost';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
-
-const completeProfileSchema = z.object({
-    name: z.string().min(2, "name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(6, "Confirm password is required"),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-});
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function CompleteProfilePage() {
     const dispatch = useDispatch();
     const router = useRouter();
     const incompleteUser = useSelector((state: any) => state.auth.incompleteUser);
+    const { t, isRtl } = useTranslation();
+    const completeProfileSchema = z.object({
+        name: z.string().min(2, t.auth.nameTooShort),
+        email: z.string().email(t.auth.invalidEmail),
+        password: z.string().min(6, t.auth.passwordTooShort),
+        confirmPassword: z.string().min(6, t.auth.confirmPasswordRequired),
+    }).refine((data) => data.password === data.confirmPassword, {
+        message: t.auth.passwordsMismatch,
+        path: ["confirmPassword"],
+    });
 
     useEffect(() => {
         if (!incompleteUser) {
@@ -34,7 +35,7 @@ export default function CompleteProfilePage() {
     const { mutate: completeProfile, isPending } = usePost(
         '/auth/complete-profile',
         ['user'],
-        'Profile activated successfully! Welcome to STORE.'
+        t.auth.welcomeBack
     );
 
     const { register, handleSubmit, formState: { errors } } = useForm({
@@ -82,10 +83,10 @@ export default function CompleteProfilePage() {
                         <User className="w-10 h-10 text-primary" />
                     </div>
                     <h2 className="text-5xl font-black leading-tight mb-6 tracking-tighter">
-                        Complete Your <br /> <span className="text-secondary italic">Profile.</span>
+                        {t.auth.createProfile}
                     </h2>
                     <p className="text-lg opacity-80 leading-relaxed font-medium">
-                        Just a few more details to unlock the full shopping experience and connect your history.
+                        {t.auth.profileDescription}
                     </p>
                 </div>
             </div>
@@ -96,19 +97,19 @@ export default function CompleteProfilePage() {
                         <Link href="/" className="text-2xl font-black tracking-tighter text-primary mb-8 inline-block hover:opacity-80 transition">
                             STORE<span className="text-secondary">.</span>
                         </Link>
-                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Set Your Password</h1>
-                        <p className="text-gray-500 mt-3 font-medium">Hello <span className="text-primary font-bold">{incompleteUser.identifier}</span>, let's finish your account.</p>
+                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{t.auth.setPassword}</h1>
+                        <p className="text-gray-500 mt-3 font-medium">{t.auth.finishAccount} <span className="text-primary font-bold">{incompleteUser.identifier}</span></p>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">name</label>
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t.auth.fullName}</label>
                             <div className="relative group">
                                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                 <input
                                     {...register("name")}
                                     type="text"
-                                    placeholder="Choose a name"
+                                    placeholder={t.auth.chooseName}
                                     className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.name ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
                                 />
                             </div>
@@ -116,13 +117,13 @@ export default function CompleteProfilePage() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t.auth.email}</label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                 <input
                                     {...register("email")}
                                     type="email"
-                                    placeholder="Email Address"
+                                    placeholder={t.auth.email}
                                     className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${errors.email ? 'border-red-500' : 'border-gray-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition-all font-medium`}
                                 />
                             </div>
@@ -130,7 +131,7 @@ export default function CompleteProfilePage() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Create Password</label>
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t.auth.createPassword}</label>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                 <input
@@ -144,7 +145,7 @@ export default function CompleteProfilePage() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Confirm Password</label>
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t.auth.confirmPassword}</label>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                 <input
@@ -165,7 +166,7 @@ export default function CompleteProfilePage() {
                             {isPending ? (
                                 <Loader2 className="animate-spin" size={24} />
                             ) : (
-                                <>Activate Account <ArrowRight size={22} /></>
+                                <>{t.auth.activateAccount} <ArrowRight size={22} className={isRtl ? 'rotate-180' : ''} /></>
                             )}
                         </button>
                     </form>

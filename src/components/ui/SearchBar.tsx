@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SearchBarProps {
     onSearch?: (query: string) => void;
@@ -11,10 +12,11 @@ interface SearchBarProps {
 
 export default function SearchBar({ 
     onSearch, 
-    placeholder = "Search for products, categories, or brands...", 
+    placeholder, 
     className = "",
     isLoading = false 
 }: SearchBarProps) {
+    const { t } = useTranslation();
     const [query, setQuery] = useState("");
     const [isFocused, setIsFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +72,7 @@ export default function SearchBar({
                     onChange={handleChange}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
-                    placeholder={placeholder}
+                    placeholder={placeholder || t.common.searchPlaceholder}
                     className="w-full py-4 bg-transparent border-none outline-none text-gray-700 font-medium placeholder:text-gray-400 placeholder:font-normal"
                 />
 
@@ -78,6 +80,7 @@ export default function SearchBar({
                     <button
                         type="button"
                         onClick={handleClear}
+                        aria-label={t.common.clear}
                         className="p-2 mr-4 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                     >
                         <X size={18} />

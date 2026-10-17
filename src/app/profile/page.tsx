@@ -18,13 +18,7 @@ import { useRouter } from 'next/navigation';
 
 import AddressManager from '@/components/modules/profile/AddressManager';
 import OrdersManager from '@/components/modules/profile/OrdersManager';
-
-const profileSchema = z.object({
-    name: z.string().min(3, "name must be at least 3 characters"),
-    email: z.string().email("Invalid email address"),
-    phone: z.string().min(5, "Invalid phone number"),
-    password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal('')),
-});
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Tab = 'profile' | 'addresses' | 'orders';
 
@@ -33,6 +27,13 @@ export default function ProfilePage() {
     const router = useRouter();
     const currentUser = useSelector((state: RootState) => state.auth.user);
     const token = useSelector((state: RootState) => state.auth.token);
+    const { t, language } = useTranslation();
+    const profileSchema = z.object({
+        name: z.string().min(3, t.profile.nameTooShort),
+        email: z.string().email(t.profile.invalidEmail),
+        phone: z.string().min(5, t.profile.invalidPhone),
+        password: z.string().min(6, t.profile.passwordTooShort).optional().or(z.literal('')),
+    });
 
     const [activeTab, setActiveTab] = useState<Tab>('profile');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -54,7 +55,7 @@ export default function ProfilePage() {
     const { mutate: updateProfile, isPending: isUpdating } = useUpdate(
         '/auth/edit-profile',
         ['profile'],
-        'Profile updated successfully'
+        t.common.save
     );
 
     const user = profileResponse?.data?.data || profileResponse?.data?.user || profileResponse?.user || currentUser;
@@ -132,7 +133,7 @@ export default function ProfilePage() {
                             Account Settings
                         </div> */}
                         <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tighter">
-                            Your <span className="italic text-secondary">Profile.</span>
+                            {t.profile.heading}
                         </h1>
                     </div>
                     <button
@@ -143,7 +144,7 @@ export default function ProfilePage() {
                         className="flex items-center gap-2 px-6 py-3 bg-white border border-red-100 text-red-500 rounded-2xl font-bold hover:bg-red-50 transition-all active:scale-95 shadow-sm"
                     >
                         <LogOut size={20} />
-                        Logout
+                        {t.profile.logout}
                     </button>
                 </div>
 
@@ -159,7 +160,7 @@ export default function ProfilePage() {
                                 <div className="relative mb-6">
                                     <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
                                         {imagePreview ? (
-                                            <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
+                                            <img src={imagePreview} alt={t.nav.profile} className="w-full h-full object-cover" />
                                         ) : (
                                             <User size={48} className="text-gray-300" />
                                         )}
@@ -171,22 +172,22 @@ export default function ProfilePage() {
                                 </div>
 
                                 <h2 className="text-2xl font-black text-primary tracking-tight mb-1">
-                                    {user?.name || 'User'}
+                                    {user?.name || t.profile.user}
                                 </h2>
                                 <p className="text-gray-400 font-medium text-sm mb-6 flex items-center gap-2 justify-center">
                                     <Calendar size={14} />
-                                    Joined {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently'}
+                                    {t.profile.joined} {user?.createdAt ? new Date(user.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' }) : t.profile.recently}
                                 </p>
 
                                 <div className="w-full pt-6 border-t border-gray-50 flex justify-between items-center text-sm">
                                     <div className="text-center flex-1">
                                         <div className="font-black text-primary">0</div>
-                                        <div className="text-gray-400 text-xs font-bold uppercase tracking-widest">Orders</div>
+                                        <div className="text-gray-400 text-xs font-bold uppercase tracking-widest">{t.profile.orders}</div>
                                     </div>
                                     <div className="w-px h-8 bg-gray-100" />
                                     <div className="text-center flex-1">
                                         <div className="font-black text-primary">0</div>
-                                        <div className="text-gray-400 text-xs font-bold uppercase tracking-widest">Reviews</div>
+                                        <div className="text-gray-400 text-xs font-bold uppercase tracking-widest">{t.profile.reviews}</div>
                                     </div>
                                 </div>
                             </div>
@@ -194,31 +195,31 @@ export default function ProfilePage() {
 
                         {/* Quick Actions */}
                         <div className="bg-primary rounded-[30px] p-6 text-white shadow-xl shadow-primary/20">
-                            <h3 className="font-black mb-4 uppercase text-xs tracking-widest opacity-60">Preferences</h3>
+                            <h3 className="font-black mb-4 uppercase text-xs tracking-widest opacity-60">{t.profile.preferences}</h3>
                             <div className="space-y-2">
                                 <button
                                     onClick={() => setActiveTab('profile')}
                                     className={`w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 transition-colors group ${activeTab === 'profile' ? 'bg-white/10' : ''}`}
                                 >
-                                    <span className="font-bold">Profile Info</span>
+                                    <span className="font-bold">{t.profile.profileInfo}</span>
                                     <ChevronRight size={18} className={`opacity-40 transition-transform ${activeTab === 'profile' ? 'translate-x-1' : ''}`} />
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('addresses')}
                                     className={`w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 transition-colors group ${activeTab === 'addresses' ? 'bg-white/10' : ''}`}
                                 >
-                                    <span className="font-bold">Shipping Addresses</span>
+                                    <span className="font-bold">{t.profile.addresses}</span>
                                     <ChevronRight size={18} className={`opacity-40 transition-transform ${activeTab === 'addresses' ? 'translate-x-1' : ''}`} />
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('orders')}
                                     className={`w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 transition-colors group ${activeTab === 'orders' ? 'bg-white/10' : ''}`}
                                 >
-                                    <span className="font-bold">My Orders</span>
+                                    <span className="font-bold">{t.profile.myOrders}</span>
                                     <ChevronRight size={18} className={`opacity-40 transition-transform ${activeTab === 'orders' ? 'translate-x-1' : ''}`} />
                                 </button>
                                 {/* <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 opacity-50 cursor-not-allowed">
-                                    <span className="font-bold">Payment Methods</span>
+                                    <span className="font-bold">{t.profile.paymentMethods}</span>
                                     <ChevronRight size={18} className="opacity-0" />
                                 </button> */}
                             </div>
@@ -235,12 +236,12 @@ export default function ProfilePage() {
                                             <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center font-black">
                                                 01
                                             </div>
-                                            <h3 className="text-xl font-black text-primary tracking-tight">Personal Information</h3>
+                                            <h3 className="text-xl font-black text-primary tracking-tight">{t.profile.personalInformation}</h3>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
-                                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">name</label>
+                                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t.auth.fullName}</label>
                                                 <div className="relative group">
                                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                                     <input
@@ -253,7 +254,7 @@ export default function ProfilePage() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t.auth.email}</label>
                                                 <div className="relative group">
                                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                                     <input
@@ -266,7 +267,7 @@ export default function ProfilePage() {
                                             </div>
 
                                             <div className="space-y-2 md:col-span-2">
-                                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
+                                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t.auth.phone}</label>
                                                 <div className="relative group">
                                                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                                     <input
@@ -285,11 +286,11 @@ export default function ProfilePage() {
                                             <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center font-black">
                                                 02
                                             </div>
-                                            <h3 className="text-xl font-black text-primary tracking-tight">Security</h3>
+                                            <h3 className="text-xl font-black text-primary tracking-tight">{t.profile.security}</h3>
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Change Password (Optional)</label>
+                                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t.profile.changePassword}</label>
                                             <div className="relative group">
                                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-secondary transition-colors" size={20} />
                                                 <input
@@ -300,7 +301,7 @@ export default function ProfilePage() {
                                                 />
                                             </div>
                                             {errors.password && <p className="text-red-500 text-xs font-bold ml-1">{errors.password.message as string}</p>}
-                                            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider ml-1 mt-2">Leave blank to keep existing password</p>
+                                            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider ml-1 mt-2">{t.profile.leaveBlank}</p>
                                         </div>
                                     </section>
 
@@ -313,12 +314,12 @@ export default function ProfilePage() {
                                             {isUpdating ? (
                                                 <>
                                                     <Loader2 className="animate-spin" size={22} />
-                                                    Updating...
+                                                    {t.profile.updating}
                                                 </>
                                             ) : (
                                                 <>
                                                     <Save size={22} />
-                                                    Save Changes
+                                                    {t.profile.saveChanges}
                                                 </>
                                             )}
                                         </button>
