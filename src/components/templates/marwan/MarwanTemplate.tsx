@@ -20,8 +20,12 @@ import {
   MessageCircle,
   Layers,
   CheckCircle2,
-  PackageCheck
+  PackageCheck,
+  LogIn,
+  User
 } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -57,6 +61,7 @@ export default function MarwanTemplate({
   const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings() as any;
   const { t, isRtl, getLocalized, formatPrice } = useTranslation();
   const router = useRouter();
+  const token = useSelector((state: RootState) => state.auth.token);
 
   // Real backend API calls
   const { data: bannersData, isLoading: bannersLoading } = useGet<ApiResponse<Banner>>(['banners'], '/banner');
@@ -380,6 +385,18 @@ export default function MarwanTemplate({
             </nav>
 
             <div className="flex items-center gap-3 shrink-0">
+              {/* Login / Profile */}
+              <Link
+                href={token ? '/profile' : '/login'}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-black uppercase tracking-wider transition-all hover:scale-105"
+                style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+                title={token ? (t?.nav?.profile || 'Profile') : (t?.nav?.login || 'Login')}
+              >
+                {token ? <User size={15} /> : <LogIn size={15} />}
+                <span className="hidden sm:inline">
+                  {token ? (t?.nav?.profile || 'Profile') : (t?.nav?.login || 'Login')}
+                </span>
+              </Link>
               {/* Language toggle */}
               {toggleLanguage && (
                 <button
