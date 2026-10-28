@@ -211,7 +211,7 @@ export default function ProductDetailClient() {
         <div className="w-full min-h-screen bg-gray-50/30">
             {/* Breadcrumbs */}
             <div className="w-full px-4 md:px-12 py-4 border-b border-gray-100/60 bg-white">
-                <div className="flex items-center gap-2 text-xs md:text-sm text-gray-400 flex-wrap max-w-7xl mx-auto">
+                <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 flex-wrap max-w-7xl mx-auto">
                     <Link href="/" className="hover:text-primary font-semibold transition-colors">{t.nav.home}</Link>
                     <span>/</span>
                     {product.brand?.name && (
@@ -355,7 +355,7 @@ export default function ProductDetailClient() {
                                     </span>
                                 )}
                                 {product.category?.name && (
-                                    <span className="text-xs font-black text-secondary bg-secondary/10 px-3 py-1 rounded-lg uppercase tracking-wider">
+                                    <span className="text-xs font-black text-gray-800 bg-secondary/10 px-3 py-1 rounded-lg uppercase tracking-wider">
                                         {getLocalized(product.category)}
                                     </span>
                                 )}
@@ -365,7 +365,7 @@ export default function ProductDetailClient() {
                                 {getLocalized(product)}
                             </h1>
                             {product.ar_name && product.name !== product.ar_name && (
-                                <p className="text-gray-400 font-semibold text-sm mb-3">
+                                <p className="text-gray-700 font-semibold text-sm mb-3">
                                     {getLocalized(product)}
                                 </p>
                             )}
@@ -375,7 +375,7 @@ export default function ProductDetailClient() {
                                 <div className="flex items-center gap-1 text-amber-500">
                                     <Star size={16} className="fill-current" />
                                     <span className="text-gray-900 font-black">4.8</span>
-                                    <span className="text-gray-400">({t.product.verifiedProduct})</span>
+                                    <span className="text-gray-600">({t.product.verifiedProduct})</span>
                                 </div>
                                 <span>•</span>
                                 <div className="flex items-center gap-1 text-emerald-600">
@@ -388,12 +388,12 @@ export default function ProductDetailClient() {
                         {/* Price Card */}
                         <div className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-sm">
                             <div className="flex items-baseline gap-3 mb-2 flex-wrap">
-                                <span className="text-4xl md:text-5xl font-black text-secondary tracking-tight">
+                                <span className="text-4xl md:text-5xl font-black text-primary tracking-tight">
                                     {formatPrice(priceInfo.finalPrice)}
                                 </span>
 
                                 {priceInfo.hasDiscount && (
-                                    <span className="text-xl font-bold text-gray-300 line-through">
+                                    <span className="text-xl font-bold text-gray-600 line-through">
                                         {formatPrice(priceInfo.mainPrice)}
                                     </span>
                                 )}
@@ -419,7 +419,7 @@ export default function ProductDetailClient() {
                                                     {t.product.selectOption} {getLocalized(variation)}
                                                 </label>
                                                 {variation.ar_name && variation.ar_name !== variation.name && (
-                                                    <span className="text-xs text-gray-400 font-medium">
+                                                    <span className="text-xs text-gray-600 font-medium">
                                                         ({variation.ar_name})
                                                     </span>
                                                 )}
@@ -429,7 +429,7 @@ export default function ProductDetailClient() {
                                             {variation.name.toLowerCase().includes('size') || variation.name.toLowerCase().includes('مقاس') ? (
                                                 <button
                                                     onClick={() => setSizeGuideOpen(true)}
-                                                    className="text-xs font-bold text-secondary hover:underline flex items-center gap-1"
+                                                    className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
                                                 >
                                                     <Ruler size={13} /> {t.product.sizeGuide}
                                                 </button>
@@ -444,7 +444,7 @@ export default function ProductDetailClient() {
                                                         key={option._id}
                                                         onClick={() => setSelectedOptions(prev => ({ ...prev, [variation._id]: option._id }))}
                                                         className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all border-2 flex flex-col items-center min-w-[70px] ${isSelected
-                                                            ? 'bg-secondary border-secondary text-white shadow-md scale-105'
+                                                            ? 'bg-primary border-primary text-[var(--color-on-primary)] shadow-md scale-105'
                                                             : !optionInStock
                                                                 ? 'bg-gray-50 border-gray-100 text-gray-300 opacity-60'
                                                                 : 'bg-white border-gray-100 text-gray-700 hover:border-gray-300'
@@ -473,36 +473,36 @@ export default function ProductDetailClient() {
 
                         {/* Specifications & SKU Grid */}
                         <div className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-sm">
-                            <h3 className="text-xs font-black text-gray-700 uppercase tracking-wider mb-4">{t.product.overview}</h3>
+                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4">{t.product.overview}</h3>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                                 {currentSkuObj?.code && (
                                     <div className="p-3 bg-gray-50 rounded-xl">
-                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.skuCode}</span>
-                                        <span className="font-black text-gray-800">{currentSkuObj.code}</span>
+                                        <span className="text-gray-600 block font-bold text-[10px] uppercase mb-0.5">{t.product.skuCode}</span>
+                                        <span className="font-black text-gray-900">{currentSkuObj.code}</span>
                                     </div>
                                 )}
                                 {product.brand?.name && (
                                     <div className="p-3 bg-gray-50 rounded-xl">
-                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.brand}</span>
-                                        <span className="font-black text-gray-800">{getLocalized(product.brand)}</span>
+                                        <span className="text-gray-600 block font-bold text-[10px] uppercase mb-0.5">{t.product.brand}</span>
+                                        <span className="font-black text-gray-900">{getLocalized(product.brand)}</span>
                                     </div>
                                 )}
                                 {product.category?.name && (
                                     <div className="p-3 bg-gray-50 rounded-xl">
-                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.category}</span>
-                                        <span className="font-black text-gray-800">{getLocalized(product.category)}</span>
+                                        <span className="text-gray-600 block font-bold text-[10px] uppercase mb-0.5">{t.product.category}</span>
+                                        <span className="font-black text-gray-900">{getLocalized(product.category)}</span>
                                     </div>
                                 )}
                                 <div className="p-3 bg-gray-50 rounded-xl">
-                                    <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.availability}</span>
+                                    <span className="text-gray-600 block font-bold text-[10px] uppercase mb-0.5">{t.product.availability}</span>
                                     <span className={`font-black ${inStock ? 'text-emerald-600' : 'text-red-500'}`}>
                                         {inStock ? `${currentStock} ${t.product.inStock}` : t.product.outOfStock}
                                     </span>
                                 </div>
                                 {(product.created_at || product.createdAt) && (
                                     <div className="p-3 bg-gray-50 rounded-xl">
-                                        <span className="text-gray-400 block font-bold text-[10px] uppercase mb-0.5">{t.product.releaseDate}</span>
-                                        <span className="font-black text-gray-800">
+                                        <span className="text-gray-600 block font-bold text-[10px] uppercase mb-0.5">{t.product.releaseDate}</span>
+                                        <span className="font-black text-gray-900">
                                             {new Date(product.created_at || product.createdAt!).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
                                         </span>
                                     </div>
@@ -520,14 +520,14 @@ export default function ProductDetailClient() {
                                 <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl p-1.5 shadow-inner">
                                     <button
                                         onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                        className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-secondary hover:shadow-md transition-all active:scale-90"
+                                        className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-primary hover:shadow-md transition-all active:scale-90"
                                     >
                                         <Minus size={16} strokeWidth={2.5} />
                                     </button>
                                     <span className="w-8 text-center font-black text-lg text-primary">{quantity}</span>
                                     <button
                                         onClick={() => setQuantity(q => Math.min(currentStock, q + 1))}
-                                        className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-secondary hover:shadow-md transition-all active:scale-90"
+                                        className="w-10 h-10 flex items-center justify-center bg-white border border-gray-100 rounded-xl text-primary hover:text-primary hover:shadow-md transition-all active:scale-90"
                                     >
                                         <Plus size={16} strokeWidth={2.5} />
                                     </button>
@@ -540,7 +540,7 @@ export default function ProductDetailClient() {
                                     onClick={handleAddToCart}
                                     disabled={!inStock || isAddingToCart || isBuyingNow}
                                     className={`flex-1 py-4 px-6 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all active:scale-[0.98] border-2 ${inStock
-                                        ? 'bg-white text-primary border-primary hover:bg-primary hover:text-white shadow-lg shadow-primary/10 hover:shadow-primary/25'
+                                        ? 'bg-white text-primary border-primary hover:bg-primary hover:text-[var(--color-on-primary)] shadow-lg shadow-primary/10 hover:shadow-primary/25'
                                         : 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
                                         }`}
                                 >
@@ -555,7 +555,7 @@ export default function ProductDetailClient() {
                                     onClick={handleBuyNow}
                                     disabled={!inStock || isAddingToCart || isBuyingNow}
                                     className={`flex-1 py-4 px-6 rounded-[1.25rem] font-black text-base flex items-center justify-center gap-3 transition-all active:scale-[0.98] border-2 ${inStock
-                                        ? 'bg-secondary text-white border-secondary hover:bg-primary hover:border-primary shadow-xl shadow-secondary/20 hover:shadow-primary/25'
+                                        ? 'bg-primary text-[var(--color-on-primary)] border-primary hover:brightness-90 shadow-xl shadow-primary/20 hover:shadow-primary/25'
                                         : 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
                                         }`}
                                 >

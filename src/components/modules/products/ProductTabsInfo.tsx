@@ -23,7 +23,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                         activeTab === 'description'
                             ? 'bg-primary text-white shadow-md'
-                            : 'text-gray-500 hover:text-primary hover:bg-gray-50'
+                            : 'text-gray-700 hover:text-primary hover:bg-gray-50'
                     }`}
                 >
                     <FileText size={16} />
@@ -35,7 +35,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                         activeTab === 'specs'
                             ? 'bg-primary text-white shadow-md'
-                            : 'text-gray-500 hover:text-primary hover:bg-gray-50'
+                            : 'text-gray-700 hover:text-primary hover:bg-gray-50'
                     }`}
                 >
                     <Sliders size={16} />
@@ -47,7 +47,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                         activeTab === 'shipping'
                             ? 'bg-primary text-white shadow-md'
-                            : 'text-gray-500 hover:text-primary hover:bg-gray-50'
+                            : 'text-gray-700 hover:text-primary hover:bg-gray-50'
                     }`}
                 >
                     <Truck size={16} />
@@ -59,7 +59,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                         activeTab === 'warranty'
                             ? 'bg-primary text-white shadow-md'
-                            : 'text-gray-500 hover:text-primary hover:bg-gray-50'
+                            : 'text-gray-700 hover:text-primary hover:bg-gray-50'
                     }`}
                 >
                     <ShieldCheck size={16} />
@@ -68,7 +68,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
             </div>
 
             {/* Tab Content */}
-            <div className="text-sm text-gray-600 leading-relaxed">
+            <div className="text-sm text-gray-700 leading-relaxed">
                 {activeTab === 'description' && (
                     <div className="space-y-4">
                         <p className="text-gray-700 leading-relaxed">
@@ -86,16 +86,16 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                 {activeTab === 'specs' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex justify-between p-3.5 bg-gray-50 rounded-xl">
-                            <span className="text-gray-400 font-medium">{t.sections.itemCode}</span>
-                            <span className="font-bold text-primary">{skuCode || product._id.slice(-8).toUpperCase()}</span>
+                            <span className="text-gray-700 font-medium">{t.sections.itemCode}</span>
+                            <span className="font-bold text-gray-900">{skuCode || product._id.slice(-8).toUpperCase()}</span>
                         </div>
                         <div className="flex justify-between p-3.5 bg-gray-50 rounded-xl">
-                            <span className="text-gray-400 font-medium">{t.product.brand}</span>
-                            <span className="font-bold text-primary">{product.brand ? getLocalized(product.brand) : t.sections.authorizedBrand}</span>
+                            <span className="text-gray-700 font-medium">{t.product.brand}</span>
+                            <span className="font-bold text-gray-900">{product.brand ? getLocalized(product.brand) : t.sections.authorizedBrand}</span>
                         </div>
                         <div className="flex justify-between p-3.5 bg-gray-50 rounded-xl">
-                            <span className="text-gray-400 font-medium">{t.product.category}</span>
-                            <span className="font-bold text-primary">{product.category ? getLocalized(product.category) : t.sections.generalCollection}</span>
+                            <span className="text-gray-700 font-medium">{t.product.category}</span>
+                            <span className="font-bold text-gray-900">{product.category ? getLocalized(product.category) : t.sections.generalCollection}</span>
                         </div>
                         <div className="flex justify-between p-3.5 bg-gray-50 rounded-xl">
                             <span className="text-gray-400 font-medium">{t.sections.condition}</span>
@@ -110,7 +110,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                             <Truck className="text-secondary shrink-0 mt-0.5" size={20} />
                             <div>
                                 <h4 className="font-bold text-primary text-sm mb-1">{t.sections.standardDelivery}</h4>
-                                <p className="text-xs text-gray-500 leading-relaxed">
+                                <p className="text-xs text-gray-700 leading-relaxed">
                                     {t.sections.standardDeliveryDesc}
                                 </p>
                             </div>
@@ -120,7 +120,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                             <Box className="text-gray-500 shrink-0 mt-0.5" size={20} />
                             <div>
                                 <h4 className="font-bold text-primary text-sm mb-1">{t.sections.carefulPackaging}</h4>
-                                <p className="text-xs text-gray-500 leading-relaxed">
+                                <p className="text-xs text-gray-700 leading-relaxed">
                                     {t.sections.carefulPackagingDesc}
                                 </p>
                             </div>
@@ -144,7 +144,7 @@ export default function ProductTabsInfo({ product, skuCode }: ProductTabsInfoPro
                             <ShieldCheck className="text-primary shrink-0 mt-0.5" size={20} />
                             <div>
                                 <h4 className="font-bold text-primary text-sm mb-1">{t.sections.authenticity}</h4>
-                                <p className="text-xs text-gray-500 leading-relaxed">
+                                <p className="text-xs text-gray-700 leading-relaxed">
                                     {t.sections.authenticityDesc}
                                 </p>
                             </div>

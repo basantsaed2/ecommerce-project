@@ -16,9 +16,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 interface ProductCardProps {
     product: Product;
+    badge?: string;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, badge }: ProductCardProps) {
     const { logoUrl } = useStoreSettings();
     const { t, getLocalized, formatPrice } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
@@ -58,8 +59,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         }
 
         dispatch(addItem({ product, quantity: 1 }));
-        dispatch(syncCart());
+        await dispatch(syncCart());
         toast.success(`${getLocalized(product)} ${t.product.addedToCartNamed}`);
+        router.push('/cart');
     };
 
     const handleBuyNow = async (e: React.MouseEvent) => {
@@ -89,6 +91,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {/* Badges & Actions Overlay */}
                 <div className="absolute top-3 inset-x-3 z-20 flex justify-between items-start pointer-events-none">
                     <div className="flex flex-col gap-1.5 items-start">
+                        {badge && (
+                            <span className="bg-gray-900 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md">
+                                {badge}
+                            </span>
+                        )}
+
                         {/* Discount Badge */}
                         {priceInfo.hasDiscount && (
                             <span className="bg-gradient-to-r from-red-600 to-rose-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1">
@@ -137,18 +145,41 @@ export default function ProductCard({ product }: ProductCardProps) {
 
                 {/* Image Container */}
                 <div className="relative aspect-square bg-[#F8FAFC] overflow-hidden flex items-center justify-center p-6">
-                    {/* Hover Quick View Icon */}
-                    <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsDialogOpen(true);
-                            }}
-                            className="bg-white text-gray-800 font-bold text-xs px-4 py-2.5 rounded-full flex items-center gap-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-black hover:text-white shadow-lg active:scale-95"
-                        >
-                            <Eye size={16} />
-                            {t.product.quickView}
-                        </button>
+                    <div className="absolute inset-0 z-10 flex items-end justify-center bg-black/35 p-3 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+                        <div className="flex w-full flex-wrap items-center justify-center gap-2">
+                            <button
+                                type="button"
+                                onClick={handleAddToCart}
+                                disabled={product.quantity <= 0}
+                                aria-label={t.product.addToCart}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-[var(--color-on-primary)] shadow-lg transition hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                <ShoppingCart size={15} />
+                                {t.product.addToCart}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleBuyNow}
+                                disabled={product.quantity <= 0}
+                                aria-label={t.product.buyNow}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-primary bg-secondary px-3 py-2 text-xs font-bold text-[var(--color-on-secondary)] shadow-lg transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                <Zap size={14} />
+                                {t.product.buyNow}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsDialogOpen(true);
+                                }}
+                                aria-label={t.product.quickView}
+                                title={t.product.quickView}
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white text-gray-900 shadow-lg transition hover:bg-gray-100"
+                            >
+                                <Eye size={16} />
+                            </button>
+                        </div>
                     </div>
 
                     <img
@@ -179,18 +210,18 @@ export default function ProductCard({ product }: ProductCardProps) {
                             </span>
                         )}
                         {product.category?.name ? (
-                            <span className="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            <span className="text-[9px] font-bold text-gray-800 bg-secondary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
                                 {getLocalized(product.category)}
                             </span>
                         ) : product.categoryId && product.categoryId.length > 0 ? (
-                            <span className="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            <span className="text-[9px] font-bold text-gray-800 bg-secondary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
                                 {getLocalized(product.categoryId[0])}
                             </span>
                         ) : null}
                     </div>
 
                     {/* Product Name */}
-                    <h3 className="font-bold text-gray-900 text-sm md:text-base line-clamp-1 group-hover:text-secondary transition-colors mb-1">
+                    <h3 className="font-bold text-gray-900 text-sm md:text-base line-clamp-1 group-hover:text-primary transition-colors mb-1">
                         {getLocalized(product)}
                     </h3>
 
@@ -215,51 +246,18 @@ export default function ProductCard({ product }: ProductCardProps) {
 
                     {/* Price section */}
                     <div className="mt-auto pt-3 border-t border-gray-50">
-                        <div className="flex items-baseline justify-between mb-3">
-                            <div>
-                                <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{t.product.price}</span>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="font-black text-xl text-gray-900">
-                                        {formatPrice(priceInfo.finalPrice)}
-                                    </span>
+                        <span className="block text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">{t.product.price}</span>
+                        <div className="flex items-baseline gap-2">
+                            <span className="font-black text-xl text-gray-900">
+                                {formatPrice(priceInfo.finalPrice)}
+                            </span>
 
-                                    {priceInfo.hasDiscount && (
-                                        <span className="text-xs font-bold text-gray-400 line-through">
-                                            {priceInfo.mainPrice.toLocaleString()}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Add to Cart button icon */}
-                            <button
-                                onClick={handleAddToCart}
-                                disabled={product.quantity <= 0}
-                                aria-label={t.product.addToCart}
-                                className={`relative overflow-hidden w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                                    product.quantity > 0
-                                        ? 'bg-gray-900 text-white hover:bg-secondary hover:shadow-lg active:scale-95'
-                                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                                }`}
-                            >
-                                <ShoppingCart size={18} />
-                            </button>
+                            {priceInfo.hasDiscount && (
+                                <span className="text-xs font-bold text-gray-500 line-through">
+                                    {priceInfo.mainPrice.toLocaleString()}
+                                </span>
+                            )}
                         </div>
-
-                        {/* Buy Now button */}
-                        <button
-                            onClick={handleBuyNow}
-                            disabled={product.quantity <= 0}
-                            aria-label={t.product.buyNow}
-                            className={`w-full py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] ${
-                                product.quantity > 0
-                                    ? 'bg-secondary text-white hover:bg-primary shadow-md shadow-secondary/20 hover:shadow-primary/20'
-                                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                            }`}
-                        >
-                            <Zap size={14} strokeWidth={2.5} />
-                            {hasVariations ? t.product.selectOptions : t.product.buyNow}
-                        </button>
                     </div>
                 </div>
             </div>

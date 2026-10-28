@@ -1045,7 +1045,7 @@ export default function CheckoutPage() {
                         <button
                             onClick={handleCheckout}
                             disabled={isPlacingOrder || (selectedOrderType === 'pickup' ? !selectedWarehouse : (isLoadingShippingMethod || isShippingMethodError || (isBostaShipping ? (!guestCity || !guestZone || !guestDistrict || !guestStreet || !guestBuildingNumber) : (token ? !selectedAddress : (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber)))))}
-                            className="w-full bg-secondary text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-white hover:text-secondary transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-secondary/20 border-2 border-secondary hover:border-white"
+                            className="w-full bg-primary text-[var(--color-on-primary)] py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:brightness-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20 border-2 border-primary"
                         >
                             {isPlacingOrder ? <Loader2 className="animate-spin" size={24} /> : (
                                 <>

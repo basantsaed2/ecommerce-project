@@ -118,6 +118,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         dispatch(syncCart());
         toast.success(t.product.addedToCartSimple);
         onClose();
+        router.push('/cart');
     };
 
     const handleBuyNow = async () => {
@@ -160,7 +161,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
                 {isLoading || !product ? (
                     <div className="w-full h-96 flex items-center justify-center">
-                        <Loader2 className="animate-spin text-secondary" size={40} />
+                        <Loader2 className="animate-spin text-primary" size={40} />
                     </div>
                 ) : (
                     <>
@@ -217,12 +218,12 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                 <div className="flex items-center gap-2 mb-3 flex-wrap">
                                     {product.brand?.name && (
                                         <span className="text-[10px] font-black text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1">
-                                            <Award size={10} className="text-gray-400" />
+                                            <Award size={10} className="text-gray-600" />
                                             {getLocalized(product.brand)}
                                         </span>
                                     )}
                                     {product.category?.name && (
-                                        <span className="text-[10px] font-black text-secondary bg-secondary/10 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                                        <span className="text-[10px] font-black text-gray-800 bg-secondary/10 px-2.5 py-1 rounded-md uppercase tracking-wider">
                                             {getLocalized(product.category)}
                                         </span>
                                     )}
@@ -234,18 +235,18 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
                                 {/* Price Box */}
                                 <div className="flex items-baseline gap-2 mb-4">
-                                    <span className="text-3xl font-black text-secondary">
+                                    <span className="text-3xl font-black text-primary">
                                         {formatPrice(priceInfo.finalPrice)}
                                     </span>
                                     {priceInfo.hasDiscount && (
-                                        <span className="text-base font-bold text-gray-400 line-through">
+                                        <span className="text-base font-bold text-gray-600 line-through">
                                             {formatPrice(priceInfo.mainPrice)}
                                         </span>
                                     )}
                                 </div>
 
                                 {product.description && (
-                                    <p className="text-gray-500 text-xs mb-6 leading-relaxed line-clamp-3">
+                                    <p className="text-gray-700 text-sm mb-6 leading-relaxed line-clamp-3">
                                         {getLocalized(product, 'description')}
                                     </p>
                                 )}
@@ -267,10 +268,10 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                                                 key={option._id}
                                                                 onClick={() => setSelectedOptions(prev => ({ ...prev, [variation._id]: option._id }))}
                                                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-2 flex flex-col items-center ${isSelected
-                                                                    ? 'bg-secondary border-secondary text-white shadow-md'
+                                                                    ? 'bg-primary border-primary text-[var(--color-on-primary)] shadow-md'
                                                                     : !inStock
                                                                         ? 'bg-gray-50 border-gray-100 text-gray-300 opacity-60'
-                                                                        : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300'
+                                                                        : 'bg-white border-gray-200 text-gray-800 hover:border-gray-400'
                                                                     }`}
                                                             >
                                                                 <span>{getLocalized(option)}</span>
@@ -291,14 +292,14 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                     <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl p-1 shadow-inner">
                                         <button
                                             onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                            className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-primary hover:text-secondary active:scale-90"
+                                            className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-primary hover:text-primary active:scale-90"
                                         >
                                             <Minus size={14} strokeWidth={2.5} />
                                         </button>
                                         <span className="w-6 text-center font-black text-sm">{quantity}</span>
                                         <button
                                             onClick={() => setQuantity(q => Math.min(product.quantity, q + 1))}
-                                            className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-primary hover:text-secondary active:scale-90"
+                                            className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-primary hover:text-primary active:scale-90"
                                         >
                                             <Plus size={14} strokeWidth={2.5} />
                                         </button>
@@ -310,7 +311,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                         onClick={handleAddToCart}
                                         disabled={isOutOfStock}
                                         className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] border-2 ${!isOutOfStock
-                                            ? 'bg-white text-primary border-primary hover:bg-primary hover:text-white'
+                                            ? 'bg-white text-primary border-primary hover:bg-primary hover:text-[var(--color-on-primary)]'
                                             : 'bg-gray-100 text-gray-300 cursor-not-allowed border-gray-100 shadow-none'
                                             }`}
                                     >
@@ -325,7 +326,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                         onClick={handleBuyNow}
                                         disabled={isOutOfStock || isBuyingNow}
                                         className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] ${!isOutOfStock
-                                            ? 'bg-secondary text-white hover:bg-primary'
+                                            ? 'bg-primary text-[var(--color-on-primary)] hover:brightness-90'
                                             : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                                             }`}
                                     >

@@ -3,10 +3,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Moon, Package, ShieldCheck, Sparkles, Star, Sun, Truck, Undo2 } from 'lucide-react';
+import { ArrowRight, Moon, Package, ShieldCheck, ShoppingCart, Sparkles, Sun, Truck, Undo2, UserRound } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import DynamicSectionRenderer from '@/components/sections/DynamicSectionRenderer';
+import ProductCard from '@/components/modules/products/ProductCard';
 import { ApiResponse, Banner, Brand, Category, Product } from '@/types/api';
 import StoreLoader from '@/components/common/StoreLoader';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -50,8 +53,10 @@ export default function MarwanTemplate({
   className = '',
 }: MarwanTemplateProps) {
   const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings() as any;
-  const { t, isRtl, getLocalized, formatPrice } = useTranslation();
+  const { t, isRtl, getLocalized } = useTranslation();
   const router = useRouter();
+  const token = useSelector((state: RootState) => state.auth.token);
+  const cartCount = useSelector((state: RootState) => state.cart.items.length);
 
   // ── Dynamic header data from backend ───────────────────────────────────
   const ecommerceData = settings?.ecommerceData?.[0] || {};
@@ -265,11 +270,6 @@ export default function MarwanTemplate({
     }
   }, [activeSearch, matchingBrand, showCategories, showProducts, categories.length, products.length]);
 
-  const priceText = (product: Product) => {
-    const raw = product.final_price ?? product.main_price ?? product.price ?? 0;
-    return formatPrice(raw);
-  };
-
   const contactUser = settings?.ecommerceUsers?.[0] || {};
   const contactLinks = contactUser.social_links || {};
   const hasContactInfo = Boolean(contactUser.name || contactUser.email || contactUser.phone || Object.keys(contactLinks).length);
@@ -389,6 +389,29 @@ export default function MarwanTemplate({
               >
                 {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
               </button>
+              <Link
+                href="/cart"
+                aria-label={t.nav.cart}
+                title={t.nav.cart}
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:opacity-80"
+                style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+              >
+                <ShoppingCart size={17} />
+                {cartCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[9px] font-bold text-white">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+              <Link
+                href={token ? '/profile' : '/login'}
+                aria-label={token ? t.nav.profile : t.nav.login}
+                title={token ? t.nav.profile : t.nav.login}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:opacity-80"
+                style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+              >
+                <UserRound size={17} />
+              </Link>
               <Link
                 href="/products"
                 className="hidden md:inline-flex items-center justify-center px-6 py-3 rounded-full text-[13px] font-extrabold uppercase tracking-wider transition-transform hover:-translate-y-0.5"
@@ -667,40 +690,10 @@ export default function MarwanTemplate({
                   <div
                     key={product._id}
                     data-reveal
-                    style={{ transitionDelay: `${(i % 3) * 80}ms`, background: 'var(--mw-surface)', borderColor: 'var(--mw-border)' }}
-                    className={`${REVEAL_BASE} ${REVEAL_SHOWN} group rounded-xl overflow-hidden border hover:-translate-y-1 transition-[transform,box-shadow]`}
+                    style={{ transitionDelay: `${(i % 3) * 80}ms` }}
+                    className={`${REVEAL_BASE} ${REVEAL_SHOWN}`}
                   >
-                    <div className="relative h-[220px] overflow-hidden" style={{ background: 'var(--mw-surface-2)' }}>
-                      <span
-                        className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-                        style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
-                      >
-                        {t.sections.newLabel}
-                      </span>
-                      <img
-                        src={product.image || product.gallery_product?.[0] || logoUrl || undefined}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
-                      />
-                    </div>
-                    <div className="p-5">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-base font-black" style={{ color: 'var(--mw-primary)' }}>{priceText(product)}</span>
-                      </div>
-                      <h3 className="text-base font-extrabold mb-2">{getLocalized(product, 'name')}</h3>
-                      <p className="text-sm leading-relaxed mb-4 line-clamp-2" style={{ color: 'var(--mw-text-muted)' }}>
-                        {getLocalized(product, 'description') || (isRtl ? 'جودة عالية وتصميم عملي يدوم طويلاً.' : 'Quality build, everyday comfort, and a design made to last.')}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <Link
-                          href={`/product/${product._id}`}
-                          className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider transition-all group-hover:gap-2.5"
-                        >
-                          {t.common.viewMore} <ArrowRight size={14} className={isRtl ? 'rotate-180' : ''} />
-                        </Link>
-                        <Star size={16} style={{ color: 'var(--mw-primary)' }} />
-                      </div>
-                    </div>
+                    <ProductCard product={product} badge={t.sections.newLabel} />
                   </div>
                 ))}
               </div>

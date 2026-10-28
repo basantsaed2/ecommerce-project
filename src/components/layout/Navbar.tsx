@@ -70,7 +70,8 @@ export default function Navbar() {
 
     const authRoutes = ["/login", "/signup"];
     if (authRoutes.includes(pathname)) return null;
-    if (templateSlug === 'marwan' || templateSlug === 'example') return null;
+    const hasHomePageHeader = templateSlug === 'marwan' || templateSlug === 'example';
+    if (hasHomePageHeader && pathname === '/') return null;
 
     // منع الرندر غير المتوافق مع السيرفر حتى يكتمل التحميل
     if (!mounted) return <nav className="h-20 bg-white border-b border-gray-100" />;
@@ -99,10 +100,10 @@ export default function Navbar() {
                         <Link
                             key={link.href}
                             href={link.href}
-                            className={`${isActive(link.href) ? 'text-secondary' : 'text-gray-500'} hover:text-secondary transition relative group`}
+                            className={`${isActive(link.href) ? 'text-primary' : 'text-gray-600'} hover:text-primary transition relative group`}
                         >
                             {link.name}
-                            <span className={`absolute -bottom-1 left-0 h-0.5 bg-secondary transition-all ${isActive(link.href) ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+                            <span className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all ${isActive(link.href) ? 'w-full' : 'w-0 group-hover:w-full'}`} />
                         </Link>
                     ))}
                 </div>
@@ -157,7 +158,10 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center gap-3 ml-2">
                         {!isLoggedIn ? (
                             <>
-                                <Link href="/login" className="px-5 py-2.5 text-sm font-bold text-primary hover:bg-gray-50 rounded-xl transition">{t.nav.login}</Link>
+                                <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-gray-50">
+                                    <LogIn size={17} aria-hidden="true" />
+                                    {t.nav.login}
+                                </Link>
                                 <Link href="/signup" className="px-5 py-2.5 text-sm font-bold bg-primary text-white rounded-xl hover:shadow-lg transition">{t.nav.register}</Link>
                             </>
                         ) : (

@@ -3,10 +3,12 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { 
-  Search, Heart, ShoppingBag, Phone, MapPin, 
-  ChevronDown, Star, Menu,
+  Search, Heart, ShoppingBag, UserRound, Phone, MapPin,
+  ChevronDown, Menu,
   Facebook, Twitter, Instagram, Youtube, Sun, Moon
 } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 import { useGet } from '@/hooks/useGet';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
@@ -14,6 +16,7 @@ import { ApiResponse, Banner, Brand, Category, Product } from '@/types/api';
 import StoreLoader from '@/components/common/StoreLoader';
 import BestSellersSection from '@/components/sections/products/BestSellersSection';
 import OffersSection from '@/components/sections/promo/OffersSection';
+import SharedProductCard from '@/components/modules/products/ProductCard';
 
 interface ExampleTemplateProps {
   searchQuery?: string;
@@ -42,6 +45,8 @@ export default function ExampleTemplate({
 }: ExampleTemplateProps) {
   const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings();
   const { t, isRtl, getLocalized } = useTranslation();
+  const token = useSelector((state: RootState) => state.auth.token);
+  const cartCount = useSelector((state: RootState) => state.cart.items.length);
   const isDarkMode = themeMode === 'dark';
   const activePrimary = isDarkMode ? colors?.primaryDark || colors?.primary : colors?.primary;
   const activeSecondary = isDarkMode ? colors?.secondaryDark || colors?.secondary : colors?.secondary;
@@ -156,8 +161,7 @@ export default function ExampleTemplate({
 
           <div className="flex items-center gap-6 font-medium">
             <Link href="/order-tracking" className="hover:text-[var(--bs-primary)] transition-colors flex items-center gap-1 font-bold text-[var(--bs-primary)]">📦 {t.nav.trackOrder}</Link>
-            <Link href="/register" className="hover:text-[var(--bs-primary)] transition-colors">+ {t.nav.register}</Link>
-            <Link href="/login" className="hover:text-[var(--bs-primary)] transition-colors">{t.nav.login}</Link>
+            <Link href="/signup" className="hover:text-[var(--bs-primary)] transition-colors">+ {t.nav.register}</Link>
           </div>
         </div>
       </div>
@@ -217,11 +221,24 @@ export default function ExampleTemplate({
             >
               {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <Link href="/wishlist" className="relative p-2 text-gray-700 hover:text-[var(--bs-primary)] transition-colors">
+            <Link href="/favourite" aria-label={t.nav.wishlist} className="relative p-2 text-gray-700 hover:text-[var(--bs-primary)] transition-colors">
               <Heart size={24} />
             </Link>
-            <Link href="/cart" className="relative p-2 text-gray-700 hover:text-[var(--bs-primary)] transition-colors">
+            <Link href="/cart" aria-label={t.nav.cart} className="relative p-2 text-gray-700 hover:text-[var(--bs-primary)] transition-colors">
               <ShoppingBag size={24} />
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-gray-900 px-1 text-[10px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            <Link
+              href={token ? '/profile' : '/login'}
+              aria-label={token ? t.nav.profile : t.nav.login}
+              title={token ? t.nav.profile : t.nav.login}
+              className="relative p-2 text-gray-700 transition-colors hover:text-[var(--bs-primary)]"
+            >
+              <UserRound size={24} />
             </Link>
           </div>
         </div>
@@ -385,7 +402,7 @@ export default function ExampleTemplate({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {newArrivals.map((prod) => (
-              <ProductCard key={prod._id} product={prod} badge={t.sections.newLabel} logoUrl={logoUrl} />
+              <SharedProductCard key={prod._id} product={prod} badge={t.sections.newLabel} />
             ))}
           </div>
         </section>
@@ -403,7 +420,7 @@ export default function ExampleTemplate({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {trendingProducts.map((prod) => (
-              <ProductCard key={prod._id} product={prod} logoUrl={logoUrl} />
+              <SharedProductCard key={prod._id} product={prod} />
             ))}
           </div>
         </section>
@@ -612,61 +629,5 @@ function LegacyFeatureBannersGrid({ banners = [], primaryColor = '#d9232d' }: { 
 
       </div>
     </section>
-  );
-}
-
-// ── 3. Product Card Sub-Component ───────────────────────────────────────
-function ProductCard({ product, badge, logoUrl }: { product: Product; badge?: string; logoUrl?: string | null }) {
-  const price = product.final_price ?? product.main_price ?? product.price ?? 0;
-  const oldPrice = product.main_price && product.final_price ? product.main_price : null;
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-md overflow-hidden flex flex-col justify-between hover:shadow-lg transition-shadow relative group">
-      {badge && (
-        <span className="absolute top-3 left-3 bg-[#1e293b] text-white text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded z-10">
-          {badge}
-        </span>
-      )}
-
-      <Link href={`/product/${product._id}`} className="block relative pt-[100%] overflow-hidden bg-white p-4">
-        <img
-          src={product.image || product.gallery_product?.[0] || logoUrl || undefined}
-          alt={product.name}
-          className="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)] object-contain group-hover:scale-105 transition-transform duration-300"
-        />
-      </Link>
-
-      <div className="p-4 flex flex-col flex-1 justify-between border-t border-gray-50">
-        <div>
-          <h3 className="font-bold text-xs text-slate-800 line-clamp-1 mb-1 group-hover:text-[var(--bs-primary)] transition-colors">
-            {product.name}
-          </h3>
-          <p className="text-[11px] text-gray-500 mb-0.5">
-            Brand: <span className="text-[var(--bs-primary)]">{product.brand?.name || (product as any).brand_name || ''}</span>
-          </p>
-          <p className="text-[11px] text-gray-500 mb-3">
-            Sold By: <span className="text-[var(--bs-primary)]">{(product as any).seller || ''}</span>
-          </p>
-        </div>
-
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-bold text-sm text-slate-900">${Number(price).toLocaleString()}</span>
-            {oldPrice && (
-              <span className="text-xs text-[var(--bs-primary)] line-through font-medium">
-                ${Number(oldPrice).toLocaleString()}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1 text-amber-400">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} size={12} className={i < 4 ? 'fill-amber-400 text-amber-400' : 'text-gray-300'} />
-            ))}
-            <span className="text-[10px] text-gray-500 ml-1">(1)</span>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

@@ -40,6 +40,23 @@ interface StoreThemeContextType {
     toggleLanguage: () => void;
 }
 
+function getReadableForeground(color: string): string {
+    const hex = color.trim().replace(/^#/, '');
+    const normalizedHex = hex.length === 3
+        ? hex.split('').map((character) => character + character).join('')
+        : hex;
+
+    if (!/^[\da-f]{6}$/i.test(normalizedHex)) return '#111827';
+
+    const [red, green, blue] = normalizedHex.match(/.{2}/g)!.map((channel) => {
+        const value = parseInt(channel, 16) / 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    });
+    const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+
+    return luminance > 0.179 ? '#111827' : '#ffffff';
+}
+
 const StoreThemeContext = createContext<StoreThemeContextType>({
     settings: DEFAULT_STORE_SETTINGS,
     storeName: DEFAULT_STORE_SETTINGS.storeName,
@@ -234,11 +251,15 @@ export function StoreThemeProvider({
             : colors.textSecondary || colors.textMuted || '#6b7280';
         const borderColor = colors.border || '#e5e7eb';
         const accentColor = colors.accent || '#f59e0b';
+        const primaryForeground = getReadableForeground(primaryColor);
+        const secondaryForeground = getReadableForeground(secondaryColor);
 
         styleTag.innerHTML = `
             :root {
                 --color-primary: ${primaryColor};
                 --color-secondary: ${secondaryColor};
+                --color-on-primary: ${primaryForeground};
+                --color-on-secondary: ${secondaryForeground};
                 --color-background: ${backgroundColor};
                 --color-surface: ${surfaceColor};
                 --color-text: ${textColor};
