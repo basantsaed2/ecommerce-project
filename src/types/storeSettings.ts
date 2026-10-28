@@ -114,6 +114,46 @@ export type TemplateSlugOption =
     | 'bold'
     | string;
 
+export interface EcommerceSocialLinks {
+    facebook?: string;
+    instagram?: string;
+    whatsapp?: string;
+    twitter?: string;
+    tiktok?: string;
+    youtube?: string;
+    linkedin?: string;
+}
+
+export interface EcommerceHeader {
+    logo?: string;
+    title?: string;
+    announcement?: string;
+    links?: string[];
+}
+
+export interface EcommerceFooter {
+    logo?: string;
+    bio?: string;
+    copyright?: string;
+}
+
+export interface EcommerceData {
+    _id?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+    bio?: string;
+    address?: string;
+    image?: string;
+    status?: string;
+    social_links?: EcommerceSocialLinks;
+    header?: EcommerceHeader;
+    footer?: EcommerceFooter;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 export interface StoreSettings {
     _id?: string;
     key: string;

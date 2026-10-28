@@ -5,9 +5,11 @@ import { RootState, AppDispatch } from '@/store/store';
 import { useGet } from '@/hooks/useGet';
 import { usePost } from '@/hooks/usePost';
 import { clearCartLocal, setCartState, setOrderType } from '@/store/slices/cartSlice';
-import { MapPin, CreditCard, Banknote, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Plus, Store, Truck, X, Percent } from 'lucide-react';
+import { MapPin, CreditCard, Banknote, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Plus, Store, Truck, X, Percent, CalendarClock, LogIn, User } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import axiosInstance from '@/api/axiosInstance';
 import { Address } from '@/types/address';
 import SearchableSelect from '@/components/ui/SearchableSelect';
 import { useQueryClient } from '@tanstack/react-query';
@@ -125,7 +127,7 @@ const getBostaDistricts = (response: unknown): BostaDistrictOption[] => {
 
 export default function CheckoutPage() {
     const { logoUrl } = useStoreSettings();
-    const { t, isRtl } = useTranslation();
+    const { t, isRtl, language, formatPrice } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -148,6 +150,14 @@ export default function CheckoutPage() {
     const [proofImage, setProofImage] = useState<string | null>(null);
     const [proofFileName, setProofFileName] = useState<string>('');
     const [isSuccess, setIsSuccess] = useState(false);
+    const [paymentType, setPaymentType] = useState<'full' | 'installment'>('full');
+    const [installmentMonths, setInstallmentMonths] = useState('3');
+    const [installmentDownPayment, setInstallmentDownPayment] = useState('');
+    const [installmentPreview, setInstallmentPreview] = useState<any>(null);
+    const [installmentPreviewError, setInstallmentPreviewError] = useState('');
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+    const [installmentResult, setInstallmentResult] = useState<any>(null);
+    const [orderReference, setOrderReference] = useState<string>('');
 
     // Add Address Dialog state
     const [showAddAddressDialog, setShowAddAddressDialog] = useState(false);
@@ -265,6 +275,19 @@ export default function CheckoutPage() {
         ? pmData.data.data
         : Array.isArray(pmData?.data) ? pmData.data : [];
 
+    // Fetch installment settings (public endpoint)
+    const { data: installmentSettingsResponse } = useGet<any>(
+        ['installment-settings'],
+        '/installments/settings'
+    );
+    const installmentSettings = installmentSettingsResponse?.data?.settings
+        || installmentSettingsResponse?.settings
+        || null;
+    const installmentEnabled = Boolean(installmentSettings?.enabled);
+    const maxInstallments = Math.max(1, Number(installmentSettings?.max_installments) || 12);
+    const minDownPaymentPercent = Math.max(0, Number(installmentSettings?.min_down_payment_percent) || 0);
+    const minDownPayment = Math.max(0, (finalTotal * minDownPaymentPercent) / 100);
+
     // Fetch order types
     const { data: otData, isLoading: isFetchingOt } = useGet<any>(
         ['order-types'],
@@ -313,6 +336,113 @@ export default function CheckoutPage() {
             setSelectedWarehouse(warehousesList[0]._id);
         }
     }, [warehousesList, selectedWarehouse]);
+
+    // 🧮 Installment preview (debounced) — uses the backend calculation
+    useEffect(() => {
+        if (paymentType !== 'installment') {
+            setInstallmentPreview(null);
+            setInstallmentPreviewError('');
+            setIsPreviewLoading(false);
+            return;
+        }
+
+        const months = Number(installmentMonths);
+        const down = Number(installmentDownPayment) || 0;
+
+        if (!installmentEnabled) {
+            setInstallmentPreview(null);
+            setInstallmentPreviewError(t.checkout.installments.previewError);
+            setIsPreviewLoading(false);
+            return;
+        }
+
+        if (!months || months < 1 || months > maxInstallments) {
+            setInstallmentPreview(null);
+            setInstallmentPreviewError('');
+            setIsPreviewLoading(false);
+            return;
+        }
+
+        if (finalTotal <= 0) {
+            setIsPreviewLoading(false);
+            return;
+        }
+
+        if (down >= finalTotal) {
+            setInstallmentPreview(null);
+            setInstallmentPreviewError(t.checkout.installments.downPaymentTooHigh);
+            setIsPreviewLoading(false);
+            return;
+        }
+
+        if (down + 0.001 < minDownPayment) {
+            setInstallmentPreview(null);
+            setInstallmentPreviewError(
+                `${t.checkout.installments.downPaymentTooLow} ${minDownPayment.toLocaleString()} ${t.common.currency}`
+            );
+            setIsPreviewLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+        setIsPreviewLoading(true);
+
+        const timer = setTimeout(async () => {
+            try {
+                const { data } = await axiosInstance.post('/installments/preview', {
+                    total: finalTotal,
+                    months,
+                    down_payment: down,
+                });
+                if (!cancelled) {
+                    setInstallmentPreview(data?.data?.plan || null);
+                    setInstallmentPreviewError('');
+                }
+            } catch (err: any) {
+                if (!cancelled) {
+                    setInstallmentPreview(null);
+                    setInstallmentPreviewError(
+                        err?.response?.data?.error?.message
+                        || t.checkout.installments.previewError
+                    );
+                }
+            } finally {
+                if (!cancelled) setIsPreviewLoading(false);
+            }
+        }, 350);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [paymentType, installmentMonths, installmentDownPayment, finalTotal, minDownPayment, maxInstallments, installmentEnabled, t]);
+
+    const handleSelectInstallment = () => {
+        if (!installmentEnabled) return;
+        if (!token) {
+            toast.error(t.checkout.installments.loginRequired);
+            return;
+        }
+        setPaymentType('installment');
+        setInstallmentMonths(String(Math.min(3, maxInstallments)));
+        setInstallmentDownPayment(
+            minDownPayment > 0 ? String(Math.round(minDownPayment * 100) / 100) : '0'
+        );
+        setInstallmentPreview(null);
+        setInstallmentPreviewError('');
+    };
+
+    const installmentBlocked = paymentType === 'installment' && (
+        !token
+        || !installmentEnabled
+        || !installmentPreview
+        || isPreviewLoading
+        || !!installmentPreviewError
+        || Number(installmentMonths) < 1
+        || Number(installmentMonths) > maxInstallments
+        || Number(installmentDownPayment || 0) >= finalTotal
+        || Number(installmentDownPayment || 0) + 0.001 < minDownPayment
+    );
 
     // Checkout Mutation
     const { mutate: placeOrder, isPending: isPlacingOrder } = usePost(
@@ -381,10 +511,33 @@ export default function CheckoutPage() {
             }
         }
 
+        if (paymentType === 'installment') {
+            if (!token) {
+                toast.error(t.checkout.installments.loginRequired);
+                return;
+            }
+            if (!installmentEnabled) {
+                toast.error(t.checkout.installments.previewError);
+                return;
+            }
+            if (!installmentPreview || isPreviewLoading) {
+                toast.error(t.checkout.installments.previewError);
+                return;
+            }
+        }
+
         const payload: any = {
             orderType: selectedOrderType,
-            paymentMethod: paymentMethod
+            paymentMethod: paymentMethod,
+            paymentType: paymentType === 'installment' ? 'installment' : 'full',
         };
+
+        if (paymentType === 'installment') {
+            payload.installment = {
+                months: Number(installmentMonths),
+                down_payment: Number(installmentDownPayment) || 0,
+            };
+        }
 
         if (selectedOrderType === 'pickup') {
             payload.warehouseId = selectedWarehouse;
@@ -419,18 +572,26 @@ export default function CheckoutPage() {
             };
         }
 
-        if (proofImage) {
+        if (proofImage && paymentType !== 'installment') {
             payload.proofImage = proofImage;
         }
 
         placeOrder(payload, {
             onSuccess: (res: any) => {
                 const iframeUrl = res?.iframeUrl || res?.data?.iframeUrl || res?.data?.payment?.iframeUrl || res?.payment?.iframeUrl || res?.data?.order?.payment?.iframeUrl;
-                
+                const installmentPlan = res?.data?.installment_plan || res?.installment_plan || null;
+                const createdOrder = res?.data?.order || res?.order || null;
+                const reference = createdOrder?.reference || res?.data?.reference || res?.reference || '';
+
+                if (reference) setOrderReference(String(reference));
+
                 dispatch(clearCartLocal());
                 toast.success(t.checkout.orderPlacedSuccess);
 
-                if (iframeUrl) {
+                if (installmentPlan) {
+                    setInstallmentResult(installmentPlan);
+                    setIsSuccess(true);
+                } else if (iframeUrl) {
                     window.location.href = iframeUrl;
                 } else {
                     setIsSuccess(true);
@@ -445,11 +606,75 @@ export default function CheckoutPage() {
                 <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6 animate-bounce">
                     <CheckCircle2 size={48} className="text-green-500" />
                 </div>
-                <h1 className="text-4xl font-black text-primary tracking-tighter mb-4">{t.checkout.orderConfirmedTitle}</h1>
-                <p className="text-gray-500 font-medium max-w-sm mb-8">{t.checkout.confirmedDesc}</p>
-                <div className="flex gap-4">
+                <h1 className="text-4xl font-black text-primary tracking-tighter mb-4">
+                    {installmentResult
+                        ? t.checkout.installments.successTitle
+                        : t.checkout.orderConfirmedTitle}
+                </h1>
+                <p className="text-gray-500 font-medium max-w-sm mb-8">
+                    {installmentResult
+                        ? t.checkout.installments.successDesc
+                        : t.checkout.confirmedDesc}
+                </p>
+                {installmentResult && (
+                    <div className="w-full max-w-md bg-secondary/5 border-2 border-secondary/20 rounded-3xl p-6 text-start space-y-3 mb-8">
+                        {orderReference && (
+                            <div className="flex justify-between gap-4 text-sm">
+                                <span className="font-bold text-gray-500">{t.checkout.orderReference}</span>
+                                <span className="font-black text-primary font-mono tracking-wider">{orderReference}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between gap-4 text-sm">
+                            <span className="font-bold text-gray-500">{t.checkout.installments.planNumber}</span>
+                            <span className="font-black text-primary">{installmentResult.plan_number}</span>
+                        </div>
+                        <div className="flex justify-between gap-4 text-sm">
+                            <span className="font-bold text-gray-500">{t.checkout.installments.downPayment}</span>
+                            <span className="font-black text-primary">{formatPrice(installmentResult.down_payment)}</span>
+                        </div>
+                        <div className="flex justify-between gap-4 text-sm">
+                            <span className="font-bold text-gray-500">{t.checkout.installments.totalPayable}</span>
+                            <span className="font-black text-primary">{formatPrice(installmentResult.total_payable)}</span>
+                        </div>
+                        {installmentResult?.installments?.[0] && (
+                            <div className="flex justify-between gap-4 text-sm">
+                                <span className="font-bold text-gray-500">{t.checkout.installments.firstInstallment}</span>
+                                <span className="font-black text-primary">
+                                    {formatPrice(installmentResult.installments[0].amount)} — {new Date(installmentResult.installments[0].due_date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB')}
+                                </span>
+                            </div>
+                        )}
+                        <p className="text-xs font-bold text-secondary pt-2 border-t border-secondary/10">
+                            {t.checkout.installments.branchNote}
+                        </p>
+                    </div>
+                )}
+
+                {!installmentResult && orderReference && (
+                    <div className="w-full max-w-md bg-primary/5 border-2 border-primary/10 rounded-3xl p-6 text-center mb-8">
+                        <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">
+                            {t.checkout.orderReference}
+                        </p>
+                        <p className="text-4xl font-black text-primary font-mono tracking-[0.2em]">
+                            {orderReference}
+                        </p>
+                        <p className="text-xs text-gray-500 font-medium mt-3">
+                            {t.checkout.referenceHint}
+                        </p>
+                    </div>
+                )}
+
+                <div className="flex flex-wrap justify-center gap-4">
+                    {orderReference && (
+                        <button
+                            onClick={() => router.push(`/order-tracking?ref=${encodeURIComponent(orderReference)}`)}
+                            className="px-8 py-3 bg-secondary text-white rounded-2xl font-bold hover:opacity-90 transition-all shadow-xl shadow-secondary/20"
+                        >
+                            {t.tracking.trackButton}
+                        </button>
+                    )}
                     <button
-                        onClick={() => router.push('/profile')}
+                        onClick={() => router.push('/profile?tab=orders')}
                         className="px-8 py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all"
                     >
                         {t.checkout.viewOrders}
@@ -477,7 +702,24 @@ export default function CheckoutPage() {
 
     return (
         <div className="w-full px-4 md:px-12 py-6 pb-24">
-            <h1 className="text-4xl font-black text-primary tracking-tight mb-10">{t.checkout.secureCheckoutTitle}</h1>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
+                <h1 className="text-4xl font-black text-primary tracking-tight">{t.checkout.secureCheckoutTitle}</h1>
+                {token ? (
+                    <Link
+                        href="/profile"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-100 text-sm font-bold text-gray-700 hover:bg-gray-200 transition"
+                    >
+                        <User size={16} /> {t.nav.profile}
+                    </Link>
+                ) : (
+                    <Link
+                        href="/login"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-sm font-bold text-white hover:shadow-lg transition"
+                    >
+                        <LogIn size={16} /> {t.nav.login}
+                    </Link>
+                )}
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <div className="lg:col-span-2 space-y-10">
@@ -910,11 +1152,14 @@ export default function CheckoutPage() {
                                     return (
                                         <div
                                             key={methodIdentifier || idx}
-                                            onClick={() => setPaymentMethod(methodIdentifier)}
-                                            className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-5 ${paymentMethod === methodIdentifier ? 'border-primary bg-primary/5 shadow-xl shadow-primary/5' : 'border-gray-100 bg-white hover:border-gray-300'
+                                            onClick={() => {
+                                                setPaymentMethod(methodIdentifier);
+                                                setPaymentType('full');
+                                            }}
+                                            className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-5 ${paymentType === 'full' && paymentMethod === methodIdentifier ? 'border-primary bg-primary/5 shadow-xl shadow-primary/5' : 'border-gray-100 bg-white hover:border-gray-300'
                                                 }`}
                                         >
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${paymentMethod === methodIdentifier ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'}`}>
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${paymentType === 'full' && paymentMethod === methodIdentifier ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'}`}>
                                                 {methodLogo ? (
                                                     <img src={methodLogo} alt={methodName} className="w-8 h-8 object-contain" />
                                                 ) : isCash ? (
@@ -932,10 +1177,140 @@ export default function CheckoutPage() {
                                         </div>
                                     );
                                 })}
+
+                                {installmentEnabled && (
+                                    <div
+                                        onClick={handleSelectInstallment}
+                                        className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-5 ${paymentType === 'installment' ? 'border-secondary bg-secondary/5 shadow-xl shadow-secondary/10' : 'border-gray-100 bg-white hover:border-gray-300'
+                                            }`}
+                                    >
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${paymentType === 'installment' ? 'bg-secondary text-white' : 'bg-gray-50 text-gray-400'}`}>
+                                            <CalendarClock size={28} />
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-primary text-lg">{t.checkout.installments.option}</p>
+                                            <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wider">
+                                                {t.checkout.installments.optionDesc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {paymentMethod && (
+                        {paymentType === 'installment' && installmentEnabled && (
+                            <div className="mt-6 p-6 rounded-[24px] border-2 border-secondary/30 bg-secondary/5 space-y-5">
+                                <div className="flex items-center justify-between gap-3">
+                                    <h3 className="text-lg font-black text-primary">{t.checkout.installments.title}</h3>
+                                    <span className="text-xs font-black text-gray-500">
+                                        {installmentSettings?.interest_type === 'fixed'
+                                            ? `${t.checkout.installments.interest} ${formatPrice(installmentSettings?.interest_value || 0)}`
+                                            : `${t.checkout.installments.interest} ${Number(installmentSettings?.interest_value || 0)}%`}
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                                            {t.checkout.installments.months}
+                                        </label>
+                                        <select
+                                            value={installmentMonths}
+                                            onChange={(e) => setInstallmentMonths(e.target.value)}
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-sm text-primary"
+                                        >
+                                            {Array.from({ length: maxInstallments }, (_, i) => i + 1).map((m) => (
+                                                <option key={m} value={m}>{m}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                                            {t.checkout.installments.downPayment}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={installmentDownPayment}
+                                            onChange={(e) => setInstallmentDownPayment(e.target.value)}
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-sm text-primary"
+                                        />
+                                        <p className="text-[10px] font-bold text-gray-400">
+                                            {t.checkout.installments.minDownPayment}: {formatPrice(minDownPayment)} ({minDownPaymentPercent}%)
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {isPreviewLoading ? (
+                                    <div className="flex items-center gap-2 text-sm font-bold text-gray-500">
+                                        <Loader2 size={16} className="animate-spin" />
+                                        {t.checkout.installments.calculating}
+                                    </div>
+                                ) : installmentPreviewError ? (
+                                    <p className="text-sm font-bold text-red-600">{installmentPreviewError}</p>
+                                ) : installmentPreview ? (
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between gap-4">
+                                            <span className="font-bold text-gray-500">{t.checkout.installments.financed}</span>
+                                            <span className="font-black text-primary">{formatPrice(installmentPreview.financed_amount)}</span>
+                                        </div>
+                                        <div className="flex justify-between gap-4">
+                                            <span className="font-bold text-gray-500">{t.checkout.installments.interest}</span>
+                                            <span className="font-black text-primary">{formatPrice(installmentPreview.interest_amount)}</span>
+                                        </div>
+                                        <div className="flex justify-between gap-4">
+                                            <span className="font-bold text-primary">{t.checkout.installments.totalPayable}</span>
+                                            <span className="font-black text-primary">{formatPrice(installmentPreview.total_payable)}</span>
+                                        </div>
+                                        {installmentPreview.installments?.length > 0 && (
+                                            <div className="flex justify-between gap-4">
+                                                <span className="font-bold text-gray-500">{t.checkout.installments.monthly}</span>
+                                                <span className="font-black text-primary">
+                                                    {formatPrice(installmentPreview.installments[0].amount)}
+                                                    {installmentPreview.installments.length > 1
+                                                        && Number(installmentPreview.installments[0].amount) !== Number(installmentPreview.installments[installmentPreview.installments.length - 1].amount)
+                                                        && (
+                                                            <span className="text-gray-400 font-bold">
+                                                                {' '}→ {formatPrice(installmentPreview.installments[installmentPreview.installments.length - 1].amount)}
+                                                            </span>
+                                                        )}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between gap-4 pt-2 border-t border-secondary/20">
+                                            <span className="font-black text-secondary">{t.checkout.installments.dueNow}</span>
+                                            <span className="font-black text-secondary">{formatPrice(installmentPreview.down_payment)}</span>
+                                        </div>
+
+                                        {installmentPreview.installments?.length > 0 && (
+                                            <details className="pt-2">
+                                                <summary className="cursor-pointer text-xs font-black text-secondary">
+                                                    {t.checkout.installments.showSchedule}
+                                                </summary>
+                                                <ul className="mt-2 space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
+                                                    {installmentPreview.installments.map((item: { sequence: number; due_date: string; amount: number }) => (
+                                                        <li key={item.sequence} className="flex justify-between gap-4 text-xs">
+                                                            <span className="font-bold text-gray-500">
+                                                                {t.checkout.installments.installmentItem} {item.sequence} —{' '}
+                                                                {new Date(item.due_date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB')}
+                                                            </span>
+                                                            <span className="font-black text-primary">{formatPrice(item.amount)}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </details>
+                                        )}
+                                    </div>
+                                ) : null}
+
+                                <div className="flex items-start gap-2 text-xs font-bold text-secondary bg-white rounded-xl p-3 border border-secondary/20">
+                                    <ShieldCheck size={16} className="shrink-0" />
+                                    {t.checkout.installments.branchNote}
+                                </div>
+                            </div>
+                        )}
+
+                        {paymentMethod && paymentType !== 'installment' && (
                             <div className="mt-6 p-6 rounded-[24px] border-2 border-gray-100 bg-gray-50/50">
                                 <h3 className="text-lg font-black text-primary mb-2">{t.checkout.paymentProof}</h3>
                                 <p className="text-sm font-bold text-gray-500 mb-4">{t.checkout.paymentProofDesc}</p>
@@ -1040,11 +1415,28 @@ export default function CheckoutPage() {
                                 <span className="text-xl font-black italic">{t.cart.total}</span>
                                 <span className="text-3xl font-black tracking-tight text-white">{finalTotal.toLocaleString()} <span className="text-base text-white/50">{t.common.currency}</span></span>
                             </div>
+
+                            {paymentType === 'installment' && installmentPreview && (
+                                <div className="space-y-2 pt-4 border-t border-white/10 text-sm">
+                                    <div className="flex justify-between text-white/70">
+                                        <span className="font-bold">{t.checkout.installments.interest}</span>
+                                        <span className="font-black text-white">{formatPrice(installmentPreview.interest_amount)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-white/70">
+                                        <span className="font-bold">{t.checkout.installments.totalPayable}</span>
+                                        <span className="font-black text-white">{formatPrice(installmentPreview.total_payable)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="font-black text-secondary">{t.checkout.installments.dueNow}</span>
+                                        <span className="font-black text-secondary">{formatPrice(installmentPreview.down_payment)}</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <button
                             onClick={handleCheckout}
-                            disabled={isPlacingOrder || (selectedOrderType === 'pickup' ? !selectedWarehouse : (isLoadingShippingMethod || isShippingMethodError || (isBostaShipping ? (!guestCity || !guestZone || !guestDistrict || !guestStreet || !guestBuildingNumber) : (token ? !selectedAddress : (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber)))))}
+                            disabled={isPlacingOrder || installmentBlocked || (selectedOrderType === 'pickup' ? !selectedWarehouse : (isLoadingShippingMethod || isShippingMethodError || (isBostaShipping ? (!guestCity || !guestZone || !guestDistrict || !guestStreet || !guestBuildingNumber) : (token ? !selectedAddress : (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber)))))}
                             className="w-full bg-primary text-[var(--color-on-primary)] py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:brightness-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20 border-2 border-primary"
                         >
                             {isPlacingOrder ? <Loader2 className="animate-spin" size={24} /> : (

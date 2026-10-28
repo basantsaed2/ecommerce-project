@@ -46,6 +46,15 @@ export default function ProfilePage() {
         }
     }, [token, router]);
 
+    // Open a specific tab when coming from checkout (?tab=orders)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const tab = new URLSearchParams(window.location.search).get('tab');
+        if (tab === 'orders' || tab === 'addresses' || tab === 'profile') {
+            setActiveTab(tab);
+        }
+    }, []);
+
     const { data: profileResponse, isLoading: isFetching } = useGet<any>(
         ['profile'],
         '/auth/get-profile',

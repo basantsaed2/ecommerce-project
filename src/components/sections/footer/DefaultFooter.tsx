@@ -19,14 +19,16 @@ interface FooterProps {
 
 export default function DefaultFooter({ title }: FooterProps) {
     const { t, getLocalized } = useTranslation();
-    const { settings, storeName, logoUrl } = useStoreSettings();
-    const ecommerceData = settings.ecommerceData?.[0];
-    const socialLinks = ecommerceData?.social_links || {};
-    const footer = ecommerceData?.footer || {};
+    const { storeName, logoUrl, settings, ecommerceData } = useStoreSettings();
     const { data: categoriesData } = useGet<ApiResponse<Category>>(['categories'], '/category');
     const categories = (categoriesData?.data?.data || []).slice(0, 5);
 
     const currentYear = new Date().getFullYear();
+    const ecomData = ecommerceData?.[0] || settings?.ecommerceData?.[0];
+    const footer = ecomData?.footer || {};
+    const footerLogo = footer?.logo || logoUrl;
+    const footerBio = footer?.bio || ecomData?.bio || t.sections.qualityProductsFooter;
+    const socialLinks = ecomData?.social_links || {};
 
     return (
         <footer className="w-full bg-white border-t border-gray-100 mt-20 pt-16 pb-12">
@@ -36,8 +38,8 @@ export default function DefaultFooter({ title }: FooterProps) {
                     {/* Brand Info & App download */}
                     <div className="lg:col-span-4 flex flex-col items-start gap-4">
                         <Link href="/" className="flex items-center gap-2">
-                            {footer.logo || logoUrl ? (
-                                <img src={footer.logo || logoUrl || undefined} alt={storeName} className="h-10 max-w-[180px] object-contain" />
+                            {footerLogo ? (
+                                <img src={footerLogo} alt={storeName} className="h-10 max-w-[180px] object-contain" />
                             ) : (
                                 <span className="text-2xl font-black tracking-tighter text-primary">
                                     {storeName || 'STORE'}<span className="text-secondary">.</span>
@@ -46,23 +48,31 @@ export default function DefaultFooter({ title }: FooterProps) {
                         </Link>
 
                         <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                            {footer.bio || ecommerceData?.bio || t.sections.qualityProductsFooter}
+                            {footerBio}
                         </p>
 
                         {/* Social Icons */}
                         <div className="flex items-center gap-2.5 pt-1">
-                            <a href={socialLinks.instagram || '#'} className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
-                                <Instagram size={16} />
-                            </a>
-                            <a href={socialLinks.facebook || '#'} className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
-                                <Facebook size={16} />
-                            </a>
-                            <a href={socialLinks.twitter || '#'} className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
-                                <Twitter size={16} />
-                            </a>
-                            <a href={socialLinks.youtube || '#'} className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
-                                <Youtube size={16} />
-                            </a>
+                            {socialLinks.instagram && (
+                                <a href={socialLinks.instagram} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                                    <Instagram size={16} />
+                                </a>
+                            )}
+                            {socialLinks.facebook && (
+                                <a href={socialLinks.facebook} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                                    <Facebook size={16} />
+                                </a>
+                            )}
+                            {socialLinks.twitter && (
+                                <a href={socialLinks.twitter} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                                    <Twitter size={16} />
+                                </a>
+                            )}
+                            {socialLinks.youtube && (
+                                <a href={socialLinks.youtube} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-secondary hover:text-white flex items-center justify-center text-gray-600 transition-colors shadow-xs">
+                                    <Youtube size={16} />
+                                </a>
+                            )}
                         </div>
 
                         {/* Mobile App Download Badges */}
@@ -132,15 +142,23 @@ export default function DefaultFooter({ title }: FooterProps) {
                         </h4>
                         <div className="flex items-start gap-2.5 text-sm text-gray-600">
                             <MapPin size={18} className="text-secondary shrink-0 mt-0.5" />
-                            <span>{ecommerceData?.address || '123 Commercial Avenue, Suite 400'}</span>
+                            <span>{ecomData?.address || '123 Commercial Avenue, Suite 400'}</span>
                         </div>
                         <div className="flex items-center gap-2.5 text-sm text-gray-600">
                             <Phone size={18} className="text-secondary shrink-0" />
-                            <span>{ecommerceData?.phone || '+1 (800) 123-4567'}</span>
+                            {ecomData?.phone ? (
+                                <a href={`tel:${ecomData.phone}`} className="hover:text-secondary">{ecomData.phone}</a>
+                            ) : (
+                                <span>+1 (800) 123-4567</span>
+                            )}
                         </div>
                         <div className="flex items-center gap-2.5 text-sm text-gray-600">
                             <Mail size={18} className="text-secondary shrink-0" />
-                            <span>{ecommerceData?.email || `support@${storeName ? storeName.toLowerCase().replace(/\s+/g, '') : 'store'}.com`}</span>
+                            {ecomData?.email ? (
+                                <a href={`mailto:${ecomData.email}`} className="hover:text-secondary">{ecomData.email}</a>
+                            ) : (
+                                <span>{`support@${storeName ? storeName.toLowerCase().replace(/\s+/g, '') : 'store'}.com`}</span>
+                            )}
                         </div>
 
                         {/* Working hours */}

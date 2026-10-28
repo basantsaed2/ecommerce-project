@@ -131,29 +131,22 @@ export default function DynamicSectionRenderer({
             case 'partners':
                 return <DefaultBrands key={componentKey} {...sectionProps} />;
 
+            // Static sections with no backend APIs are disabled
             case 'testimonials':
             case 'reviews':
             case 'customer-reviews':
-                return <DefaultTestimonials key={componentKey} {...sectionProps} />;
-
             case 'instagram-feed':
             case 'social-proof':
             case 'ugc':
-                return <InstagramFeed key={componentKey} {...sectionProps} />;
-
             case 'shopping-guides':
             case 'blog-guides':
             case 'blog':
             case 'guides':
-                return <ShoppingGuides key={componentKey} {...sectionProps} />;
-
             case 'faq':
             case 'faqs':
-                return <FAQSection key={componentKey} {...sectionProps} />;
-
             case 'newsletter':
             case 'subscribe':
-                return <DefaultNewsletter key={componentKey} {...sectionProps} />;
+                return null;
 
             case 'footer':
                 if (slug === 'modern-shop') return <ModernFooter key={componentKey} {...sectionProps} />;

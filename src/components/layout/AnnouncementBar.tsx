@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Truck, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface AnnouncementBarProps {
@@ -20,8 +21,15 @@ export default function AnnouncementBar({
 }: AnnouncementBarProps) {
     const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(true);
+    const { ecommerceData, settings } = useStoreSettings();
 
-    if (!isVisible) return null;
+    const dynamicAnnouncement = 
+        message || 
+        ecommerceData?.[0]?.header?.announcement || 
+        (settings as any)?.ecommerceData?.[0]?.header?.announcement ||
+        t.sections.announcementMessage;
+
+    if (!isVisible || !dynamicAnnouncement) return null;
 
     return (
         <div className="bg-primary text-white text-xs font-semibold py-2 px-4 relative z-[60] border-b border-white/10 transition-all duration-300">
@@ -36,7 +44,7 @@ export default function AnnouncementBar({
                 <div className="flex-1 flex items-center justify-center gap-2 text-center flex-wrap">
                     <span className="flex items-center gap-1.5">
                         <Sparkles size={14} className="text-secondary animate-pulse" />
-                        <span>{message || t.sections.announcementMessage}</span>
+                        <span>{dynamicAnnouncement}</span>
                     </span>
 
                     {couponCode && (

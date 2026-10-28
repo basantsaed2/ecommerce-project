@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
-import { Loader2, Package, ChevronRight, FileText, X, CheckCircle2, Clock, MapPin, CreditCard, Store, AlertCircle } from 'lucide-react';
+import { Loader2, Package, ChevronRight, FileText, X, CheckCircle2, Clock, MapPin, CreditCard, Store, AlertCircle, Truck } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -56,7 +57,12 @@ export default function OrdersManager() {
                                 <Package size={24} />
                             </div>
                             <div>
-                                <p className="font-black text-primary text-lg">Order #{order._id.slice(-6).toUpperCase()}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                    {t.tracking.reference}
+                                </p>
+                                <p className="font-black text-primary text-lg font-mono">
+                                    {order.reference || `#${order._id.slice(-6).toUpperCase()}`}
+                                </p>
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
                                     {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
                                 </p>
@@ -98,6 +104,13 @@ export default function OrdersManager() {
                                     )}
                                 </div>
                             </div>
+                            <Link
+                                href={`/order-tracking?ref=${encodeURIComponent(order.reference || order._id)}`}
+                                onClick={(event) => event.stopPropagation()}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary/10 text-secondary text-[10px] font-black uppercase tracking-widest hover:bg-secondary hover:text-white transition-colors"
+                            >
+                                <Truck size={14} /> {t.tracking.trackButton}
+                            </Link>
                             <ChevronRight className="text-gray-300 group-hover:text-secondary transition-colors" />
                         </div>
                     </div>
@@ -130,7 +143,7 @@ export default function OrdersManager() {
                                         <div>
                                             <h3 className="text-2xl font-black text-primary">{t.profile.orderDetailsTitle}</h3>
                                             <p className="text-gray-400 font-bold tracking-widest text-xs uppercase mt-1">
-                                                ID: {orderDetails._id}
+                                                {t.tracking.reference}: <span className="font-mono text-primary">{orderDetails.reference || orderDetails._id}</span>
                                             </p>
                                         </div>
                                     </div>
@@ -214,6 +227,13 @@ export default function OrdersManager() {
                                         <span className="text-lg font-black text-gray-400">{t.profile.orderTotal}</span>
                                         <span className="text-3xl font-black text-primary">{formatPrice(orderDetails.totalOrderPrice || orderDetails.totalPrice || orderDetails.totalAmount || 0)}</span>
                                     </div>
+
+                                    <Link
+                                        href={`/order-tracking?ref=${encodeURIComponent(orderDetails.reference || orderDetails._id)}`}
+                                        className="mt-6 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-secondary text-white font-black text-sm hover:opacity-90 transition-all"
+                                    >
+                                        <Truck size={16} /> {t.tracking.trackButton}
+                                    </Link>
 
                                 </div>
                             ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Package, MapPin, Truck, CheckCircle, Clock, ShoppingBag, CreditCard, Calendar, Store } from 'lucide-react';
 import axiosInstance from '@/api/axiosInstance';
 import { toast } from 'sonner';
@@ -12,9 +12,9 @@ export default function OrderTrackingPage() {
     const [orderData, setOrderData] = useState<any>(null);
     const { t, language } = useTranslation();
 
-    const handleTrackOrder = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!referenceId.trim()) {
+    const trackOrder = async (reference: string) => {
+        const value = reference.trim();
+        if (!value) {
             toast.error(t.tracking.enterReference);
             return;
         }
@@ -22,7 +22,7 @@ export default function OrderTrackingPage() {
         setLoading(true);
         setOrderData(null);
         try {
-            const response = await axiosInstance.get(`/order/status/${referenceId}`);
+            const response = await axiosInstance.get(`/order/status/${encodeURIComponent(value)}`);
             // التعامل مع شكل الـ Data القادمة من الـ API
             const fetchedOrder = response.data.order || response.data.data?.order || response.data.data || response.data;
             setOrderData(fetchedOrder);
@@ -33,6 +33,23 @@ export default function OrderTrackingPage() {
             setLoading(false);
         }
     };
+
+    const handleTrackOrder = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await trackOrder(referenceId);
+    };
+
+    // Prefill + auto-track when coming from "My Orders" or the checkout success screen
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const ref = new URLSearchParams(window.location.search).get('ref');
+        if (ref) {
+            setReferenceId(ref);
+            trackOrder(ref);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // نظام المراحل الجمالي المتطور (Stepper)
     const steps = ['pending', 'processing', 'shipped', 'delivered'];
@@ -212,7 +229,9 @@ export default function OrderTrackingPage() {
                                         {orderData.orderType === 'pickup' ? (
                                             <div className="space-y-1">
                                                 <p className="text-slate-900 font-bold">{t.tracking.selfPickup}</p>
-                                                <p className="text-slate-500 text-sm font-medium">{t.tracking.warehouseId}: {orderData.warehouse || t.tracking.mainBranch}</p>
+                                                <p className="text-slate-500 text-sm font-medium">
+                                                    {t.tracking.warehouseId}: {orderData.warehouse?.name || (typeof orderData.warehouse === 'string' ? orderData.warehouse : '') || t.tracking.mainBranch}
+                                                </p>
                                                 <span className="inline-block mt-2 px-2.5 py-1 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-lg">
                                                     {t.tracking.bringReference}
                                                 </span>
@@ -276,15 +295,29 @@ export default function OrderTrackingPage() {
                                     <ShoppingBag size={14} /> {t.tracking.itemsOrdered} ({orderData.cartItems.length})
                                 </h3>
                                 <div className="divide-y divide-slate-100">
-                                    {orderData.cartItems.map((item: any, idx: number) => (
-                                        <div key={item._id || idx} className="py-4 first:pt-0 last:pb-0 flex justify-between items-center">
-                                            <div className="space-y-0.5">
-                                                <p className="text-sm font-bold text-slate-900">{t.tracking.productId}: {item.product}</p>
-                                                <p className="text-xs text-slate-400 font-medium">{t.tracking.quantity}: {item.quantity}</p>
+                                    {orderData.cartItems.map((item: any, idx: number) => {
+                                        const product = item.product;
+                                        const isPopulated = product && typeof product === 'object';
+                                        const productName = isPopulated
+                                            ? String(
+                                                (language === 'ar'
+                                                    ? product.ar_name || product.name
+                                                    : product.name || product.ar_name) || product._id || ''
+                                            )
+                                            : String(product ?? '');
+                                        const unitPrice = Number(item.price ?? (isPopulated ? product.price : 0) ?? 0);
+                                        const quantity = Number(item.quantity || 0);
+
+                                        return (
+                                            <div key={item._id || (isPopulated ? product._id : idx)} className="py-4 first:pt-0 last:pb-0 flex justify-between items-center">
+                                                <div className="space-y-0.5">
+                                                    <p className="text-sm font-bold text-slate-900">{productName}</p>
+                                                    <p className="text-xs text-slate-400 font-medium">{t.tracking.quantity}: {quantity}</p>
+                                                </div>
+                                                <p className="text-sm font-black text-slate-900">{t.common.currency} {(unitPrice * quantity).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}</p>
                                             </div>
-                                            <p className="text-sm font-black text-slate-900">{t.common.currency} {item.price * item.quantity}</p>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}

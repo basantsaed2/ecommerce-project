@@ -10,7 +10,7 @@ export default function Home() {
         <div className="w-full flex flex-col gap-4">
             <TemplateRouter
                 searchQuery={searchQuery}
-                excludeKeys={['footer']}
+                excludeKeys={[]}
             />
         </div>
     );
