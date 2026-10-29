@@ -21,7 +21,7 @@ import MinimalProducts from './products/MinimalProducts';
 import BestSellersSection from './products/BestSellersSection';
 
 import DefaultPromoBanner from './promo/DefaultPromoBanner';
-import PromotionalBanners from './promo/PromotionalBanners';
+
 import OffersSection from './promo/OffersSection';
 
 import DefaultBrands from './brands/DefaultBrands';
@@ -119,11 +119,6 @@ export default function DynamicSectionRenderer({
             case 'flash-sale':
             case 'deals-of-the-day':
                 return <DefaultPromoBanner key={componentKey} {...sectionProps} />;
-
-            case 'promotional-banners':
-            case 'sub-banners':
-            case 'promo-grid':
-                return <PromotionalBanners key={componentKey} {...sectionProps} />;
 
             case 'brands':
             case 'brand':
