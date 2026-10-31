@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getCartItemVariations } from '@/utils/cartUtils';
 
 export default function CartPage() {
     const { logoUrl } = useStoreSettings();
@@ -159,6 +160,26 @@ export default function CartPage() {
                                 <h3 className="text-lg font-black text-primary mb-1 line-clamp-1">
                                     {getLocalized(item.product, 'name') || `Product (${item.product?._id?.slice(-4) || 'Unknown'})`}
                                 </h3>
+
+                                {/* Variations & Size Badge */}
+                                {(() => {
+                                    const variations = getCartItemVariations(item, isRtl);
+                                    if (variations.length === 0) return null;
+                                    return (
+                                        <div className="flex flex-wrap gap-1.5 mb-2.5 items-center justify-center sm:justify-start">
+                                            {variations.map((v, vIdx) => (
+                                                <span 
+                                                    key={vIdx}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-primary/5 text-primary border border-primary/10"
+                                                >
+                                                    <span className="text-gray-500 font-medium">{v.name}:</span>
+                                                    <span className="font-black text-primary">{v.value}</span>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
+
                                 <p className="text-sm font-bold text-gray-400 mb-4 tracking-wider uppercase">
                                     {t.product.price}: {formatPrice(item.price)}
                                 </p>

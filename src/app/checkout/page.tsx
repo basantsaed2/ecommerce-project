@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
 import { useGet } from '@/hooks/useGet';
@@ -16,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import StoreLoader from '@/components/common/StoreLoader';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getCartItemVariations } from '@/utils/cartUtils';
 
 interface BostaCityOption {
     _id: string;
@@ -127,7 +128,7 @@ const getBostaDistricts = (response: unknown): BostaDistrictOption[] => {
 
 export default function CheckoutPage() {
     const { logoUrl } = useStoreSettings();
-    const { t, isRtl, language, formatPrice } = useTranslation();
+    const { t, isRtl, language, getLocalized, formatPrice } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -225,14 +226,33 @@ export default function CheckoutPage() {
         '/cart'
     );
     const backendCart = cartResponse?.data?.cart || cartResponse?.cart;
-    const items = backendCart?.cartItems || reduxItems;
+    // Snapshot of the Redux cart on first render, before setCartState overwrites it with the /cart response.
+    // Used as a fallback source for variant data when the /cart response doesn't include it.
+    const initialReduxItems = useRef<any[]>(reduxItems);
+    const rawItems: any[] = backendCart?.cartItems || reduxItems;
+    const items = React.useMemo(() => rawItems.map((item: any) => {
+        if (getCartItemVariations(item, isRtl).length > 0) return item;
+        const productId = item.product?._id || item.product;
+        const fallback = initialReduxItems.current.find((r: any) =>
+            r.product?._id === productId &&
+            r.variant &&
+            (!item.variant?._id || r.variant?._id === item.variant._id)
+        );
+        return fallback ? { ...item, variant: fallback.variant } : item;
+    }), [rawItems, isRtl]);
+
+    // TEMP DEBUG: remove after checking the console
+    useEffect(() => {
+        console.log('CHECKOUT api item:', JSON.stringify(rawItems[0], null, 2));
+        console.log('CHECKOUT redux snapshot item:', JSON.stringify(initialReduxItems.current[0], null, 2));
+        console.log('CHECKOUT variations result:', items[0] ? getCartItemVariations(items[0], isRtl) : null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [cartResponse]);
     const totalCartPrice = backendCart?.totalCartPrice ?? reduxTotalPrice ?? 0;
     const backendShippingCost = cartResponse?.data?.shippingCost || 0;
-    const shippingCost = selectedOrderType === 'pickup' ? 0 : backendShippingCost;
     const taxAmount = backendCart?.taxAmount || 0;
     const serviceFee = backendCart?.serviceFee || 0;
     const couponDiscount = backendCart?.couponDiscount || 0;
-    const finalTotal = totalCartPrice + shippingCost + taxAmount + serviceFee - couponDiscount;
 
     // Sync API data with Redux
     useEffect(() => {
@@ -266,6 +286,43 @@ export default function CheckoutPage() {
     const filteredCities = lists.cities?.filter((c: any) => c.country === guestCountry || !c.country) || [];
     const filteredZones = lists.zones?.filter((z: any) => z.cityId === guestCity || !z.cityId) || [];
 
+    // Calculate dynamic shipping cost based on selected city/zone or saved address
+    const shippingCost = React.useMemo(() => {
+        if (selectedOrderType === 'pickup') return 0;
+
+        // If guest or manual city selection:
+        if (!token || !selectedAddress) {
+            const selectedZoneObj = lists.zones?.find((z: any) => z._id === guestZone);
+            const selectedCityObj = lists.cities?.find((c: any) => c._id === guestCity);
+
+            const zoneCost = Number(selectedZoneObj?.shipingCost ?? selectedZoneObj?.cost);
+            const cityCost = Number(selectedCityObj?.shipingCost ?? selectedCityObj?.cost);
+
+            if (!isNaN(zoneCost) && zoneCost > 0) return zoneCost;
+            if (!isNaN(cityCost) && cityCost > 0) return cityCost;
+        } else {
+            // Logged in user with selected address:
+            const currentAddr = addresses.find((a: any) => a._id === selectedAddress);
+            if (currentAddr) {
+                const zoneId = typeof currentAddr.zone === 'object' ? currentAddr.zone?._id : currentAddr.zone;
+                const cityId = typeof currentAddr.city === 'object' ? currentAddr.city?._id : currentAddr.city;
+
+                const zoneObj = lists.zones?.find((z: any) => z._id === zoneId) || (typeof currentAddr.zone === 'object' ? currentAddr.zone : null);
+                const cityObj = lists.cities?.find((c: any) => c._id === cityId) || (typeof currentAddr.city === 'object' ? currentAddr.city : null);
+
+                const zoneCost = Number(zoneObj?.shipingCost ?? zoneObj?.cost);
+                const cityCost = Number(cityObj?.shipingCost ?? cityObj?.cost);
+
+                if (!isNaN(zoneCost) && zoneCost > 0) return zoneCost;
+                if (!isNaN(cityCost) && cityCost > 0) return cityCost;
+            }
+        }
+
+        return backendShippingCost || 0;
+    }, [selectedOrderType, token, selectedAddress, guestZone, guestCity, lists, addresses, backendShippingCost]);
+
+    const finalTotal = totalCartPrice + shippingCost + taxAmount + serviceFee - couponDiscount;
+
     // Fetch payment methods
     const { data: pmData, isLoading: isFetchingPm } = useGet<any>(
         ['payment-methods'],
@@ -293,9 +350,13 @@ export default function CheckoutPage() {
         ['order-types'],
         '/order-type'
     );
-    const orderTypesList = Array.isArray(otData?.data?.data)
-        ? otData.data.data
-        : Array.isArray(otData?.data) ? otData.data : [];
+    const orderTypesList = React.useMemo(() => {
+        const list: any[] = Array.isArray(otData?.data?.data)
+            ? otData.data.data
+            : Array.isArray(otData?.data) ? otData.data : [];
+        // Remove duplicated order types (same type returned more than once)
+        return list.filter((ot: any, i: number, arr: any[]) => arr.findIndex((x: any) => x.type === ot.type) === i);
+    }, [otData]);
 
     // Fetch warehouses
     const { data: wData, isLoading: isFetchingW } = useGet<any>(
@@ -530,6 +591,7 @@ export default function CheckoutPage() {
             orderType: selectedOrderType,
             paymentMethod: paymentMethod,
             paymentType: paymentType === 'installment' ? 'installment' : 'full',
+            shippingCost: shippingCost,
         };
 
         if (paymentType === 'installment') {
@@ -560,10 +622,10 @@ export default function CheckoutPage() {
                 bostaDistrictName: selectedBostaDistrict.districtName,
             };
         } else {
-            payload.shippingAddress = token ? selectedAddress : { 
-                country: guestCountry, 
-                city: guestCity, 
-                zone: guestZone, 
+            payload.shippingAddress = token ? selectedAddress : {
+                country: guestCountry,
+                city: guestCity,
+                zone: guestZone,
                 street: guestStreet,
                 buildingNumber: guestBuildingNumber,
                 floorNumber: guestFloorNumber,
@@ -1355,12 +1417,29 @@ export default function CheckoutPage() {
 
                         <div className="space-y-4 mb-8 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                             {items.map((item: any) => (
-                                <div key={item.product._id} className="flex gap-4 items-center bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+                                <div key={`${item.product._id}-${item.variant?._id || 'no-variant'}`} className="flex gap-4 items-center bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
                                     <div className="w-16 h-16 bg-white rounded-xl p-2 shrink-0">
                                         <img src={item.product.image || item.product.gallery_product?.[0] || logoUrl || undefined} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply" />
                                     </div>
                                     <div className="flex-1">
-                                        <p className="font-bold text-sm line-clamp-1">{item.product.name || item.product.ar_name}</p>
+                                        <p className="font-bold text-sm line-clamp-1">{getLocalized(item.product, 'name') || item.product.name || item.product.ar_name}</p>
+                                        {(() => {
+                                            const variations = getCartItemVariations(item, isRtl);
+                                            if (variations.length === 0) return null;
+                                            return (
+                                                <div className="flex flex-wrap gap-1.5 mt-1.5 mb-1">
+                                                    {variations.map((v, vIdx) => (
+                                                        <span
+                                                            key={vIdx}
+                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/10 text-white border border-white/10"
+                                                        >
+                                                            <span className="text-white/60 font-medium">{v.name}:</span>
+                                                            <span className="font-black text-white">{v.value}</span>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
                                         <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-1">{t.checkout.quantity}: {item.quantity}</p>
                                     </div>
                                     <div className="font-black text-secondary">
@@ -1393,10 +1472,13 @@ export default function CheckoutPage() {
                             <div className="flex justify-between items-center text-white/50">
                                 <span className="font-bold text-sm uppercase tracking-wider">{t.cart.shipping}</span>
                                 {shippingCost > 0 ? (
-                                    <span className="font-black text-lg text-white">{shippingCost} {t.common.currency}</span>
+                                    <span className="font-black text-lg text-white">{shippingCost.toLocaleString()} {t.common.currency}</span>
                                 ) : (
                                     <span className="font-black text-[10px] text-white uppercase tracking-widest bg-white/20 px-2 py-1 rounded-lg">
-                                        {selectedOrderType === 'pickup' ? t.cart.shippingFree : (!token ? t.checkout.calculated : t.cart.shippingFree)}
+                                        {selectedOrderType === 'pickup'
+                                            ? t.cart.shippingFree
+                                            : ((!guestCity && !selectedAddress) ? t.checkout.calculated : t.cart.shippingFree)
+                                        }
                                     </span>
                                 )}
                             </div>

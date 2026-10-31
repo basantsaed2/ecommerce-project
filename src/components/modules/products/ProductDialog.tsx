@@ -109,9 +109,24 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
             return;
         }
 
+        const selectedVariationDetails = product?.variations?.map(v => {
+            const selectedOptId = selectedOptions[v._id];
+            const opt = v.options?.find(o => o._id === selectedOptId);
+            if (!opt) return null;
+            return {
+                variationName: v.name,
+                ar_variationName: v.ar_name,
+                optionName: opt.name,
+                ar_optionName: opt.ar_name,
+            };
+        }).filter(Boolean) || [];
+
         dispatch(addItem({
             product: product,
-            variant: currentSkuObj || undefined,
+            variant: currentSkuObj ? {
+                ...currentSkuObj,
+                selectedVariations: selectedVariationDetails
+            } : (selectedVariationDetails.length > 0 ? { selectedVariations: selectedVariationDetails } : undefined),
             quantity: quantity
         }));
 
@@ -129,10 +144,25 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
             return;
         }
 
+        const selectedVariationDetails = product?.variations?.map(v => {
+            const selectedOptId = selectedOptions[v._id];
+            const opt = v.options?.find(o => o._id === selectedOptId);
+            if (!opt) return null;
+            return {
+                variationName: v.name,
+                ar_variationName: v.ar_name,
+                optionName: opt.name,
+                ar_optionName: opt.ar_name,
+            };
+        }).filter(Boolean) || [];
+
         setIsBuyingNow(true);
         dispatch(addItem({
             product: product,
-            variant: currentSkuObj || undefined,
+            variant: currentSkuObj ? {
+                ...currentSkuObj,
+                selectedVariations: selectedVariationDetails
+            } : (selectedVariationDetails.length > 0 ? { selectedVariations: selectedVariationDetails } : undefined),
             quantity: quantity
         }));
 

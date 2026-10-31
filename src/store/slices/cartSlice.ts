@@ -147,12 +147,15 @@ export const cartSlice = createSlice({
 
             if (existing) {
                 existing.quantity += quantity;
+                if (variant?.selectedVariations && !existing.variant?.selectedVariations) {
+                    existing.variant = { ...(existing.variant || {}), ...variant };
+                }
             } else {
                 state.items.push({
                     product,
                     variant,
                     quantity,
-                    price: variant ? variant.price : (product.price_after_discount || product.price || 0)
+                    price: variant ? (variant.final_price || variant.price_after_discount || variant.price) : (product.price_after_discount || product.price || 0)
                 } as any);
             }
             state.totalCartPrice = state.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -188,12 +191,30 @@ export const cartSlice = createSlice({
                 cartData = cartData[0];
             }
             if (cartData) {
-                state.items = (cartData.cartItems || []).map((item: any) => ({
-                    ...item,
-                    product: typeof item.product === 'string'
-                        ? { _id: item.product, price: item.price }
-                        : item.product
-                }));
+                state.items = (cartData.cartItems || []).map((item: any) => {
+                    const existing = state.items.find((localItem: any) => 
+                        (localItem.product?._id === (item.product?._id || item.product)) &&
+                        (
+                            (item.productVariantId && (localItem.variant?._id === item.productVariantId || localItem.productVariantId === item.productVariantId)) ||
+                            (item.variant?._id && localItem.variant?._id === item.variant?._id) ||
+                            (!item.productVariantId && !item.variant && !localItem.variant)
+                        )
+                    );
+
+                    const mergedVariant = item.variant 
+                        ? { ...(existing?.variant || {}), ...item.variant }
+                        : (existing?.variant || (item.productVariantId ? { _id: item.productVariantId } : undefined));
+
+                    const populatedProduct = typeof item.product === 'object' && item.product !== null
+                        ? { ...(existing?.product || {}), ...item.product }
+                        : (existing?.product || { _id: item.product, price: item.price });
+
+                    return {
+                        ...item,
+                        variant: mergedVariant,
+                        product: populatedProduct,
+                    };
+                });
                 state.totalCartPrice = cartData.totalCartPrice ||
                     state.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
                 state.couponDiscount = cartData.couponDiscount || 0;
@@ -226,12 +247,30 @@ export const cartSlice = createSlice({
 
             if (cartData) {
                 // Normalize items to ensure each item has a product object, even if not populated
-                state.items = (cartData.cartItems || []).map((item: any) => ({
-                    ...item,
-                    product: typeof item.product === 'string'
-                        ? { _id: item.product, price: item.price }
-                        : item.product
-                }));
+                state.items = (cartData.cartItems || []).map((item: any) => {
+                    const existing = state.items.find((localItem: any) => 
+                        (localItem.product?._id === (item.product?._id || item.product)) &&
+                        (
+                            (item.productVariantId && (localItem.variant?._id === item.productVariantId || localItem.productVariantId === item.productVariantId)) ||
+                            (item.variant?._id && localItem.variant?._id === item.variant?._id) ||
+                            (!item.productVariantId && !item.variant && !localItem.variant)
+                        )
+                    );
+
+                    const mergedVariant = item.variant 
+                        ? { ...(existing?.variant || {}), ...item.variant }
+                        : (existing?.variant || (item.productVariantId ? { _id: item.productVariantId } : undefined));
+
+                    const populatedProduct = typeof item.product === 'object' && item.product !== null
+                        ? { ...(existing?.product || {}), ...item.product }
+                        : (existing?.product || { _id: item.product, price: item.price });
+
+                    return {
+                        ...item,
+                        variant: mergedVariant,
+                        product: populatedProduct,
+                    };
+                });
                 // Calculate total price if missing from backend
                 state.totalCartPrice = cartData.totalCartPrice ||
                     state.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);

@@ -130,10 +130,25 @@ export default function ProductDetailClient() {
             if (isOutOfStock) toast.error(t.product.soldOutCombination);
             return;
         }
+        const selectedVariationDetails = product?.variations?.map(v => {
+            const selectedOptId = selectedOptions[v._id];
+            const opt = v.options.find(o => o._id === selectedOptId);
+            if (!opt) return null;
+            return {
+                variationName: v.name,
+                ar_variationName: v.ar_name,
+                optionName: opt.name,
+                ar_optionName: opt.ar_name,
+            };
+        }).filter(Boolean) || [];
+
         setIsAddingToCart(true);
         dispatch(addItem({
             product: product,
-            variant: currentSkuObj || undefined,
+            variant: currentSkuObj ? {
+                ...currentSkuObj,
+                selectedVariations: selectedVariationDetails
+            } : (selectedVariationDetails.length > 0 ? { selectedVariations: selectedVariationDetails } : undefined),
             quantity: quantity
         }));
         await dispatch(syncCart());
@@ -146,10 +161,25 @@ export default function ProductDetailClient() {
             if (isOutOfStock) toast.error(t.product.soldOutCombination);
             return;
         }
+        const selectedVariationDetails = product?.variations?.map(v => {
+            const selectedOptId = selectedOptions[v._id];
+            const opt = v.options.find(o => o._id === selectedOptId);
+            if (!opt) return null;
+            return {
+                variationName: v.name,
+                ar_variationName: v.ar_name,
+                optionName: opt.name,
+                ar_optionName: opt.ar_name,
+            };
+        }).filter(Boolean) || [];
+
         setIsBuyingNow(true);
         dispatch(addItem({
             product: product,
-            variant: currentSkuObj || undefined,
+            variant: currentSkuObj ? {
+                ...currentSkuObj,
+                selectedVariations: selectedVariationDetails
+            } : (selectedVariationDetails.length > 0 ? { selectedVariations: selectedVariationDetails } : undefined),
             quantity: quantity
         }));
         await dispatch(syncCart());
