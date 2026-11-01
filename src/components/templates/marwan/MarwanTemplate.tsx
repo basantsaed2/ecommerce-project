@@ -70,6 +70,7 @@ export default function MarwanTemplate({
 
   const showHero = sectionEnabled(sections, 'hero');
   const showFeatures = sectionEnabled(sections, 'features');
+  const showFeaturedProducts = showFeatures;
   const showCategories = sectionEnabled(sections, 'categories');
   const showProducts = sectionEnabled(sections, 'products');
   const showBrands = sectionEnabled(sections, 'brands');
@@ -139,6 +140,17 @@ export default function MarwanTemplate({
     ['--mw-surface' as any]: 'color-mix(in srgb, var(--mw-bg) 96%, var(--mw-text) 4%)',
     ['--mw-surface-2' as any]: 'color-mix(in srgb, var(--mw-bg) 92%, var(--mw-text) 8%)',
     ['--mw-border' as any]: 'color-mix(in srgb, var(--mw-text) 12%, transparent)',
+    ['--mw-header-bg' as any]: isDarkMode
+      ? 'color-mix(in srgb, var(--mw-bg) 86%, white 14%)'
+      : activeSecondary || activeBackground || '#ffffff',
+    ['--mw-header-surface' as any]: isDarkMode
+      ? 'var(--mw-bg)'
+      : 'color-mix(in srgb, var(--mw-bg) 92%, var(--mw-text) 8%)',
+    ['--mw-header-text' as any]: isDarkMode ? '#f8fafc' : activeTextPrimary || '#111827',
+    ['--mw-header-muted' as any]: isDarkMode ? '#cbd5e1' : activeTextSecondary || '#6b7280',
+    ['--mw-header-border' as any]: isDarkMode
+      ? 'color-mix(in srgb, white 18%, transparent)'
+      : 'color-mix(in srgb, var(--mw-text) 14%, transparent)',
   } as React.CSSProperties;
 
   const fontQuery = useMemo(() => googleFontParam(fontStyle), [fontStyle]);
@@ -254,10 +266,14 @@ export default function MarwanTemplate({
       document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
-    if (showProducts && searchedProducts.length > 0) {
+    if (showFeaturedProducts && searchedProducts.length > 0) {
       document.getElementById('featured-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
     }
-  }, [activeSearch, matchingBrand, showCategories, showProducts, categories.length, searchedProducts.length]);
+    if (showProducts && searchedProducts.length > 0) {
+      document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeSearch, matchingBrand, showCategories, showFeaturedProducts, showProducts, categories.length, searchedProducts.length]);
 
   const isLoading = bannersLoading || categoriesLoading || productsLoading || brandsLoading;
 
@@ -281,7 +297,7 @@ export default function MarwanTemplate({
       })
     : [
         { key: 'categories', label: t?.nav?.categories || 'Categories', href: '#categories', enabled: showCategories && categories.length > 0 },
-        { key: 'featured-products', label: t?.nav?.products || 'Featured', href: '#featured-products', enabled: showProducts && featuredProducts.length > 0 },
+        { key: 'featured-products', label: t?.nav?.products || 'Featured', href: '#featured-products', enabled: showFeaturedProducts && featuredProducts.length > 0 },
         { key: 'all-products', label: 'All Products', href: '#all-products', enabled: showProducts && allProductsList.length > 0 },
         { key: 'brands', label: t?.nav?.brands || 'Brands', href: '#brands', enabled: showBrands && brands.length > 0 },
         { key: 'why-us', label: t?.nav?.whyUs || 'Why Us', href: '#why-us', enabled: showFeatures },
@@ -291,8 +307,8 @@ export default function MarwanTemplate({
   const navLinkCls = (active: boolean) =>
     `text-[13px] font-bold uppercase tracking-wider pb-1 border-b-2 transition-colors ${
       active
-        ? 'border-[var(--mw-primary)] text-[var(--mw-text)]'
-        : 'border-transparent text-[var(--mw-text-muted)] hover:text-[var(--mw-text)]'
+        ? 'border-[var(--mw-primary)] text-[var(--mw-header-text)]'
+        : 'border-transparent text-[var(--mw-header-muted)] hover:text-[var(--mw-header-text)]'
     }`;
 
   const dynamicTrustPerks = [
@@ -331,7 +347,9 @@ export default function MarwanTemplate({
         {announcementText && (
           <div
             className="fixed inset-x-0 top-0 z-[55] text-xs font-bold py-1.5 px-4 text-center transition-all flex items-center justify-center gap-2"
-            style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
+            style={isDarkMode
+              ? { background: 'var(--mw-header-bg)', color: 'var(--mw-header-text)', borderBottom: '1px solid var(--mw-header-border)' }
+              : { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
           >
             <Sparkles size={13} />
             <span>{announcementText}</span>
@@ -342,8 +360,9 @@ export default function MarwanTemplate({
         <header
           className={`fixed inset-x-0 ${announcementText ? 'top-[28px]' : 'top-0'} z-50 transition-all duration-300 ${scrolled ? 'shadow-lg backdrop-blur-md' : ''}`}
           style={{
-            background: 'color-mix(in srgb, var(--mw-secondary) 96%, black 4%)',
-            borderBottom: '1px solid color-mix(in srgb, var(--mw-primary) 45%, transparent)',
+            background: 'var(--mw-header-bg)',
+            color: 'var(--mw-header-text)',
+            borderBottom: '1px solid var(--mw-header-border)',
           }}
         >
           <div className="max-w-[1460px] mx-auto px-4 flex items-center justify-between h-[72px] gap-4">
@@ -358,19 +377,19 @@ export default function MarwanTemplate({
             </Link>
 
             <div className="hidden md:flex flex-1 justify-center px-3">
-              <form onSubmit={handleSearchSubmit} className="relative flex w-full max-w-[460px] items-center gap-3 rounded-full border px-4 py-2" style={{ background: 'color-mix(in srgb, var(--mw-bg) 18%, transparent)', borderColor: 'color-mix(in srgb, var(--mw-primary) 35%, transparent)' }}>
-                <span style={{ color: 'var(--mw-text-muted)' }}>⌕</span>
+              <form onSubmit={handleSearchSubmit} className="relative flex w-full max-w-[460px] items-center gap-3 rounded-full border px-4 py-2 transition-colors" style={{ background: 'transparent', borderColor: 'var(--mw-header-border)' }}>
+                <span style={{ color: 'var(--mw-header-muted)' }}>⌕</span>
                 <input
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder={t?.common?.searchPlaceholder || 'Search products, categories, or brands...'}
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-text-muted)]"
-                  style={{ color: 'var(--mw-text)' }}
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-header-muted)]"
+                  style={{ color: 'var(--mw-header-text)', backgroundColor: 'transparent' }}
                 />
                 {matchingBrand && (
-                  <Link href={`/brands#${matchingBrand._id}`} className="absolute inset-x-0 top-full z-50 mt-2 rounded-xl border bg-white px-4 py-3 text-sm font-bold text-gray-800 shadow-lg">
-                    {getLocalized ? getLocalized(matchingBrand) : matchingBrand.name} <span className="font-normal text-gray-500">— {t?.nav?.brands || 'Brands'}</span>
+                  <Link href={`/brands#${matchingBrand._id}`} className="absolute inset-x-0 top-full z-50 mt-2 rounded-xl border px-4 py-3 text-sm font-bold shadow-lg" style={{ background: 'var(--mw-header-bg)', color: 'var(--mw-header-text)', borderColor: 'var(--mw-header-border)' }}>
+                    {getLocalized ? getLocalized(matchingBrand) : matchingBrand.name} <span className="font-normal" style={{ color: 'var(--mw-header-muted)' }}>— {t?.nav?.brands || 'Brands'}</span>
                   </Link>
                 )}
               </form>
@@ -390,8 +409,12 @@ export default function MarwanTemplate({
                 onClick={toggleLanguage}
                 aria-label={language === 'ar' ? t.sections.switchToEnglish : t.sections.switchToArabic}
                 title={language === 'ar' ? t.sections.english : t.sections.arabic}
-                className="inline-flex h-9 min-w-9 items-center justify-center rounded-full border px-2 text-[10px] font-black transition-all duration-300 hover:scale-105"
-                style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+              className="flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
+              style={{
+                backgroundColor: 'var(--color-primary)',
+                borderColor: 'var(--color-primary)',
+                color: 'var(--color-secondary)',
+              }}
               >
                 {language.toUpperCase()}
               </button>
@@ -403,9 +426,9 @@ export default function MarwanTemplate({
                 title={themeMode === 'dark' ? t.sections.lightMode : t.sections.darkMode}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
                 style={{
-                  backgroundColor: 'var(--color-secondary)',
-                  borderColor: 'var(--color-primary)',
-                  color: 'var(--color-primary)',
+                  backgroundColor: 'var(--mw-header-surface)',
+                  borderColor: 'var(--mw-header-border)',
+                  color: 'var(--mw-header-text)',
                 }}
               >
                 {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
@@ -415,11 +438,11 @@ export default function MarwanTemplate({
                 aria-label={t.nav.cart}
                 title={t.nav.cart}
                 className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:opacity-80"
-                style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+                style={{ borderColor: 'var(--mw-header-border)', color: 'var(--mw-header-text)' }}
               >
                 <ShoppingCart size={17} />
                 {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[9px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold" style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}>
                     {cartCount}
                   </span>
                 )}
@@ -429,7 +452,7 @@ export default function MarwanTemplate({
                 aria-label={token ? t.nav.profile : t.nav.login}
                 title={token ? t.nav.profile : t.nav.login}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:opacity-80"
-                style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+                style={{ borderColor: 'var(--mw-header-border)', color: 'var(--mw-header-text)' }}
               >
                 <UserRound size={17} />
               </Link>
@@ -465,19 +488,19 @@ export default function MarwanTemplate({
 
           {menuOpen && (
             <div className="lg:hidden max-w-[1240px] mx-auto px-5 pb-4 flex flex-col gap-3">
-              <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 rounded-full border px-3 py-2" style={{ background: 'var(--mw-bg)', borderColor: 'var(--mw-border)' }}>
-                <span style={{ color: 'var(--mw-text-muted)' }}>⌕</span>
+              <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 rounded-full border px-3 py-2" style={{ background: 'transparent', borderColor: 'var(--mw-header-border)' }}>
+                <span style={{ color: 'var(--mw-header-muted)' }}>⌕</span>
                 <input
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder={t?.common?.search || 'Search...'}
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-text-muted)]"
-                  style={{ color: 'var(--mw-text)' }}
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-header-muted)]"
+                  style={{ color: 'var(--mw-header-text)', backgroundColor: 'transparent' }}
                 />
               </form>
               {navItems.map((item) => (
-                <Link key={item.key} href={item.href} onClick={() => setMenuOpen(false)} className="text-sm font-bold uppercase py-1">
+                <Link key={item.key} href={item.href} onClick={() => setMenuOpen(false)} className="text-sm font-bold uppercase py-1" style={{ color: 'var(--mw-header-text)' }}>
                   {item.label}
                 </Link>
               ))}
@@ -533,7 +556,7 @@ export default function MarwanTemplate({
                   </p>
 
                   <div className="flex flex-wrap gap-4 mb-10">
-                    <Link href="#featured-products" className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider text-white transition-transform hover:-translate-y-0.5 shadow-xl" style={{ background: 'var(--mw-primary)', boxShadow: '0 16px 36px color-mix(in srgb, var(--mw-primary) 40%, transparent)' }}>
+                    <Link href={showFeaturedProducts ? '#featured-products' : '#all-products'} className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider text-white transition-transform hover:-translate-y-0.5 shadow-xl" style={{ background: 'var(--mw-primary)', boxShadow: '0 16px 36px color-mix(in srgb, var(--mw-primary) 40%, transparent)' }}>
                       {t?.home?.shopNow || 'Shop Products'} <ArrowRight size={17} className={isRtl ? 'rotate-180' : ''} />
                     </Link>
                     {categories.length > 0 && (
@@ -670,7 +693,7 @@ export default function MarwanTemplate({
                   {secondaryBanner?.description || (featuredCategoryBanner?.ar_name ? `Explore all official products in ${featuredCategoryBanner.name} (${featuredCategoryBanner.ar_name}) with exclusive store rates.` : 'Explore verified store collections with full warranty and express shipping.')}
                 </p>
                 <Link
-                  href={featuredCategoryBanner ? `/categories?id=${featuredCategoryBanner._id}` : '#featured-products'}
+                  href={featuredCategoryBanner ? `/categories?id=${featuredCategoryBanner._id}` : showFeaturedProducts ? '#featured-products' : '#all-products'}
                   className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-xs font-black uppercase tracking-wider text-white transition-transform hover:-translate-y-0.5"
                   style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
                 >
@@ -682,7 +705,7 @@ export default function MarwanTemplate({
         )}
 
         {/* ── Section 4: Featured Products ── */}
-        {showProducts && featuredProducts.length > 0 && (
+        {showFeaturedProducts && featuredProducts.length > 0 && (
           <section className="py-12 md:py-16 max-w-[1240px] mx-auto px-5" id="featured-products">
             <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} flex flex-wrap items-end justify-between gap-4 mb-8`}>
               <div>

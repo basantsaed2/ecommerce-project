@@ -50,9 +50,33 @@ export default function DynamicSectionRenderer({
     const { sections: contextSections, templateSlug: globalTemplateSlug } = useStoreSettings();
 
     const sectionsToRender = propSections || contextSections || [];
+    const featuresSection = sectionsToRender.find((section) => section?.key?.toLowerCase() === 'features');
+    const showFeaturedProducts = featuresSection?.enabled;
+    const productSectionKeys = ['products', 'featured-products', 'featured', 'product'];
+    const hasProductSection = sectionsToRender.some((section) =>
+        productSectionKeys.includes(section?.key?.toLowerCase())
+    );
+    const sectionsWithFeaturedProducts = sectionsToRender.map((section) =>
+        showFeaturedProducts === undefined || !productSectionKeys.includes(section?.key?.toLowerCase())
+            ? section
+            : { ...section, enabled: showFeaturedProducts }
+    );
+
+    if (
+        showFeaturedProducts &&
+        !hasProductSection &&
+        !productSectionKeys.some((key) => excludeKeys.includes(key))
+    ) {
+        sectionsWithFeaturedProducts.push({
+            key: 'products',
+            enabled: true,
+            order: (featuresSection?.order || 0) + 1,
+            templateSlug: featuresSection?.templateSlug,
+        });
+    }
 
     // Filter enabled sections and exclude any specified keys
-    const enabledSections = sectionsToRender
+    const enabledSections = sectionsWithFeaturedProducts
         .filter((sec) => sec && sec.enabled !== false && !excludeKeys.includes(sec.key))
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 

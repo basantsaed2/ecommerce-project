@@ -88,7 +88,9 @@ export default function ExampleTemplate({
   const [catMenuOpen, setCatMenuOpen] = useState(true);
 
   const showHero = sectionEnabled(sections, 'hero');
+  const showFeaturedProducts = sectionEnabled(sections, 'features');
   const showProducts = sectionEnabled(sections, 'products');
+  const showNewArrivals = sectionEnabled(sections, 'new-arrivals');
   const showBrands = sectionEnabled(sections, 'brands');
   const showBestSellers = sectionEnabledAny(sections, ['best-sellers', 'best-seller', 'bestsellers']);
   const showOffers = sectionEnabledAny(sections, ['offers', 'offer', 'offer-products', 'special-offers']);
@@ -107,7 +109,8 @@ export default function ExampleTemplate({
   // Extract Dynamic Lists
   const categories = useMemo(() => (categoriesData?.data?.data || []).filter((category) => category.is_featured === true), [categoriesData]);
   const banners = useMemo(() => bannersData?.data?.data || [], [bannersData]);
-  const products = useMemo(() => (productsData?.data?.data || []).filter((product) => product.is_featured === true), [productsData]);
+  const allProducts = useMemo(() => productsData?.data?.data || [], [productsData]);
+  const products = useMemo(() => allProducts.filter((product) => product.is_featured === true), [allProducts]);
   const brands = useMemo(() => (brandsData?.data?.data || []).filter((brand) => brand.is_featured === true), [brandsData]);
 
   // Filtered Lists
@@ -121,7 +124,23 @@ export default function ExampleTemplate({
     );
   }, [products, currentSearch]);
 
-  const newArrivals = useMemo(() => filteredProducts.slice(0, 4), [filteredProducts]);
+  const filteredAllProducts = useMemo(() => {
+    const q = currentSearch.toLowerCase().trim();
+    if (!q) return allProducts;
+    return allProducts.filter((p) =>
+      p.name?.toLowerCase().includes(q) ||
+      p.ar_name?.toLowerCase().includes(q) ||
+      p.description?.toLowerCase().includes(q)
+    );
+  }, [allProducts, currentSearch]);
+
+  const newArrivals = useMemo(
+    () => [...filteredAllProducts].sort((a, b) =>
+      new Date(b.createdAt || b.created_at || 0).getTime() -
+      new Date(a.createdAt || a.created_at || 0).getTime()
+    ).slice(0, 4),
+    [filteredAllProducts]
+  );
   const trendingProducts = useMemo(() => filteredProducts.slice(4, 8), [filteredProducts]);
 
   const heroMainBanner = banners[0];
@@ -146,15 +165,15 @@ export default function ExampleTemplate({
       `}</style>
 
       {/* ── Top Utility Bar ────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-200 text-xs text-gray-600 py-2 hidden lg:block">
+      <div className="border-b text-xs py-2 hidden lg:block" style={{ backgroundColor: activeBackground || '#ffffff', borderColor: activeTextSecondary || '#e5e7eb', color: activeTextSecondary || '#4b5563' }}>
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1.5">
-              <MapPin size={14} className="text-gray-400" />
+              <MapPin size={14} style={{ color: activeTextSecondary || '#9ca3af' }} />
               {contactInfo?.address}
             </span>
             <span className="flex items-center gap-1.5">
-              <Phone size={14} className="text-gray-400" />
+              <Phone size={14} style={{ color: activeTextSecondary || '#9ca3af' }} />
               {contactInfo?.phone}
             </span>
           </div>
@@ -167,7 +186,7 @@ export default function ExampleTemplate({
       </div>
 
       {/* ── Main Header (Logo, Search, Icons) ─────────────────────────── */}
-      <header className="bg-white py-4 border-b border-gray-200">
+      <header className="py-4 border-b" style={{ backgroundColor: activeBackground || '#ffffff', borderColor: activeTextSecondary || '#e5e7eb', color: activeTextPrimary || '#111827' }}>
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between gap-6">
           <Link href="/" className="flex items-center gap-2 text-3xl font-extrabold tracking-tight shrink-0">
               {header.logo || logoUrl ? (
@@ -178,17 +197,19 @@ export default function ExampleTemplate({
           </Link>
 
           <div className="flex-1 max-w-[650px] mx-4">
-            <div className="flex items-center border-2 border-[var(--bs-primary)] rounded-md overflow-hidden bg-white">
+            <div className="flex items-center border-2 border-[var(--bs-primary)] rounded-md overflow-hidden">
               <input
                 type="text"
                 placeholder={t.common.searchPlaceholder}
                 value={currentSearch}
                 onChange={(e) => setCurrentSearch(e.target.value)}
-                className="w-full px-4 py-2.5 text-sm outline-none text-slate-800 placeholder:text-gray-400"
+                className={`w-full px-4 py-2.5 text-sm outline-none ${isDarkMode ? 'text-slate-100 placeholder:text-slate-400' : 'text-slate-800 placeholder:text-gray-400'}`}
+                style={{ backgroundColor: 'transparent' }}
+
               />
               <button 
                 type="button"
-                className="bg-[var(--bs-primary)] text-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:brightness-110 transition-all shrink-0"
+                className="text-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:brightness-110 transition-all shrink-0"
               >
                 <Search size={15} /> {t.common.search.replace('...', '')}
               </button>
@@ -201,8 +222,12 @@ export default function ExampleTemplate({
               onClick={toggleLanguage}
               aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
               title={language === 'ar' ? 'English' : 'العربية'}
-              className="flex h-9 min-w-9 items-center justify-center rounded-full border px-2 text-[10px] font-black transition-all duration-300 hover:scale-105"
-              style={{ borderColor: 'var(--bs-primary)', color: 'var(--bs-primary)' }}
+              className="flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
+              style={{
+                backgroundColor: 'var(--color-primary)',
+                borderColor: 'var(--color-primary)',
+                color: 'var(--color-secondary)',
+              }}
             >
               {language.toUpperCase()}
             </button>
@@ -221,13 +246,13 @@ export default function ExampleTemplate({
             >
               {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <Link href="/favourite" aria-label={t.nav.wishlist} className="relative p-2 text-gray-700 hover:text-[var(--bs-primary)] transition-colors">
+            <Link href="/favourite" aria-label={t.nav.wishlist} className={`relative p-2 transition-colors hover:text-[var(--bs-primary)] ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               <Heart size={24} />
             </Link>
-            <Link href="/cart" aria-label={t.nav.cart} className="relative p-2 text-gray-700 hover:text-[var(--bs-primary)] transition-colors">
+            <Link href="/cart" aria-label={t.nav.cart} className={`relative p-2 transition-colors hover:text-[var(--bs-primary)] ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               <ShoppingBag size={24} />
               {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-gray-900 px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 px-1 text-[10px] font-bold text-white" style={{ borderColor: activeBackground || '#ffffff', backgroundColor: isDarkMode ? '#020617' : '#111827' }}>
                   {cartCount}
                 </span>
               )}
@@ -236,7 +261,7 @@ export default function ExampleTemplate({
               href={token ? '/profile' : '/login'}
               aria-label={token ? t.nav.profile : t.nav.login}
               title={token ? t.nav.profile : t.nav.login}
-              className="relative p-2 text-gray-700 transition-colors hover:text-[var(--bs-primary)]"
+              className={`relative p-2 transition-colors hover:text-[var(--bs-primary)] ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}
             >
               <UserRound size={24} />
             </Link>
@@ -390,8 +415,26 @@ export default function ExampleTemplate({
         </section>
       )}
 
+      {/* ── Featured Products ──────────────────────────────────────────── */}
+      {showFeaturedProducts && filteredProducts.length > 0 && (
+        <section className="max-w-[1400px] mx-auto px-6 pt-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-900">{t.sections.featuredProductsHeading}</h2>
+            <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
+              {t.sections.seeAll}
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredProducts.slice(0, 4).map((prod) => (
+              <SharedProductCard key={prod._id} product={prod} badge={t.sections.newLabel} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── New Arrivals ──────────────────────────────────────────────── */}
-      {showProducts && newArrivals.length > 0 && (
+      {showNewArrivals && newArrivals.length > 0 && (
         <section className="max-w-[1400px] mx-auto px-6 pt-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900">{t.sections.newArrivalsHeading}</h2>
