@@ -61,6 +61,9 @@ export default function MarwanTemplate({
   const [activeSection, setActiveSection] = useState('');
   const [searchText, setSearchText] = useState(searchQuery || '');
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>('all');
+  
+  // State to toggle showing all categories on home page
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   useEffect(() => {
     setSearchText(searchQuery || '');
@@ -620,7 +623,7 @@ export default function MarwanTemplate({
           ))}
         </div>
 
-        {/* ── Section 2: Categories ── */}
+        {/* ── Section 2: Categories (Modified to show 4 categories & Show More button) ── */}
         {showCategories && categories.length > 0 && (
           <section className="py-12 md:py-16 max-w-[1240px] mx-auto px-5" id="categories">
             <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} flex flex-wrap items-end justify-between gap-4 mb-8`}>
@@ -638,7 +641,7 @@ export default function MarwanTemplate({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {categories.map((category, i) => (
+              {categories.slice(0, showAllCategories ? categories.length : 4).map((category, i) => (
                 <Link
                   key={category._id}
                   href={`/categories?id=${category._id}`}
@@ -669,6 +672,19 @@ export default function MarwanTemplate({
                 </Link>
               ))}
             </div>
+
+            {/* Show More Button if categories exceed 4 */}
+            {!showAllCategories && categories.length > 4 && (
+              <div className="mt-10 flex justify-center">
+                <button
+                  onClick={() => setShowAllCategories(true)}
+                  className="inline-flex items-center gap-2 rounded-full border-2 px-8 py-3 font-bold transition-all hover:opacity-90 shadow-sm hover:shadow cursor-pointer"
+                  style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+                >
+                  Show More <ArrowRight size={16} className={isRtl ? 'rotate-180' : ''} />
+                </button>
+              </div>
+            )}
           </section>
         )}
 
