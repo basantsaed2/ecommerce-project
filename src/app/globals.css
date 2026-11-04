@@ -34,6 +34,21 @@ html.dark .text-gray-700 { color: #f3f4f6 !important; }
 html.dark .text-gray-600,
 html.dark .text-gray-500,
 html.dark .text-gray-400 { color: #d1d5db !important; }
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 { color: #f8fafc !important; }
+html.dark h1 span,
+html.dark h2 span,
+html.dark h3 span,
+html.dark h4 span,
+html.dark h5 span,
+html.dark h6 span { color: #f8fafc !important; }
+html.dark section .text-secondary { color: #f8fafc !important; }
+html.dark .mw-tpl section [style*="color: var(--mw-primary)"],
+html.dark .bs-tpl section [class*="var(--bs-primary)"] { color: #f8fafc !important; }
 html.dark .border-gray-100,
 html.dark .border-gray-200 { border-color: #374151 !important; }
 html.dark input,

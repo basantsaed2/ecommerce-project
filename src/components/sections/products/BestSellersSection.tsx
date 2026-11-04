@@ -6,6 +6,7 @@ import { useGet } from '@/hooks/useGet';
 import { ApiResponse, Product } from '@/types/api';
 import ProductCard from '@/components/modules/products/ProductCard';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 
 interface BestSellersSectionProps {
     title?: string;
@@ -20,6 +21,8 @@ export default function BestSellersSection({
     searchQuery = '',
 }: BestSellersSectionProps) {
     const { t } = useTranslation();
+    const { themeMode } = useStoreSettings();
+    const isDarkMode = themeMode === 'dark';
     const { data, isLoading, error } = useGet<ApiResponse<Product>>(
         ['best-sellers'],
         '/product/best-sellers'
@@ -43,10 +46,10 @@ export default function BestSellersSection({
             <div className="max-w-[1240px] mx-auto">
                 <div className="flex items-end justify-between gap-4 mb-8">
                     <div>
-                        <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-secondary mb-2">
+                        <span className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest mb-2 ${isDarkMode ? 'text-white' : 'text-secondary'}`}>
                             <TrendingUp size={15} /> {subtitle || t.sections.topPerformers}
                         </span>
-                        <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
+                        <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
                             {title || t.sections.bestSellers}
                         </h2>
                     </div>

@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { getProductPriceInfo } from '@/utils/productUtils';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
+import { resolveCartVariantId } from '@/utils/cartUtils';
 
 interface ProductDialogProps {
     productId: string;
@@ -95,6 +96,8 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
     const isOutOfStock = !hasAvailableStock || (currentSkuObj ? getSkuStock(currentSkuObj) <= 0 : productQuantity <= 0);
 
     const isOptionInStock = (optionId: string): boolean => {
+        const option = product?.variations?.flatMap(variation => variation.options).find(item => item._id === optionId);
+        if (typeof option?.quantity === 'number') return option.quantity > 0;
         if (!product?.skus) return productQuantity > 0;
         return product.skus.some(sku =>
             getSkuStock(sku) > 0 && sku.option_ids.includes(optionId)
@@ -114,19 +117,26 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
             const opt = v.options?.find(o => o._id === selectedOptId);
             if (!opt) return null;
             return {
+                variationId: v._id,
+                optionId: opt._id,
+                productVariantId: v.product_price_id,
                 variationName: v.name,
                 ar_variationName: v.ar_name,
                 optionName: opt.name,
                 ar_optionName: opt.ar_name,
             };
         }).filter(Boolean) || [];
+        const productVariantId = resolveCartVariantId(selectedVariationDetails, currentSkuObj?._id);
 
         dispatch(addItem({
             product: product,
-            variant: currentSkuObj ? {
-                ...currentSkuObj,
+            variant: currentSkuObj || selectedVariationDetails.length > 0 ? {
+                ...(currentSkuObj || {}),
+                ...(productVariantId ? { _id: productVariantId } : {}),
+                price: currentSkuObj?.price ?? priceInfo.mainPrice,
+                final_price: currentSkuObj?.final_price ?? priceInfo.finalPrice,
                 selectedVariations: selectedVariationDetails
-            } : (selectedVariationDetails.length > 0 ? { selectedVariations: selectedVariationDetails } : undefined),
+            } : undefined,
             quantity: quantity
         }));
 
@@ -149,20 +159,27 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
             const opt = v.options?.find(o => o._id === selectedOptId);
             if (!opt) return null;
             return {
+                variationId: v._id,
+                optionId: opt._id,
+                productVariantId: v.product_price_id,
                 variationName: v.name,
                 ar_variationName: v.ar_name,
                 optionName: opt.name,
                 ar_optionName: opt.ar_name,
             };
         }).filter(Boolean) || [];
+        const productVariantId = resolveCartVariantId(selectedVariationDetails, currentSkuObj?._id);
 
         setIsBuyingNow(true);
         dispatch(addItem({
             product: product,
-            variant: currentSkuObj ? {
-                ...currentSkuObj,
+            variant: currentSkuObj || selectedVariationDetails.length > 0 ? {
+                ...(currentSkuObj || {}),
+                ...(productVariantId ? { _id: productVariantId } : {}),
+                price: currentSkuObj?.price ?? priceInfo.mainPrice,
+                final_price: currentSkuObj?.final_price ?? priceInfo.finalPrice,
                 selectedVariations: selectedVariationDetails
-            } : (selectedVariationDetails.length > 0 ? { selectedVariations: selectedVariationDetails } : undefined),
+            } : undefined,
             quantity: quantity
         }));
 
@@ -304,6 +321,14 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                                                         : 'bg-white border-gray-200 text-gray-800 hover:border-gray-400'
                                                                     }`}
                                                             >
+                                                                {typeof option.quantity === 'number' && (
+                                                                    <span
+                                                                        className="mb-1.5 inline-flex h-7 min-w-8 items-center justify-center rounded-full bg-emerald-100 px-2 text-base font-black leading-none text-emerald-800 shadow-sm ring-1 ring-emerald-200"
+                                                                        title={t.product.quantity}
+                                                                    >
+                                                                        {option.quantity}
+                                                                    </span>
+                                                                )}
                                                                 <span>{getLocalized(option)}</span>
                                                             </button>
                                                         );

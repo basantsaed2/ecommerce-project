@@ -41,3 +41,13 @@ export interface UpdateQuantityRequest {
     quantity: number;
     productVariantId?: string;
 }
+
+export interface SyncCartItemRequest {
+    productId: string;
+    productVariantId?: string;
+    quantity: number;
+    options?: Array<{
+        variationId: string;
+        optionId: string;
+    }>;
+}

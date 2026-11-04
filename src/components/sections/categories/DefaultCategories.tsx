@@ -44,7 +44,7 @@ export default function DefaultCategories({
     if (allCategories.length === 0) return null;
 
     return (
-        <section className="w-full py-8 relative">
+        <section className="w-full px-4 py-12 sm:px-6 relative">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-4">
                 <div>
                     <span className="text-xs font-black uppercase tracking-widest text-secondary mb-1 block">

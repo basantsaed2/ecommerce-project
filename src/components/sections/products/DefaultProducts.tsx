@@ -45,7 +45,7 @@ export default function DefaultProducts({
     if (allProducts.length === 0 && !hasNextPage) return null;
 
     return (
-        <section className="w-full py-10 relative">
+        <section className="w-full px-4 py-12 sm:px-6 relative">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-2">

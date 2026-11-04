@@ -42,7 +42,7 @@ export default function ModernCategories({
     if (categories.length === 0) return null;
 
     return (
-        <section className="w-full py-10">
+        <section className="w-full px-4 py-12 sm:px-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
                 <div>
                     <span className="text-xs font-black uppercase tracking-widest text-secondary block mb-1">

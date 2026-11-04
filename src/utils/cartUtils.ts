@@ -3,6 +3,32 @@ export interface CartItemVariationInfo {
     value: string;
 }
 
+export interface SelectedCartVariation {
+    variationId?: string;
+    optionId?: string;
+    productVariantId?: string;
+}
+
+export function resolveCartVariantId(
+    selectedVariations: Array<SelectedCartVariation | null | undefined>,
+    explicitVariantId?: string,
+): string | undefined {
+    if (explicitVariantId) return explicitVariantId;
+
+    const validVariations = selectedVariations.filter(
+        (variation): variation is SelectedCartVariation => Boolean(variation)
+    );
+    const linkedVariantIds = [...new Set(
+        validVariations
+            .map(variation => variation.productVariantId)
+            .filter((variantId): variantId is string => Boolean(variantId))
+    )];
+    if (linkedVariantIds.length === 1) return linkedVariantIds[0];
+    if (validVariations.length === 1) return validVariations[0].optionId;
+
+    return undefined;
+}
+
 /**
  * Extracts variation names and values (e.g. Size: 90 * 190) from any cart item
  */

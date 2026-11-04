@@ -11,6 +11,9 @@ import { RootState } from '@/store/store';
 import { logout } from '@/store/slices/authSlice';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
+import { CART_COUNT_BADGE_CLASS, HEADER_ACTION_BASE_CLASS } from '@/components/layout/headerStyles';
+
+const headerActionClassName = `${HEADER_ACTION_BASE_CLASS} border-gray-200 bg-white text-primary hover:border-gray-400 hover:bg-gray-50 hover:text-black`;
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -114,7 +117,7 @@ export default function Navbar() {
                         onClick={toggleLanguage}
                         aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
                         title={language === 'ar' ? 'English' : 'العربية'}
-                        className="h-10 min-w-10 rounded-xl border border-gray-200 bg-white px-2 text-xs font-black text-primary transition hover:border-secondary hover:text-secondary"
+                        className={`${headerActionClassName} text-xs font-black`}
                     >
                         {language.toUpperCase()}
                     </button>
@@ -124,12 +127,7 @@ export default function Navbar() {
                         aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                         aria-pressed={themeMode === 'dark'}
                         title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
-                        style={{
-                            backgroundColor: 'var(--color-secondary)',
-                            borderColor: 'var(--color-primary)',
-                            color: 'var(--color-primary)',
-                        }}
+                        className={headerActionClassName}
                     >
                         {themeMode === 'dark' ? (
                             <Sun size={18} className="transition-transform duration-300 rotate-0" />
@@ -138,16 +136,16 @@ export default function Navbar() {
                         )}
                     </button>
                     {/* Icons (Desktop/Tablet) */}
-                    <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1">
+                    <div className="flex items-center gap-1">
                         {isLoggedIn && (
                             <Link href="/favourite" className="p-2 text-gray-500 hover:text-red-500 transition-colors hidden md:block">
                                 <Heart size={20} />
                             </Link>
                         )}
-                        <Link href="/cart" className="relative p-2 bg-white rounded-xl shadow-sm text-primary transition-all hover:scale-105">
+                        <Link href="/cart" aria-label={`${t.nav.cart}${cartCount > 0 ? ` (${cartCount})` : ''}`} className={headerActionClassName}>
                             <ShoppingCart size={20} />
                             {cartCount > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-secondary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">
+                                <span className={CART_COUNT_BADGE_CLASS}>
                                     {cartCount}
                                 </span>
                             )}
@@ -205,7 +203,7 @@ export default function Navbar() {
                     <ShoppingCart size={22} />
                     <span className="text-[10px] font-bold">{t.nav.cart}</span>
                     {cartCount > 0 && (
-                        <span className="absolute -top-1 right-0 bg-secondary text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                        <span className={CART_COUNT_BADGE_CLASS}>
                             {cartCount}
                         </span>
                     )}

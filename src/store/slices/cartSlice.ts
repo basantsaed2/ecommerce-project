@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { cartApi } from '@/api/cart';
-import { CartItem, PopulatedCartItem, Cart } from '@/types/cart';
+import { CartItem, PopulatedCartItem, Cart, SyncCartItemRequest } from '@/types/cart';
 import { RootState } from '../store';
 import { toast } from 'sonner';
+import { resolveCartVariantId } from '@/utils/cartUtils';
 
 interface CartState {
     items: PopulatedCartItem[];
@@ -76,11 +77,29 @@ export const syncCart = createAsyncThunk(
     async (_, { getState, rejectWithValue }) => {
         try {
             const state = getState() as RootState;
-            const items = state.cart.items.map(item => ({
-                productId: item.product._id,
-                productVariantId: item.variant?._id || item.productVariantId,
-                quantity: item.quantity
-            }));
+            const items: SyncCartItemRequest[] = state.cart.items.map(item => {
+                const selectedVariations = Array.isArray(item.variant?.selectedVariations)
+                    ? item.variant.selectedVariations
+                    : [];
+                const productVariantId = resolveCartVariantId(
+                    selectedVariations,
+                    item.variant?._id || item.productVariantId
+                );
+
+                return {
+                    productId: item.product._id,
+                    productVariantId,
+                    quantity: item.quantity,
+                    ...(selectedVariations.length > 0 && {
+                        options: selectedVariations
+                            .filter((variation: any) => variation.variationId && variation.optionId)
+                            .map((variation: any) => ({
+                                variationId: variation.variationId,
+                                optionId: variation.optionId,
+                            })),
+                    }),
+                };
+            });
             const response = await cartApi.syncCart(items);
             return getCartFromResponse(response);
         } catch (error: any) {

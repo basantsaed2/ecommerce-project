@@ -86,7 +86,7 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
         <>
             <div
                 onClick={handleCardClick}
-                className="group relative flex flex-col bg-white rounded-[24px] border border-gray-100 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-1 overflow-hidden cursor-pointer"
+                className="group relative flex h-full min-h-[430px] flex-col bg-white rounded-[24px] border border-gray-100 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-1 overflow-hidden cursor-pointer"
             >
                 {/* Badges & Actions Overlay */}
                 <div className="absolute top-3 inset-x-3 z-20 flex justify-between items-start pointer-events-none">
@@ -144,7 +144,7 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
                 </div>
 
                 {/* Image Container */}
-                <div className="relative aspect-square bg-[#F8FAFC] overflow-hidden flex items-center justify-center p-6">
+                <div className="relative aspect-square w-full shrink-0 bg-[#F8FAFC] overflow-hidden flex items-center justify-center p-6">
                     <div className="absolute inset-0 z-10 flex items-end justify-center bg-black/35 p-3 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
                         <div className="flex w-full flex-wrap items-center justify-center gap-2">
                             <button
@@ -201,7 +201,7 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
                 </div>
 
                 {/* Content Container */}
-                <div className="p-4 md:p-5 flex flex-col flex-1">
+                <div className="flex min-h-[190px] flex-1 flex-col p-4 md:p-5">
                     {/* Brand & Category badges */}
                     <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                         {product.brand?.name && (

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
+import { CART_COUNT_BADGE_CLASS, HEADER_ACTION_BASE_CLASS } from '@/components/layout/headerStyles';
 import DynamicSectionRenderer from '@/components/sections/DynamicSectionRenderer';
 import { ApiResponse, Banner, Brand, Category, Product } from '@/types/api';
 import StoreLoader from '@/components/common/StoreLoader';
@@ -61,6 +62,7 @@ export default function MarwanTemplate({
   const [activeSection, setActiveSection] = useState('');
   const [searchText, setSearchText] = useState(searchQuery || '');
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>('all');
+  const [showAllProducts, setShowAllProducts] = useState(false);
   
   // State to toggle showing all categories on home page
   const [showAllCategories, setShowAllCategories] = useState(false);
@@ -412,11 +414,11 @@ export default function MarwanTemplate({
                 onClick={toggleLanguage}
                 aria-label={language === 'ar' ? t.sections.switchToEnglish : t.sections.switchToArabic}
                 title={language === 'ar' ? t.sections.english : t.sections.arabic}
-              className="flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
+              className={`${HEADER_ACTION_BASE_CLASS} text-xs font-black`}
               style={{
-                backgroundColor: 'var(--color-primary)',
-                borderColor: 'var(--color-primary)',
-                color: 'var(--color-secondary)',
+                backgroundColor: 'var(--mw-header-surface)',
+                borderColor: 'var(--mw-header-border)',
+                color: 'var(--mw-header-text)',
               }}
               >
                 {language.toUpperCase()}
@@ -427,7 +429,7 @@ export default function MarwanTemplate({
                 aria-label={themeMode === 'dark' ? t.sections.switchToLightMode : t.sections.switchToDarkMode}
                 aria-pressed={themeMode === 'dark'}
                 title={themeMode === 'dark' ? t.sections.lightMode : t.sections.darkMode}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
+                className={HEADER_ACTION_BASE_CLASS}
                 style={{
                   backgroundColor: 'var(--mw-header-surface)',
                   borderColor: 'var(--mw-header-border)',
@@ -438,14 +440,18 @@ export default function MarwanTemplate({
               </button>
               <Link
                 href="/cart"
-                aria-label={t.nav.cart}
                 title={t.nav.cart}
-                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:opacity-80"
-                style={{ borderColor: 'var(--mw-header-border)', color: 'var(--mw-header-text)' }}
+                aria-label={`${t.nav.cart}${cartCount > 0 ? ` (${cartCount})` : ''}`}
+                className={HEADER_ACTION_BASE_CLASS}
+                style={{
+                  backgroundColor: 'var(--mw-header-surface)',
+                  borderColor: 'var(--mw-header-border)',
+                  color: 'var(--mw-header-text)',
+                }}
               >
-                <ShoppingCart size={17} />
+                <ShoppingCart size={20} />
                 {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold" style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}>
+                  <span className={CART_COUNT_BADGE_CLASS}>
                     {cartCount}
                   </span>
                 )}
@@ -631,7 +637,7 @@ export default function MarwanTemplate({
                 <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
                   <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> {t?.sections?.curatedCollections || 'Store Collections'}
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight">
+                        <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
                   {t?.sections?.shopBy || 'Shop by'} <span style={{ color: 'var(--mw-primary)' }}>{t?.nav?.categories || 'category'}</span>
                 </h2>
               </div>
@@ -728,7 +734,7 @@ export default function MarwanTemplate({
                 <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
                   <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> {t?.sections?.bestPicks || 'Handpicked Selection'}
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight">
+                                        <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
                   {t?.sections?.featuredLabel || 'Featured'} <span style={{ color: 'var(--mw-primary)' }}>{t?.nav?.products || 'products'}</span>
                 </h2>
               </div>
@@ -761,14 +767,17 @@ export default function MarwanTemplate({
                   <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
                     <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Full Store Inventory
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight">
+                                          <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
                     Explore All <span style={{ color: 'var(--mw-primary)' }}>Products</span>
                   </h2>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    onClick={() => setSelectedCategoryTab('all')}
+                    onClick={() => {
+                      setSelectedCategoryTab('all');
+                      setShowAllProducts(false);
+                    }}
                     className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${selectedCategoryTab === 'all' ? 'shadow-md scale-105' : 'border border-gray-200 text-gray-600 hover:border-black'}`}
                     style={selectedCategoryTab === 'all' ? { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' } : {}}
                   >
@@ -777,7 +786,10 @@ export default function MarwanTemplate({
                   {categories.map((cat) => (
                     <button
                       key={cat._id}
-                      onClick={() => setSelectedCategoryTab(cat._id)}
+                      onClick={() => {
+                        setSelectedCategoryTab(cat._id);
+                        setShowAllProducts(false);
+                      }}
                       className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${selectedCategoryTab === cat._id ? 'shadow-md scale-105' : 'border border-gray-200 text-gray-600 hover:border-black'}`}
                       style={selectedCategoryTab === cat._id ? { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' } : {}}
                     >
@@ -788,7 +800,7 @@ export default function MarwanTemplate({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {tabFilteredProducts.map((product, i) => (
+                {tabFilteredProducts.slice(0, showAllProducts ? tabFilteredProducts.length : 4).map((product, i) => (
                   <div
                     key={`all-p-${product._id}-${i}`}
                     className="group"
@@ -797,6 +809,17 @@ export default function MarwanTemplate({
                   </div>
                 ))}
               </div>
+              {!showAllProducts && tabFilteredProducts.length > 4 && (
+                <div className="mt-10 flex justify-center">
+                  <button
+                    onClick={() => setShowAllProducts(true)}
+                    className="inline-flex items-center gap-2 rounded-full border-2 px-8 py-3 font-bold transition-all hover:opacity-90 shadow-sm hover:shadow cursor-pointer"
+                    style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+                  >
+                    Show More <ArrowRight size={16} className={isRtl ? 'rotate-180' : ''} />
+                  </button>
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -807,7 +830,7 @@ export default function MarwanTemplate({
             <div className="max-w-[1240px] mx-auto px-5">
               <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} text-center mb-10`}>
                 <span className="text-[11px] font-extrabold tracking-[0.25em] uppercase mb-2 block" style={{ color: 'var(--mw-primary)' }}>Certified Partners</span>
-                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight">
+                                        <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
                   Official Brand <span style={{ color: 'var(--mw-primary)' }}>Distributors</span>
                 </h2>
               </div>
@@ -835,7 +858,7 @@ export default function MarwanTemplate({
               <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
                 <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Our Commitment
               </div>
-              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight">
+                                      <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
                 {t?.sections?.trustTitle || `Why Shop with ${displayStoreName}`}
               </h2>
             </div>

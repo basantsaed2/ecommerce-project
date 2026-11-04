@@ -22,6 +22,7 @@ import ProductReviewsSection from '@/components/modules/products/ProductReviewsS
 import RelatedProducts from '@/components/modules/products/RelatedProducts';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
+import { resolveCartVariantId } from '@/utils/cartUtils';
 
 export default function ProductDetailClient() {
     const params = useParams<{ id?: string }>();
@@ -114,6 +115,8 @@ export default function ProductDetailClient() {
     const isOutOfStock = !hasAvailableStock || (currentSkuObj ? getSkuStock(currentSkuObj) <= 0 : productQuantity <= 0);
 
     const isOptionInStock = (optionId: string): boolean => {
+        const option = product?.variations?.flatMap(variation => variation.options).find(item => item._id === optionId);
+        if (typeof option?.quantity === 'number') return option.quantity > 0;
         if (!product?.skus) return productQuantity > 0;
         return product.skus.some(sku =>
             getSkuStock(sku) > 0 && sku.option_ids.includes(optionId)
@@ -135,20 +138,27 @@ export default function ProductDetailClient() {
             const opt = v.options.find(o => o._id === selectedOptId);
             if (!opt) return null;
             return {
+                variationId: v._id,
+                optionId: opt._id,
+                productVariantId: v.product_price_id,
                 variationName: v.name,
                 ar_variationName: v.ar_name,
                 optionName: opt.name,
                 ar_optionName: opt.ar_name,
             };
         }).filter(Boolean) || [];
+        const productVariantId = resolveCartVariantId(selectedVariationDetails, currentSkuObj?._id);
 
         setIsAddingToCart(true);
         dispatch(addItem({
             product: product,
-            variant: currentSkuObj ? {
-                ...currentSkuObj,
+            variant: currentSkuObj || selectedVariationDetails.length > 0 ? {
+                ...(currentSkuObj || {}),
+                ...(productVariantId ? { _id: productVariantId } : {}),
+                price: currentSkuObj?.price ?? priceInfo.mainPrice,
+                final_price: currentSkuObj?.final_price ?? priceInfo.finalPrice,
                 selectedVariations: selectedVariationDetails
-            } : (selectedVariationDetails.length > 0 ? { selectedVariations: selectedVariationDetails } : undefined),
+            } : undefined,
             quantity: quantity
         }));
         await dispatch(syncCart());
@@ -166,20 +176,27 @@ export default function ProductDetailClient() {
             const opt = v.options.find(o => o._id === selectedOptId);
             if (!opt) return null;
             return {
+                variationId: v._id,
+                optionId: opt._id,
+                productVariantId: v.product_price_id,
                 variationName: v.name,
                 ar_variationName: v.ar_name,
                 optionName: opt.name,
                 ar_optionName: opt.ar_name,
             };
         }).filter(Boolean) || [];
+        const productVariantId = resolveCartVariantId(selectedVariationDetails, currentSkuObj?._id);
 
         setIsBuyingNow(true);
         dispatch(addItem({
             product: product,
-            variant: currentSkuObj ? {
-                ...currentSkuObj,
+            variant: currentSkuObj || selectedVariationDetails.length > 0 ? {
+                ...(currentSkuObj || {}),
+                ...(productVariantId ? { _id: productVariantId } : {}),
+                price: currentSkuObj?.price ?? priceInfo.mainPrice,
+                final_price: currentSkuObj?.final_price ?? priceInfo.finalPrice,
                 selectedVariations: selectedVariationDetails
-            } : (selectedVariationDetails.length > 0 ? { selectedVariations: selectedVariationDetails } : undefined),
+            } : undefined,
             quantity: quantity
         }));
         await dispatch(syncCart());
@@ -480,6 +497,14 @@ export default function ProductDetailClient() {
                                                                 : 'bg-white border-gray-100 text-gray-700 hover:border-gray-300'
                                                             }`}
                                                     >
+                                                        {typeof option.quantity === 'number' && (
+                                                            <span
+                                                                className="mb-1.5 inline-flex h-7 min-w-8 items-center justify-center rounded-full bg-emerald-100 px-2 text-base font-black leading-none text-emerald-800 shadow-sm ring-1 ring-emerald-200"
+                                                                title={t.product.quantity}
+                                                            >
+                                                                {option.quantity}
+                                                            </span>
+                                                        )}
                                                         <span>{getLocalized(option)}</span>
                                                         {!optionInStock && <span className="text-[9px] opacity-70">{t.product.soldOut}</span>}
                                                     </button>

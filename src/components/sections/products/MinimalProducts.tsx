@@ -37,7 +37,7 @@ export default function MinimalProducts({
     );
 
     return (
-        <section className="w-full py-8">
+        <section className="w-full px-4 py-10 sm:px-6">
             <h2 className="text-2xl font-bold text-primary mb-6">
                 {title || t.sections.featuredProducts}
             </h2>

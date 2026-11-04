@@ -34,6 +34,7 @@ export interface ProductOption {
     variationId?: string;
     name: string;
     ar_name?: string;
+    quantity?: number;
 }
 
 export interface ProductVariation {

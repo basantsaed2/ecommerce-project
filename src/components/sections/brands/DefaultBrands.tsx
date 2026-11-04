@@ -38,7 +38,7 @@ export default function DefaultBrands({
     const secondRowItems = secondRow.length > 1 ? [...secondRow, ...secondRow, ...secondRow] : secondRow;
 
     return (
-        <section className="w-full py-16 bg-white/40 backdrop-blur-xl rounded-[3rem] border border-gray-100 shadow-xl overflow-hidden my-6">
+        <section className="w-full px-4 py-12 sm:px-6 md:py-16 bg-white/40 backdrop-blur-xl rounded-[3rem] border border-gray-100 shadow-xl overflow-hidden my-6">
             <div className="flex flex-col items-center text-center mb-10 px-6">
                 <span className="text-xs font-black uppercase tracking-[0.3em] text-secondary mb-2 block">
                     {subtitle || t.sections.officialPartners}
@@ -56,18 +56,17 @@ export default function DefaultBrands({
                             <Link
                                 key={`${brand._id}-r1-${idx}`}
                                 href={`/brands#${brand._id}`}
-                                className="min-w-[160px] md:min-w-[200px] h-20 md:h-28 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-2xl flex items-center justify-center p-4 hover:shadow-xl hover:border-secondary/30 transition-all duration-300 group"
+                                className="min-w-[160px] md:min-w-[200px] h-28 md:h-36 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 p-4 hover:shadow-xl hover:border-secondary/30 transition-all duration-300 group"
                             >
                                 <img
                                     src={brand.logo}
                                     alt={getLocalized(brand)}
-                                    className="max-w-[85%] max-h-[85%] object-contain transition-all duration-300 group-hover:scale-105"
+                                    className="max-w-[85%] max-h-14 object-contain transition-all duration-300 group-hover:scale-105"
                                     onError={(event) => {
                                         event.currentTarget.style.display = 'none';
-                                        event.currentTarget.nextElementSibling?.classList.remove('hidden');
                                     }}
                                 />
-                                <span className="hidden text-sm font-bold text-primary">{getLocalized(brand)}</span>
+                                <span className="text-sm font-bold text-primary text-center line-clamp-1">{getLocalized(brand)}</span>
                             </Link>
                         ))}
                     </div>
@@ -81,18 +80,17 @@ export default function DefaultBrands({
                                 <Link
                                     key={`${brand._id}-r2-${idx}`}
                                     href={`/brands#${brand._id}`}
-                                    className="min-w-[160px] md:min-w-[200px] h-20 md:h-28 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-2xl flex items-center justify-center p-4 hover:shadow-xl hover:border-secondary/30 transition-all duration-300 group"
+                                    className="min-w-[160px] md:min-w-[200px] h-28 md:h-36 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 p-4 hover:shadow-xl hover:border-secondary/30 transition-all duration-300 group"
                                 >
                                     <img
                                         src={brand.logo}
                                         alt={getLocalized(brand)}
-                                        className="max-w-[85%] max-h-[85%] object-contain transition-all duration-300 group-hover:scale-105"
+                                        className="max-w-[85%] max-h-14 object-contain transition-all duration-300 group-hover:scale-105"
                                         onError={(event) => {
                                             event.currentTarget.style.display = 'none';
-                                            event.currentTarget.nextElementSibling?.classList.remove('hidden');
                                         }}
                                     />
-                                    <span className="hidden text-sm font-bold text-primary">{getLocalized(brand)}</span>
+                                    <span className="text-sm font-bold text-primary text-center line-clamp-1">{getLocalized(brand)}</span>
                                 </Link>
                             ))}
                         </div>

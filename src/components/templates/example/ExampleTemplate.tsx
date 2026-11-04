@@ -13,6 +13,7 @@ import { useGet } from '@/hooks/useGet';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
 import { ApiResponse, Banner, Brand, Category, Product } from '@/types/api';
+import { CART_COUNT_BADGE_CLASS, HEADER_ACTION_BASE_CLASS } from '@/components/layout/headerStyles';
 import StoreLoader from '@/components/common/StoreLoader';
 import BestSellersSection from '@/components/sections/products/BestSellersSection';
 import OffersSection from '@/components/sections/promo/OffersSection';
@@ -53,6 +54,12 @@ export default function ExampleTemplate({
   const activeBackground = isDarkMode ? colors?.backgroundDark || colors?.background : colors?.background;
   const activeTextPrimary = isDarkMode ? colors?.textPrimaryDark || colors?.textPrimary : colors?.textPrimary;
   const activeTextSecondary = isDarkMode ? colors?.textSecondaryDark || colors?.textSecondary : colors?.textSecondary;
+  const headerActionClassName = `${HEADER_ACTION_BASE_CLASS} text-gray-800 hover:border-gray-400 hover:bg-gray-50 hover:text-black`;
+  const headerActionStyle = {
+    backgroundColor: activeBackground || '#ffffff',
+    borderColor: isDarkMode ? '#334155' : '#e5e7eb',
+    color: activeTextPrimary || '#111827',
+  };
   const ecommerceData = settings.ecommerceData?.[0];
   const header = ecommerceData?.header || {};
   const footer = ecommerceData?.footer || {};
@@ -222,12 +229,8 @@ export default function ExampleTemplate({
               onClick={toggleLanguage}
               aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
               title={language === 'ar' ? 'English' : 'العربية'}
-              className="flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
-              style={{
-                backgroundColor: 'var(--color-primary)',
-                borderColor: 'var(--color-primary)',
-                color: 'var(--color-secondary)',
-              }}
+              className={`${headerActionClassName} text-xs font-black`}
+              style={headerActionStyle}
             >
               {language.toUpperCase()}
             </button>
@@ -237,22 +240,23 @@ export default function ExampleTemplate({
               aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
               aria-pressed={themeMode === 'dark'}
               title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
-              className="flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-md active:scale-95"
-              style={{
-                backgroundColor: 'var(--color-secondary)',
-                borderColor: 'var(--color-primary)',
-                color: 'var(--color-primary)',
-              }}
+              className={headerActionClassName}
+              style={headerActionStyle}
             >
-              {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              {themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <Link href="/favourite" aria-label={t.nav.wishlist} className={`relative p-2 transition-colors hover:text-[var(--bs-primary)] ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               <Heart size={24} />
             </Link>
-            <Link href="/cart" aria-label={t.nav.cart} className={`relative p-2 transition-colors hover:text-[var(--bs-primary)] ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-              <ShoppingBag size={24} />
+            <Link
+              href="/cart"
+              aria-label={`${t.nav.cart}${cartCount > 0 ? ` (${cartCount})` : ''}`}
+              className={headerActionClassName}
+              style={headerActionStyle}
+            >
+              <ShoppingBag size={20} />
               {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 px-1 text-[10px] font-bold text-white" style={{ borderColor: activeBackground || '#ffffff', backgroundColor: isDarkMode ? '#020617' : '#111827' }}>
+                <span className={CART_COUNT_BADGE_CLASS}>
                   {cartCount}
                 </span>
               )}
@@ -353,7 +357,7 @@ export default function ExampleTemplate({
 
       {/* ── Shop by Category Section ────────────────────────────────── */}
       {categories.length > 0 && (
-        <section className="max-w-[1400px] mx-auto px-6 pt-10">
+        <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--bs-primary)] mb-1">{t.sections.exploreCatalogLabel}</p>
@@ -399,16 +403,17 @@ export default function ExampleTemplate({
 
       {/* ── Shop by Brands ────────────────────────────────────────────── */}
       {showBrands && brands.length > 0 && (
-        <section className="max-w-[1400px] mx-auto px-6 pt-10">
+        <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
           <h2 className="text-xl font-bold text-slate-900 mb-6">{t.sections.shopByBrands}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             {brands.map((brand) => (
-              <div key={brand._id} className="bg-white border border-gray-200 rounded-md p-4 flex items-center justify-center hover:shadow-md transition-shadow h-24">
+              <div key={brand._id} className="bg-white border border-gray-200 rounded-md p-4 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow h-32">
                 {brand.logo ? (
-                  <img src={brand.logo} alt={brand.name} className="max-h-12 max-w-full object-contain" />
+                  <img src={brand.logo} alt={brand.name} className="max-h-14 max-w-full object-contain" />
                 ) : (
                   <span className="font-extrabold text-sm text-slate-700 uppercase tracking-wider">{brand.name}</span>
                 )}
+                {brand.logo && <span className="text-sm font-bold text-slate-700 text-center line-clamp-1">{getLocalized(brand)}</span>}
               </div>
             ))}
           </div>
@@ -417,9 +422,9 @@ export default function ExampleTemplate({
 
       {/* ── Featured Products ──────────────────────────────────────────── */}
       {showFeaturedProducts && filteredProducts.length > 0 && (
-        <section className="max-w-[1400px] mx-auto px-6 pt-12">
+        <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900">{t.sections.featuredProductsHeading}</h2>
+                                    <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>{t.sections.featuredProductsHeading}</h2>
             <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
               {t.sections.seeAll}
             </Link>
@@ -435,7 +440,7 @@ export default function ExampleTemplate({
 
       {/* ── New Arrivals ──────────────────────────────────────────────── */}
       {showNewArrivals && newArrivals.length > 0 && (
-        <section className="max-w-[1400px] mx-auto px-6 pt-12">
+        <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900">{t.sections.newArrivalsHeading}</h2>
             <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
@@ -453,7 +458,7 @@ export default function ExampleTemplate({
 
       {/* ── Trending Products ─────────────────────────────────────────── */}
       {showProducts && trendingProducts.length > 0 && (
-        <section className="max-w-[1400px] mx-auto px-6 pt-12">
+        <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900">{t.sections.trendingProductsHeading}</h2>
             <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">

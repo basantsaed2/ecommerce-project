@@ -34,7 +34,7 @@ export default function MinimalCategories({
     if (categories.length === 0) return null;
 
     return (
-        <section className="w-full py-6">
+        <section className="w-full px-4 py-10 sm:px-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-primary">
                     {title || t.sections.featuredCategories}

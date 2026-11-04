@@ -36,7 +36,7 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
     if (allCategories.length === 0) return null;
 
     return (
-        <section className="w-full px-4 md:px-6 py-6 relative">
+        <section className="w-full px-4 md:px-6 py-12 relative">
             <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
                 <div className="text-center md:text-left">
                     <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight mb-2">
@@ -76,7 +76,7 @@ export default function CategoriesSection({ searchQuery = "" }: CategoriesSectio
                             {getLocalized(category)}
                         </span>
                         
-                        <span className="text-[10px] font-bold text-gray-400 mt-1 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                        <span className="text-[10px] font-bold text-gray-400 mt-1">
                             {t.home.exploreCollection} &rarr;
                         </span>
                     </Link>
