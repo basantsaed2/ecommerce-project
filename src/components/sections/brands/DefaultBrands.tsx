@@ -22,7 +22,7 @@ export default function DefaultBrands({
     if (isLoading) {
         return (
             <div className="flex justify-center py-12">
-                <Loader2 className="animate-spin text-secondary" size={32} />
+                <Loader2 className="animate-spin text-[var(--color-text-muted)]" size={32} />
             </div>
         );
     }
@@ -38,12 +38,12 @@ export default function DefaultBrands({
     const secondRowItems = secondRow.length > 1 ? [...secondRow, ...secondRow, ...secondRow] : secondRow;
 
     return (
-        <section className="w-full px-4 py-12 sm:px-6 md:py-16 bg-white/40 backdrop-blur-xl rounded-[3rem] border border-gray-100 shadow-xl overflow-hidden my-6">
+        <section className="w-full px-4 py-12 sm:px-6 md:py-16 bg-[var(--color-surface)] backdrop-blur-xl rounded-[3rem] border border-[var(--color-border)] shadow-xl overflow-hidden my-6">
             <div className="flex flex-col items-center text-center mb-10 px-6">
-                <span className="text-xs font-black uppercase tracking-[0.3em] text-secondary mb-2 block">
+                <span className="text-xs font-black uppercase tracking-[0.3em] text-[var(--color-text-muted)] mb-2 block">
                     {subtitle || t.sections.officialPartners}
                 </span>
-                <h2 className="text-3xl md:text-5xl font-black text-primary tracking-tight">
+                <h2 className="text-3xl md:text-5xl font-black text-[var(--color-text)] tracking-tight">
                     {title || t.sections.featuredBrands}
                 </h2>
             </div>
@@ -56,7 +56,7 @@ export default function DefaultBrands({
                             <Link
                                 key={`${brand._id}-r1-${idx}`}
                                 href={`/brands#${brand._id}`}
-                                className="min-w-[160px] md:min-w-[200px] h-28 md:h-36 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 p-4 hover:shadow-xl hover:border-secondary/30 transition-all duration-300 group"
+                                className="min-w-[160px] md:min-w-[200px] h-28 md:h-36 bg-[var(--color-background)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl flex flex-col items-center justify-center gap-2 p-4 hover:shadow-xl hover:border-[var(--color-text-muted)] transition-all duration-300 group"
                             >
                                 <img
                                     src={brand.logo}
@@ -66,7 +66,7 @@ export default function DefaultBrands({
                                         event.currentTarget.style.display = 'none';
                                     }}
                                 />
-                                <span className="text-sm font-bold text-primary text-center line-clamp-1">{getLocalized(brand)}</span>
+                                <span className="text-sm font-bold text-[var(--color-text)] text-center line-clamp-1">{getLocalized(brand)}</span>
                             </Link>
                         ))}
                     </div>
@@ -80,7 +80,7 @@ export default function DefaultBrands({
                                 <Link
                                     key={`${brand._id}-r2-${idx}`}
                                     href={`/brands#${brand._id}`}
-                                    className="min-w-[160px] md:min-w-[200px] h-28 md:h-36 bg-white/90 backdrop-blur-sm border border-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 p-4 hover:shadow-xl hover:border-secondary/30 transition-all duration-300 group"
+                                    className="min-w-[160px] md:min-w-[200px] h-28 md:h-36 bg-[var(--color-background)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl flex flex-col items-center justify-center gap-2 p-4 hover:shadow-xl hover:border-[var(--color-text-muted)] transition-all duration-300 group"
                                 >
                                     <img
                                         src={brand.logo}
@@ -90,7 +90,7 @@ export default function DefaultBrands({
                                             event.currentTarget.style.display = 'none';
                                         }}
                                     />
-                                    <span className="text-sm font-bold text-primary text-center line-clamp-1">{getLocalized(brand)}</span>
+                                    <span className="text-sm font-bold text-[var(--color-text)] text-center line-clamp-1">{getLocalized(brand)}</span>
                                 </Link>
                             ))}
                         </div>

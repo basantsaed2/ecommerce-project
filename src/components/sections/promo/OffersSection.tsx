@@ -30,7 +30,7 @@ export default function OffersSection({ title, subtitle }: OffersSectionProps) {
     const { data, isLoading, error } = useGet<ApiResponse<OfferRecord>>(['offers'], '/offer');
 
     if (isLoading) {
-        return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-secondary" size={32} /></div>;
+        return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-[var(--color-text-muted)]" size={32} /></div>;
     }
 
     if (error) return null;
@@ -48,10 +48,10 @@ export default function OffersSection({ title, subtitle }: OffersSectionProps) {
             <div className="max-w-[1240px] mx-auto">
                 <div className="flex items-end justify-between gap-4 mb-8">
                     <div>
-                        <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-secondary mb-2">
+                        <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--color-text-muted)] mb-2">
                             <Tag size={15} /> {subtitle || t.sections.limitedTimeDeal}
                         </span>
-                        <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
+                        <h2 className="text-3xl md:text-4xl font-black text-[var(--color-text)] tracking-tight">
                             {title || t.sections.specialOffers}
                         </h2>
                     </div>
@@ -69,12 +69,12 @@ export default function OffersSection({ title, subtitle }: OffersSectionProps) {
                             <Link
                                 key={offer._id}
                                 href={`/offer/${offer._id}`}
-                                className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                                className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                             >
                                 {offer.image && <img src={offer.image} alt={getLocalized(offer, 'title') || getLocalized(offer) || t.sections.specialOffers} className="mb-4 h-40 w-full rounded-xl object-cover" />}
-                                <h3 className="text-lg font-black text-primary">{getLocalized(offer, 'title') || getLocalized(offer)}</h3>
-                                {offer.description && <p className="mt-2 text-sm text-gray-500">{getLocalized(offer, 'description')}</p>}
-                                {offer.discount && <p className="mt-4 font-black text-secondary">{offer.discount}% {t.product.discount}</p>}
+                                <h3 className="text-lg font-black text-[var(--color-text)]">{getLocalized(offer, 'title') || getLocalized(offer)}</h3>
+                                {offer.description && <p className="mt-2 text-sm text-[var(--color-text-muted)]">{getLocalized(offer, 'description')}</p>}
+                                {offer.discount && <p className="mt-4 font-black text-[var(--color-text-muted)]">{offer.discount}% {t.product.discount}</p>}
                             </Link>
                         ))}
                     </div>

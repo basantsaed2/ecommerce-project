@@ -151,8 +151,8 @@ export default function MarwanTemplate({
     ['--mw-header-surface' as any]: isDarkMode
       ? 'var(--mw-bg)'
       : 'color-mix(in srgb, var(--mw-bg) 92%, var(--mw-text) 8%)',
-    ['--mw-header-text' as any]: isDarkMode ? '#f8fafc' : activeTextPrimary || '#111827',
-    ['--mw-header-muted' as any]: isDarkMode ? '#cbd5e1' : activeTextSecondary || '#6b7280',
+    ['--mw-header-text' as any]: activeTextPrimary || '#111827',
+    ['--mw-header-muted' as any]: activeTextSecondary || '#6b7280',
     ['--mw-header-border' as any]: isDarkMode
       ? 'color-mix(in srgb, white 18%, transparent)'
       : 'color-mix(in srgb, var(--mw-text) 14%, transparent)',
@@ -375,7 +375,7 @@ export default function MarwanTemplate({
               {displayLogo ? (
                 <img src={displayLogo} alt={displayStoreName} className="max-h-14 max-w-full object-contain object-left" />
               ) : (
-                <span className="text-[28px] md:text-[36px] font-black uppercase tracking-tight leading-none" style={{ color: 'var(--mw-primary)' }}>
+                <span className="text-[28px] md:text-[36px] font-black uppercase tracking-tight leading-none" style={{ color: 'var(--mw-text)' }}>
                   {displayStoreName}
                 </span>
               )}
@@ -536,16 +536,16 @@ export default function MarwanTemplate({
             <div className="relative z-[2] w-full max-w-[1240px] mx-auto px-5 py-12">
               <div className={`grid gap-8 items-center ${displayLogo ? 'md:grid-cols-[1.1fr_0.9fr]' : 'grid-cols-1'}`}>
                 <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN}`}>
-                  <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.2em] uppercase mb-4" style={{ color: 'var(--mw-primary)' }}>
+                  <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.2em] uppercase mb-4" style={{ color: 'var(--mw-text-muted)' }}>
                     <span className="w-6 h-0.5" style={{ background: 'var(--mw-primary)' }} />
                     {t?.home?.welcomeTo || 'Welcome to'} {displayStoreName}
                   </div>
 
-                  <h1 className="text-[2.6rem] md:text-[3.8rem] lg:text-[4.8rem] font-black leading-[1.0] uppercase tracking-tight text-white mb-5">
+                  <h1 className="text-[2.6rem] md:text-[3.8rem] lg:text-[4.8rem] font-black leading-[1.0] uppercase tracking-tight mb-5" style={{ color: 'var(--mw-text)' }}>
                     {heroBanner?.title ? (
                       <>
                         Discover The{' '}
-                        <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, color-mix(in srgb, var(--mw-primary) 70%, white), var(--mw-primary))' }}>
+                        <span style={{ color: 'var(--mw-text-muted)' }}>
                           {heroBanner.title}
                         </span>{' '}
                         Lineup
@@ -553,41 +553,41 @@ export default function MarwanTemplate({
                     ) : (
                       <>
                         Shop Premium{' '}
-                        <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, color-mix(in srgb, var(--mw-primary) 70%, white), var(--mw-primary))' }}>
+                        <span style={{ color: 'var(--mw-text-muted)' }}>
                           Collections
                         </span>
                       </>
                     )}
                   </h1>
 
-                  <p className="max-w-[480px] text-base leading-[1.8] text-white/85 mb-8">
+                  <p className="max-w-[480px] text-base leading-[1.8] mb-8" style={{ color: 'var(--mw-text-muted)' }}>
                     {heroBanner?.description || footerData.bio || (t?.home?.heroSubtitle || 'Curated high-quality products directly from verified official distributors.')}
                   </p>
 
                   <div className="flex flex-wrap gap-4 mb-10">
-                    <Link href={showFeaturedProducts ? '#featured-products' : '#all-products'} className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider text-white transition-transform hover:-translate-y-0.5 shadow-xl" style={{ background: 'var(--mw-primary)', boxShadow: '0 16px 36px color-mix(in srgb, var(--mw-primary) 40%, transparent)' }}>
+                    <Link href={showFeaturedProducts ? '#featured-products' : '#all-products'} className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider transition-transform hover:-translate-y-0.5 shadow-xl" style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)', boxShadow: '0 16px 36px color-mix(in srgb, var(--mw-primary) 40%, transparent)' }}>
                       {t?.home?.shopNow || 'Shop Products'} <ArrowRight size={17} className={isRtl ? 'rotate-180' : ''} />
                     </Link>
                     {categories.length > 0 && (
-                      <Link href="#categories" className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider text-white bg-white/10 border border-white/30 transition-transform hover:-translate-y-0.5 hover:border-white backdrop-blur-sm">
+                      <Link href="#categories" className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-extrabold text-[13px] uppercase tracking-wider border transition-transform hover:-translate-y-0.5 backdrop-blur-sm" style={{ color: 'var(--mw-text)', borderColor: 'var(--mw-text)', background: 'color-mix(in srgb, var(--mw-bg) 20%, transparent)' }}>
                         {t?.home?.browseCategories || 'Explore Categories'}
                       </Link>
                     )}
                   </div>
 
-                  <div className="flex gap-8 pt-6 border-t border-white/15">
+                  <div className="flex gap-8 pt-6 border-t" style={{ borderColor: 'var(--mw-border)' }}>
                     <div>
-                      <b className="block text-3xl font-black" style={{ color: 'var(--mw-primary)' }}>{categories.length || '—'}</b>
-                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase text-white/70">{t?.sections?.categoryCountLabel || 'Categories'}</span>
+                      <b className="block text-3xl font-black" style={{ color: 'var(--mw-text)' }}>{categories.length || '—'}</b>
+                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase" style={{ color: 'var(--mw-text-muted)' }}>{t?.sections?.categoryCountLabel || 'Categories'}</span>
                     </div>
                     <div>
-                      <b className="block text-3xl font-black" style={{ color: 'var(--mw-primary)' }}>{allProductsList.length || '—'}</b>
-                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase text-white/70">{t?.sections?.productCountLabel || 'Products'}</span>
+                      <b className="block text-3xl font-black" style={{ color: 'var(--mw-text)' }}>{allProductsList.length || '—'}</b>
+                      <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase" style={{ color: 'var(--mw-text-muted)' }}>{t?.sections?.productCountLabel || 'Products'}</span>
                     </div>
                     {brands.length > 0 && (
                       <div>
-                        <b className="block text-3xl font-black" style={{ color: 'var(--mw-primary)' }}>{brands.length}</b>
-                        <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase text-white/70">{t?.nav?.brands || 'Official Brands'}</span>
+                        <b className="block text-3xl font-black" style={{ color: 'var(--mw-text)' }}>{brands.length}</b>
+                        <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase" style={{ color: 'var(--mw-text-muted)' }}>{t?.nav?.brands || 'Official Brands'}</span>
                       </div>
                     )}
                   </div>
@@ -634,11 +634,11 @@ export default function MarwanTemplate({
           <section className="py-12 md:py-16 max-w-[1240px] mx-auto px-5" id="categories">
             <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} flex flex-wrap items-end justify-between gap-4 mb-8`}>
               <div>
-                <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
+                <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-text-muted)' }}>
                   <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> {t?.sections?.curatedCollections || 'Store Collections'}
                 </div>
-                        <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
-                  {t?.sections?.shopBy || 'Shop by'} <span style={{ color: 'var(--mw-primary)' }}>{t?.nav?.categories || 'category'}</span>
+                        <h2 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: 'var(--mw-text)' }}>
+                  {t?.sections?.shopBy || 'Shop by'} <span style={{ color: 'var(--mw-text-muted)' }}>{t?.nav?.categories || 'category'}</span>
                 </h2>
               </div>
               <Link href="/categories" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full border text-[11px] font-extrabold uppercase tracking-wider hover:border-black transition-colors" style={{ borderColor: 'var(--mw-border)' }}>
@@ -685,7 +685,7 @@ export default function MarwanTemplate({
                 <button
                   onClick={() => setShowAllCategories(true)}
                   className="inline-flex items-center gap-2 rounded-full border-2 px-8 py-3 font-bold transition-all hover:opacity-90 shadow-sm hover:shadow cursor-pointer"
-                  style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+                  style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-text)' }}
                 >
                   Show More <ArrowRight size={16} className={isRtl ? 'rotate-180' : ''} />
                 </button>
@@ -731,11 +731,11 @@ export default function MarwanTemplate({
           <section className="py-12 md:py-16 max-w-[1240px] mx-auto px-5" id="featured-products">
             <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} flex flex-wrap items-end justify-between gap-4 mb-8`}>
               <div>
-                <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
+                <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-text-muted)' }}>
                   <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> {t?.sections?.bestPicks || 'Handpicked Selection'}
                 </div>
-                                        <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
-                  {t?.sections?.featuredLabel || 'Featured'} <span style={{ color: 'var(--mw-primary)' }}>{t?.nav?.products || 'products'}</span>
+                                        <h2 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: 'var(--mw-text)' }}>
+                  {t?.sections?.featuredLabel || 'Featured'} <span style={{ color: 'var(--mw-text-muted)' }}>{t?.nav?.products || 'products'}</span>
                 </h2>
               </div>
               <Link href="/product" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full border text-[11px] font-extrabold uppercase tracking-wider hover:border-black transition-colors" style={{ borderColor: 'var(--mw-border)' }}>
@@ -764,11 +764,11 @@ export default function MarwanTemplate({
             <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} mb-8`}>
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
                 <div>
-                  <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
+                  <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-text-muted)' }}>
                     <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Full Store Inventory
                   </div>
-                                          <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
-                    Explore All <span style={{ color: 'var(--mw-primary)' }}>Products</span>
+                                          <h2 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: 'var(--mw-text)' }}>
+                    Explore All <span style={{ color: 'var(--mw-text-muted)' }}>Products</span>
                   </h2>
                 </div>
 
@@ -778,8 +778,8 @@ export default function MarwanTemplate({
                       setSelectedCategoryTab('all');
                       setShowAllProducts(false);
                     }}
-                    className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${selectedCategoryTab === 'all' ? 'shadow-md scale-105' : 'border border-gray-200 text-gray-600 hover:border-black'}`}
-                    style={selectedCategoryTab === 'all' ? { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' } : {}}
+                    className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${selectedCategoryTab === 'all' ? 'shadow-md scale-105' : 'border hover:opacity-80'}`}
+                    style={selectedCategoryTab === 'all' ? { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' } : { color: 'var(--mw-text-muted)', borderColor: 'var(--mw-border)' }}
                   >
                     All ({allProductsList.length})
                   </button>
@@ -790,8 +790,8 @@ export default function MarwanTemplate({
                         setSelectedCategoryTab(cat._id);
                         setShowAllProducts(false);
                       }}
-                      className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${selectedCategoryTab === cat._id ? 'shadow-md scale-105' : 'border border-gray-200 text-gray-600 hover:border-black'}`}
-                      style={selectedCategoryTab === cat._id ? { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' } : {}}
+                      className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${selectedCategoryTab === cat._id ? 'shadow-md scale-105' : 'border hover:opacity-80'}`}
+                      style={selectedCategoryTab === cat._id ? { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' } : { color: 'var(--mw-text-muted)', borderColor: 'var(--mw-border)' }}
                     >
                       {cat.name}
                     </button>
@@ -814,7 +814,7 @@ export default function MarwanTemplate({
                   <button
                     onClick={() => setShowAllProducts(true)}
                     className="inline-flex items-center gap-2 rounded-full border-2 px-8 py-3 font-bold transition-all hover:opacity-90 shadow-sm hover:shadow cursor-pointer"
-                    style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-primary)' }}
+                    style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-text)' }}
                   >
                     Show More <ArrowRight size={16} className={isRtl ? 'rotate-180' : ''} />
                   </button>
@@ -829,21 +829,21 @@ export default function MarwanTemplate({
           <section className="py-12 md:py-16 border-y" style={{ background: 'var(--mw-surface)', borderColor: 'var(--mw-border)' }} id="brands">
             <div className="max-w-[1240px] mx-auto px-5">
               <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} text-center mb-10`}>
-                <span className="text-[11px] font-extrabold tracking-[0.25em] uppercase mb-2 block" style={{ color: 'var(--mw-primary)' }}>Certified Partners</span>
-                                        <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
-                  Official Brand <span style={{ color: 'var(--mw-primary)' }}>Distributors</span>
+                <span className="text-[11px] font-extrabold tracking-[0.25em] uppercase mb-2 block" style={{ color: 'var(--mw-text-muted)' }}>Certified Partners</span>
+                                        <h2 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: 'var(--mw-text)' }}>
+                  Official Brand <span style={{ color: 'var(--mw-text-muted)' }}>Distributors</span>
                 </h2>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 items-center">
                 {brands.map((brand) => (
-                  <Link key={brand._id} href={`/brands#${brand._id}`} className="p-5 rounded-2xl border bg-white flex flex-col items-center justify-center gap-2 hover:shadow-lg hover:border-black transition-all group aspect-square text-center" style={{ borderColor: 'var(--mw-border)' }}>
+                  <Link key={brand._id} href={`/brands#${brand._id}`} className="p-5 rounded-2xl border flex flex-col items-center justify-center gap-2 hover:shadow-lg transition-all group aspect-square text-center" style={{ borderColor: 'var(--mw-border)', background: 'var(--mw-bg)' }}>
                     {brand.logo ? (
                       <img src={brand.logo} alt={brand.name || brand.ar_name} className="max-h-16 max-w-full object-contain transition-transform duration-300 group-hover:scale-110" />
                     ) : (
-                      <span className="text-lg font-black text-gray-800">{brand.name}</span>
+                      <span className="text-lg font-black" style={{ color: 'var(--mw-text)' }}>{brand.name}</span>
                     )}
-                    <span className="text-xs font-extrabold text-gray-700 mt-1">{brand.name}</span>
-                    {brand.ar_name && <span className="text-[10px] text-gray-400 font-medium">{brand.ar_name}</span>}
+                    <span className="text-xs font-extrabold mt-1" style={{ color: 'var(--mw-text)' }}>{brand.name}</span>
+                    {brand.ar_name && <span className="text-[10px] font-medium" style={{ color: 'var(--mw-text-muted)' }}>{brand.ar_name}</span>}
                   </Link>
                 ))}
               </div>
@@ -855,10 +855,10 @@ export default function MarwanTemplate({
         {showFeatures && (
           <section className="py-12 md:py-16 max-w-[1240px] mx-auto px-5" id="why-us">
             <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} mb-10 text-center max-w-2xl mx-auto`}>
-              <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-primary)' }}>
+              <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-text-muted)' }}>
                 <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Our Commitment
               </div>
-                                      <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>
+                                      <h2 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: 'var(--mw-text)' }}>
                 {t?.sections?.trustTitle || `Why Shop with ${displayStoreName}`}
               </h2>
             </div>
@@ -885,40 +885,40 @@ export default function MarwanTemplate({
         {hasContactInfo && (
           <section className="py-12 md:py-16 border-t" style={{ background: 'var(--mw-surface)', borderColor: 'var(--mw-border)' }} id="store-connect">
             <div className="max-w-[1240px] mx-auto px-5">
-              <div className="rounded-[2.5rem] p-8 md:p-12 border bg-white shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center" style={{ borderColor: 'var(--mw-border)' }}>
+              <div className="rounded-[2.5rem] p-8 md:p-12 border shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center" style={{ borderColor: 'var(--mw-border)', background: 'var(--mw-bg)' }}>
                 <div className="lg:col-span-7 flex flex-col gap-4">
-                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600 flex items-center gap-1.5">
+                  <span className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5" style={{ color: 'var(--mw-text-muted)' }}>
                     <CheckCircle2 size={16} /> Official Store Support
                   </span>
-                  <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tight">Have Questions? We Are Ready to Help</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed max-w-xl">
+                  <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tight" style={{ color: 'var(--mw-text)' }}>Have Questions? We Are Ready to Help</h3>
+                  <p className="text-sm leading-relaxed max-w-xl" style={{ color: 'var(--mw-text-muted)' }}>
                     Reach out to our customer care team for direct order assistance, product availability, wholesale requests, or delivery tracking.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     {ecomData.phone && (
-                      <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
+                      <div className="flex items-center gap-3 p-3.5 rounded-2xl border" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)' }}>
                         <Phone size={18} style={{ color: 'var(--mw-primary)' }} />
                         <div>
-                          <span className="text-[10px] text-gray-400 font-bold uppercase block">Phone Hotline</span>
-                          <a href={`tel:${ecomData.phone}`} className="text-sm font-black hover:underline">{ecomData.phone}</a>
+                          <span className="text-[10px] font-bold uppercase block" style={{ color: 'var(--mw-text-muted)' }}>Phone Hotline</span>
+                          <a href={`tel:${ecomData.phone}`} className="text-sm font-black hover:underline" style={{ color: 'var(--mw-text)' }}>{ecomData.phone}</a>
                         </div>
                       </div>
                     )}
                     {ecomData.email && (
-                      <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
+                      <div className="flex items-center gap-3 p-3.5 rounded-2xl border" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)' }}>
                         <Mail size={18} style={{ color: 'var(--mw-primary)' }} />
                         <div>
-                          <span className="text-[10px] text-gray-400 font-bold uppercase block">Support Email</span>
-                          <a href={`mailto:${ecomData.email}`} className="text-sm font-black hover:underline">{ecomData.email}</a>
+                          <span className="text-[10px] font-bold uppercase block" style={{ color: 'var(--mw-text-muted)' }}>Support Email</span>
+                          <a href={`mailto:${ecomData.email}`} className="text-sm font-black hover:underline" style={{ color: 'var(--mw-text)' }}>{ecomData.email}</a>
                         </div>
                       </div>
                     )}
                     {ecomData.address && (
-                      <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-gray-50 border border-gray-100 sm:col-span-2">
+                      <div className="flex items-start gap-3 p-3.5 rounded-2xl border sm:col-span-2" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)' }}>
                         <MapPin size={18} style={{ color: 'var(--mw-primary)' }} className="mt-0.5" />
                         <div>
-                          <span className="text-[10px] text-gray-400 font-bold uppercase block">Address</span>
-                          <span className="text-sm font-bold">{ecomData.address}</span>
+                          <span className="text-[10px] font-bold uppercase block" style={{ color: 'var(--mw-text-muted)' }}>Address</span>
+                          <span className="text-sm font-bold" style={{ color: 'var(--mw-text)' }}>{ecomData.address}</span>
                         </div>
                       </div>
                     )}
@@ -927,12 +927,12 @@ export default function MarwanTemplate({
                 <div className="lg:col-span-5 flex flex-col gap-4">
                   {Object.keys(contactLinks).length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {contactLinks.facebook && <a href={contactLinks.facebook} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border bg-white hover:bg-gray-100 transition-colors">Facebook</a>}
-                      {contactLinks.instagram && <a href={contactLinks.instagram} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border bg-white hover:bg-gray-100 transition-colors">Instagram</a>}
-                      {contactLinks.whatsapp && <a href={contactLinks.whatsapp} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border bg-white hover:bg-gray-100 transition-colors">WhatsApp</a>}
-                      {contactLinks.twitter && <a href={contactLinks.twitter} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border bg-white hover:bg-gray-100 transition-colors">Twitter / X</a>}
-                      {contactLinks.tiktok && <a href={contactLinks.tiktok} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border bg-white hover:bg-gray-100 transition-colors">TikTok</a>}
-                      {contactLinks.linkedin && <a href={contactLinks.linkedin} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border bg-white hover:bg-gray-100 transition-colors">LinkedIn</a>}
+                      {contactLinks.facebook && <a href={contactLinks.facebook} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>Facebook</a>}
+                      {contactLinks.instagram && <a href={contactLinks.instagram} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>Instagram</a>}
+                      {contactLinks.whatsapp && <a href={contactLinks.whatsapp} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>WhatsApp</a>}
+                      {contactLinks.twitter && <a href={contactLinks.twitter} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>Twitter / X</a>}
+                      {contactLinks.tiktok && <a href={contactLinks.tiktok} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>TikTok</a>}
+                      {contactLinks.linkedin && <a href={contactLinks.linkedin} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>LinkedIn</a>}
                     </div>
                   )}
                 </div>
@@ -946,7 +946,7 @@ export default function MarwanTemplate({
           <footer
             style={{
               background: 'linear-gradient(180deg, color-mix(in srgb, var(--mw-bg) 100%, white 0%), color-mix(in srgb, var(--mw-surface) 90%, var(--mw-text) 10%))',
-              color: activePrimary || 'var(--mw-text)',
+              color: 'var(--mw-text)',
               borderColor: 'var(--mw-border)',
             }}
             className="pt-16 border-t"
