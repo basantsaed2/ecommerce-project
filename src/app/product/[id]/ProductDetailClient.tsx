@@ -489,23 +489,26 @@ export default function ProductDetailClient() {
                                                 return (
                                                     <button
                                                         key={option._id}
+                                                        disabled={!optionInStock}
                                                         onClick={() => setSelectedOptions(prev => ({ ...prev, [variation._id]: option._id }))}
-                                                        className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all border-2 flex flex-col items-center min-w-[70px] ${isSelected
-                                                            ? 'bg-primary border-primary text-[var(--color-on-primary)] shadow-md scale-105'
+                                                        className={`px-3 py-2 rounded-xl text-xs font-black transition-all border-2 flex flex-col items-center gap-1 ${isSelected
+                                                            ? optionInStock
+                                                                ? 'bg-primary border-primary text-[var(--color-on-primary)] shadow-md'
+                                                                : 'bg-gray-50 border-gray-100 text-gray-300 opacity-60 cursor-not-allowed'
                                                             : !optionInStock
-                                                                ? 'bg-gray-50 border-gray-100 text-gray-300 opacity-60'
+                                                                ? 'bg-gray-50 border-gray-100 text-gray-300 opacity-60 cursor-not-allowed'
                                                                 : 'bg-white border-gray-100 text-gray-700 hover:border-gray-300'
                                                             }`}
                                                     >
-                                                        {typeof option.quantity === 'number' && (
+                                                        {typeof option.quantity === 'number' && option.quantity > 0 && option.quantity < 5 && (
                                                             <span
-                                                                className="mb-1.5 inline-flex h-7 min-w-8 items-center justify-center rounded-full bg-emerald-100 px-2 text-base font-black leading-none text-emerald-800 shadow-sm ring-1 ring-emerald-200"
+                                                                className="inline-flex min-w-6 items-center justify-center rounded-full bg-rose-600 px-2 py-1 text-[11px] font-black leading-none text-white shadow-md shadow-rose-500/40 ring-1 ring-rose-700 motion-safe:animate-bounce"
                                                                 title={t.product.quantity}
                                                             >
                                                                 {option.quantity}
                                                             </span>
                                                         )}
-                                                        <span>{getLocalized(option)}</span>
+                                                        <span className={!optionInStock ? 'line-through' : undefined}>{getLocalized(option)}</span>
                                                         {!optionInStock && <span className="text-[9px] opacity-70">{t.product.soldOut}</span>}
                                                     </button>
                                                 );
