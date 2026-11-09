@@ -72,9 +72,22 @@ export const fetchCart = createAsyncThunk(
     }
 );
 
+// Serialize cart syncs so overlapping add-to-cart operations cannot overwrite each
+// other with stale (smaller) item lists.
+let syncChain: Promise<unknown> = Promise.resolve();
+
 export const syncCart = createAsyncThunk(
     'cart/syncCart',
     async (_, { getState, rejectWithValue }) => {
+        const previous = syncChain;
+        let release: (value?: unknown) => void = () => {};
+        syncChain = new Promise((resolve) => {
+            release = resolve;
+        });
+
+        // Wait for any in-flight sync to finish before reading state.
+        await previous.catch(() => {});
+
         try {
             const state = getState() as RootState;
             const items: SyncCartItemRequest[] = state.cart.items.map(item => {
@@ -101,8 +114,11 @@ export const syncCart = createAsyncThunk(
                 };
             });
             const response = await cartApi.syncCart(items);
-            return getCartFromResponse(response);
+            const data = getCartFromResponse(response);
+            release(data);
+            return data;
         } catch (error: any) {
+            release();
             return rejectWithValue(extractError(error));
         }
     }
