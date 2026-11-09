@@ -25,8 +25,8 @@ export default function DefaultProducts({
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 className="animate-spin text-secondary" size={40} />
-                <p className="text-gray-400 text-sm font-medium animate-pulse">{t.common.loading}</p>
+                <Loader2 className="animate-spin text-[var(--color-text-muted)]" size={40} />
+                <p className="text-[var(--color-text-muted)] text-sm font-medium animate-pulse">{t.common.loading}</p>
             </div>
         );
     }
@@ -49,20 +49,20 @@ export default function DefaultProducts({
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <Sparkles size={16} className="text-secondary" />
-                        <span className="text-xs font-black uppercase tracking-widest text-secondary">
+                        <Sparkles size={16} className="text-[var(--color-text-muted)]" />
+                        <span className="text-xs font-black uppercase tracking-widest text-[var(--color-text-muted)]">
                             {subtitle || t.sections.handpickedForYou}
                         </span>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
+                    <h2 className="text-3xl md:text-4xl font-black text-[var(--color-text)] tracking-tight">
                         {title || (searchQuery ? `${t.sections.featuredSearchResults} (${filteredProducts.length})` : t.sections.featuredProductsHeading)}
                     </h2>
                 </div>
             </div>
 
             {filteredProducts.length === 0 ? (
-                <div className="text-center py-16 bg-gray-50 rounded-3xl">
-                    <p className="text-gray-500 font-medium">{t.sections.noProductsMatching}</p>
+                <div className="text-center py-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl">
+                    <p className="text-[var(--color-text-muted)] font-medium">{t.sections.noProductsMatching}</p>
                 </div>
             ) : (
                 <>
@@ -78,7 +78,7 @@ export default function DefaultProducts({
                     <button
                         onClick={() => void fetchNextPage()}
                         disabled={isFetchingNextPage}
-                        className="px-8 py-3.5 bg-white border-2 border-gray-200 text-primary font-bold rounded-2xl hover:border-secondary hover:text-secondary hover:shadow-lg transition-all active:scale-95 flex items-center gap-2 disabled:cursor-wait disabled:opacity-70"
+                        className="px-8 py-3.5 bg-[var(--color-surface)] border-2 border-[var(--color-border)] text-[var(--color-text)] font-bold rounded-2xl hover:border-[var(--color-text-muted)] hover:text-[var(--color-text-muted)] hover:shadow-lg transition-all active:scale-95 flex items-center gap-2 disabled:cursor-wait disabled:opacity-70"
                     >
                         {isFetchingNextPage ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
                         {isFetchingNextPage ? t.common.loadingMore : t.product.loadMore}

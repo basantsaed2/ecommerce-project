@@ -86,7 +86,7 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
         <>
             <div
                 onClick={handleCardClick}
-                className="group relative flex h-full min-h-[430px] flex-col bg-white rounded-[24px] border border-gray-100 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-1 overflow-hidden cursor-pointer"
+                className="group relative flex h-full min-h-[430px] flex-col bg-[var(--color-surface)] rounded-[24px] border border-[var(--color-border)] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-1 overflow-hidden cursor-pointer"
             >
                 {/* Badges & Actions Overlay */}
                 <div className="absolute top-3 inset-x-3 z-20 flex justify-between items-start pointer-events-none">
@@ -135,7 +135,7 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
                             className={`p-2.5 rounded-xl transition-all active:scale-90 shadow-sm border ${
                                 isInWishlist
                                     ? 'bg-red-50 border-red-100 text-red-500'
-                                    : 'bg-white/90 backdrop-blur-sm border-gray-100 text-gray-400 hover:text-red-500 hover:bg-white'
+                                    : 'bg-[var(--color-surface)] backdrop-blur-sm border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-red-500'
                             }`}
                         >
                             <Heart size={18} className={isInWishlist ? 'fill-current animate-pulse' : ''} />
@@ -205,29 +205,29 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
                     {/* Brand & Category badges */}
                     <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                         {product.brand?.name && (
-                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider bg-gray-100 px-2 py-0.5 rounded-md">
+                            <span className="text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-wider bg-[var(--color-surface)] border border-[var(--color-border)] px-2 py-0.5 rounded-md">
                                 {getLocalized(product.brand)}
                             </span>
                         )}
                         {product.category?.name ? (
-                            <span className="text-[9px] font-bold text-gray-800 bg-secondary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            <span className="text-[9px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] px-2 py-0.5 rounded-md uppercase tracking-wider">
                                 {getLocalized(product.category)}
                             </span>
                         ) : product.categoryId && product.categoryId.length > 0 ? (
-                            <span className="text-[9px] font-bold text-gray-800 bg-secondary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            <span className="text-[9px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] px-2 py-0.5 rounded-md uppercase tracking-wider">
                                 {getLocalized(product.categoryId[0])}
                             </span>
                         ) : null}
                     </div>
 
                     {/* Product Name */}
-                    <h3 className="font-bold text-gray-900 text-sm md:text-base line-clamp-1 group-hover:text-primary transition-colors mb-1">
+                    <h3 className="font-bold text-[var(--color-text)] text-sm md:text-base line-clamp-1 group-hover:text-[var(--color-text-muted)] transition-colors mb-1">
                         {getLocalized(product)}
                     </h3>
 
                     {/* Description preview */}
                     {product.description && (
-                        <p className="text-gray-400 text-xs line-clamp-1 mb-2">
+                        <p className="text-[var(--color-text-muted)] text-xs line-clamp-1 mb-2">
                             {getLocalized(product, 'description')}
                         </p>
                     )}
@@ -236,8 +236,8 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
                     {hasVariations && (
                         <div className="mt-1 mb-3 flex flex-wrap gap-1">
                             {product.variations!.map((v) => (
-                                <span key={v._id} className="text-[9px] font-semibold text-gray-600 bg-gray-50 px-2 py-0.5 rounded border border-gray-100 flex items-center gap-1">
-                                    <Box size={10} className="text-gray-400" />
+                                <span key={v._id} className="text-[9px] font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface)] px-2 py-0.5 rounded border border-[var(--color-border)] flex items-center gap-1">
+                                    <Box size={10} className="text-[var(--color-text-muted)]" />
                                     {getLocalized(v)}: {v.options?.length || 0}
                                 </span>
                             ))}
@@ -245,15 +245,15 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
                     )}
 
                     {/* Price section */}
-                    <div className="mt-auto pt-3 border-t border-gray-50">
-                        <span className="block text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">{t.product.price}</span>
+                    <div className="mt-auto pt-3 border-t border-[var(--color-border)]">
+                        <span className="block text-[9px] text-[var(--color-text-muted)] font-bold uppercase tracking-wider mb-0.5">{t.product.price}</span>
                         <div className="flex items-baseline gap-2">
-                            <span className="font-black text-xl text-gray-900">
+                            <span className="font-black text-xl text-[var(--color-text)]">
                                 {formatPrice(priceInfo.finalPrice)}
                             </span>
 
                             {priceInfo.hasDiscount && (
-                                <span className="text-xs font-bold text-gray-500 line-through">
+                                <span className="text-xs font-bold text-[var(--color-text-muted)] line-through">
                                     {priceInfo.mainPrice.toLocaleString()}
                                 </span>
                             )}

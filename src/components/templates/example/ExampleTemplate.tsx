@@ -39,6 +39,17 @@ function sectionEnabledAny(sections: any[] | undefined, keys: string[], fallback
     : matchingSections.some((section) => section.enabled !== false);
 }
 
+function readableForeground(color?: string): string {
+  const hex = (color || '').trim().replace(/^#/, '');
+  const full = hex.length === 3 ? hex.split('').map((c) => c + c).join('') : hex;
+  if (!/^[\da-f]{6}$/i.test(full)) return '#ffffff';
+  const [r, g, b] = full.match(/.{2}/g)!.map((ch) => {
+    const v = parseInt(ch, 16) / 255;
+    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.179 ? '#111827' : '#ffffff';
+}
+
 export default function ExampleTemplate({
   searchQuery = '',
   excludeKeys = [],
@@ -54,10 +65,10 @@ export default function ExampleTemplate({
   const activeBackground = isDarkMode ? colors?.backgroundDark || colors?.background : colors?.background;
   const activeTextPrimary = isDarkMode ? colors?.textPrimaryDark || colors?.textPrimary : colors?.textPrimary;
   const activeTextSecondary = isDarkMode ? colors?.textSecondaryDark || colors?.textSecondary : colors?.textSecondary;
-  const headerActionClassName = `${HEADER_ACTION_BASE_CLASS} text-gray-800 hover:border-gray-400 hover:bg-gray-50 hover:text-black`;
+  const headerActionClassName = `${HEADER_ACTION_BASE_CLASS} hover:opacity-80`;
   const headerActionStyle = {
     backgroundColor: activeBackground || '#ffffff',
-    borderColor: isDarkMode ? '#334155' : '#e5e7eb',
+    borderColor: 'var(--bs-border)',
     color: activeTextPrimary || '#111827',
   };
   const ecommerceData = settings.ecommerceData?.[0];
@@ -110,6 +121,9 @@ export default function ExampleTemplate({
     ['--bs-bg' as any]: activeBackground || '#f8fafc',
     ['--bs-text' as any]: activeTextPrimary || '#0f172a',
     ['--bs-text-muted' as any]: activeTextSecondary || '#64748b',
+    ['--bs-on-primary' as any]: readableForeground(activePrimary || '#d9232d'),
+    ['--bs-surface' as any]: 'color-mix(in srgb, var(--bs-bg) 96%, var(--bs-text) 4%)',
+    ['--bs-border' as any]: 'color-mix(in srgb, var(--bs-text) 14%, transparent)',
     ['--bs-font' as any]: fontStyle ? `'${fontStyle}', sans-serif` : 'sans-serif',
   } as React.CSSProperties;
 
@@ -158,7 +172,7 @@ export default function ExampleTemplate({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-gray-50">
+      <div className="flex min-h-[60vh] items-center justify-center bg-[var(--color-background)]">
         <StoreLoader logoUrl={logoUrl} label="Loading your store..." size="lg" />
       </div>
     );
@@ -172,7 +186,7 @@ export default function ExampleTemplate({
       `}</style>
 
       {/* ── Top Utility Bar ────────────────────────────────────────────── */}
-      <div className="border-b text-xs py-2 hidden lg:block" style={{ backgroundColor: activeBackground || '#ffffff', borderColor: activeTextSecondary || '#e5e7eb', color: activeTextSecondary || '#4b5563' }}>
+      <div className="border-b text-xs py-2 hidden lg:block" style={{ backgroundColor: activeBackground || '#ffffff', borderColor: 'var(--bs-border)', color: activeTextSecondary || '#4b5563' }}>
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1.5">
@@ -186,14 +200,14 @@ export default function ExampleTemplate({
           </div>
 
           <div className="flex items-center gap-6 font-medium">
-            <Link href="/order-tracking" className="hover:text-[var(--bs-primary)] transition-colors flex items-center gap-1 font-bold text-[var(--bs-primary)]">📦 {t.nav.trackOrder}</Link>
-            <Link href="/signup" className="hover:text-[var(--bs-primary)] transition-colors">+ {t.nav.register}</Link>
+            <Link href="/order-tracking" className="hover:opacity-70 transition-colors flex items-center gap-1 font-bold text-[var(--bs-text)]">📦 {t.nav.trackOrder}</Link>
+            <Link href="/signup" className="hover:opacity-70 transition-colors">+ {t.nav.register}</Link>
           </div>
         </div>
       </div>
 
       {/* ── Main Header (Logo, Search, Icons) ─────────────────────────── */}
-      <header className="py-4 border-b" style={{ backgroundColor: activeBackground || '#ffffff', borderColor: activeTextSecondary || '#e5e7eb', color: activeTextPrimary || '#111827' }}>
+      <header className="py-4 border-b" style={{ backgroundColor: activeBackground || '#ffffff', borderColor: 'var(--bs-border)', color: activeTextPrimary || '#111827' }}>
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between gap-6">
           <Link href="/" className="flex items-center gap-2 text-3xl font-extrabold tracking-tight shrink-0">
               {header.logo || logoUrl ? (
@@ -210,13 +224,13 @@ export default function ExampleTemplate({
                 placeholder={t.common.searchPlaceholder}
                 value={currentSearch}
                 onChange={(e) => setCurrentSearch(e.target.value)}
-                className={`w-full px-4 py-2.5 text-sm outline-none ${isDarkMode ? 'text-slate-100 placeholder:text-slate-400' : 'text-slate-800 placeholder:text-gray-400'}`}
+                className="w-full px-4 py-2.5 text-sm outline-none text-[var(--bs-text)] placeholder:text-[var(--bs-text-muted)]"
                 style={{ backgroundColor: 'transparent' }}
 
               />
               <button 
                 type="button"
-                className="text-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:brightness-110 transition-all shrink-0"
+                className="bg-[var(--bs-primary)] text-[var(--bs-on-primary)] px-6 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:brightness-110 transition-all shrink-0"
               >
                 <Search size={15} /> {t.common.search.replace('...', '')}
               </button>
@@ -245,7 +259,7 @@ export default function ExampleTemplate({
             >
               {themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <Link href="/favourite" aria-label={t.nav.wishlist} className={`relative p-2 transition-colors hover:text-[var(--bs-primary)] ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+            <Link href="/favourite" aria-label={t.nav.wishlist} className={`relative p-2 transition-colors hover:opacity-70 text-[var(--bs-text)]`}>
               <Heart size={24} />
             </Link>
             <Link
@@ -265,7 +279,7 @@ export default function ExampleTemplate({
               href={token ? '/profile' : '/login'}
               aria-label={token ? t.nav.profile : t.nav.login}
               title={token ? t.nav.profile : t.nav.login}
-              className={`relative p-2 transition-colors hover:text-[var(--bs-primary)] ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}
+              className={`relative p-2 transition-colors hover:opacity-70 text-[var(--bs-text)]`}
             >
               <UserRound size={24} />
             </Link>
@@ -274,12 +288,12 @@ export default function ExampleTemplate({
       </header>
 
       {/* ── Navigation Bar ────────────────────────────────────────────── */}
-      <nav className="bg-[#2a323d] text-white">
+      <nav className="border-y" style={{ background: 'var(--bs-surface)', borderColor: 'var(--bs-border)', color: 'var(--bs-text)' }}>
         <div className="max-w-[1400px] mx-auto px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-8">
           <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-8 w-full">
             <button
               onClick={() => setCatMenuOpen(!catMenuOpen)}
-              className="bg-[var(--bs-primary)] text-white font-bold text-xs tracking-wider uppercase px-6 py-3.5 flex items-center gap-3 hover:brightness-110 transition-all w-full md:w-[240px] justify-between"
+              className="bg-[var(--bs-primary)] text-[var(--bs-on-primary)] font-bold text-xs tracking-wider uppercase px-6 py-3.5 flex items-center gap-3 hover:brightness-110 transition-all w-full md:w-[240px] justify-between"
             >
               <span className="flex items-center gap-2">
                 <Menu size={16} /> {t.nav.topCategories}
@@ -289,7 +303,7 @@ export default function ExampleTemplate({
 
             <div className="flex items-center gap-5 md:gap-8 text-xs font-bold uppercase tracking-wider overflow-x-auto pb-2 md:pb-0 scrollbar-none">
               {dynamicHeaderLinks.map((link) => (
-                <Link key={link.href} href={link.href} className="hover:text-[var(--bs-primary)] transition-colors whitespace-nowrap shrink-0">
+                <Link key={link.href} href={link.href} className="hover:opacity-70 transition-colors whitespace-nowrap shrink-0">
                   {link.label}
                 </Link>
               ))}
@@ -304,12 +318,12 @@ export default function ExampleTemplate({
           <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
             
             {/* Dynamic Left Categories */}
-            <div className={`bg-white border border-gray-200 divide-y divide-gray-100 ${catMenuOpen ? 'block' : 'hidden lg:block'}`}>
+            <div className={`bg-[var(--bs-surface)] border border-[var(--bs-border)] divide-y divide-[var(--bs-border)] ${catMenuOpen ? 'block' : 'hidden lg:block'}`}>
               {categories.slice(0, 10).map((cat) => (
                 <Link
                   key={cat._id}
                   href={`/categories?id=${cat._id}`}
-                  className="block px-5 py-3 text-xs font-medium text-slate-700 hover:text-[var(--bs-primary)] hover:bg-gray-50 transition-colors"
+                  className="block px-5 py-3 text-xs font-medium text-[var(--bs-text)] hover:opacity-70 transition-opacity"
                 >
                   {getLocalized(cat, 'name')}
                 </Link>
@@ -317,22 +331,22 @@ export default function ExampleTemplate({
             </div>
 
             {/* Dynamic Main Hero Banner */}
-            <div className="relative rounded-lg overflow-hidden bg-white min-h-[380px] flex items-center border border-gray-200">
+            <div className="relative rounded-lg overflow-hidden bg-[var(--bs-surface)] min-h-[380px] flex items-center border border-[var(--bs-border)]">
               {heroMainBanner ? (
-                <div className="w-full h-full relative grid grid-cols-1 md:grid-cols-2 items-center p-8 bg-gradient-to-r from-red-600 to-rose-500 text-white">
+                <div className="w-full h-full relative grid grid-cols-1 md:grid-cols-2 items-center p-8" style={{ background: 'linear-gradient(90deg, var(--bs-primary), color-mix(in srgb, var(--bs-primary) 75%, var(--bs-bg)))', color: 'var(--bs-on-primary)' }}>
                   <div className="space-y-4 z-10">
-                    <span className="text-xs font-bold tracking-widest uppercase bg-white/20 px-3 py-1 rounded-full">
+                    <span className="text-xs font-bold tracking-widest uppercase border border-current px-3 py-1 rounded-full">
                       Online Shop
                     </span>
                     <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-tight">
                       {heroTitle}
                     </h1>
-                    <p className="text-xs text-white/90 max-w-md leading-relaxed">
+                    <p className="text-xs opacity-90 max-w-md leading-relaxed">
                       {heroDescription}
                     </p>
                     <Link
                       href="/products"
-                      className="inline-block bg-white text-slate-900 font-extrabold text-xs uppercase tracking-wider px-6 py-3 rounded-md shadow-md hover:bg-slate-100 transition-colors"
+                      className="inline-block bg-[var(--bs-on-primary)] text-[var(--bs-primary)] font-extrabold text-xs uppercase tracking-wider px-6 py-3 rounded-md shadow-md hover:opacity-90 transition-opacity"
                     >
                       SHOP NOW
                     </Link>
@@ -360,11 +374,11 @@ export default function ExampleTemplate({
         <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--bs-primary)] mb-1">{t.sections.exploreCatalogLabel}</p>
-              <h2 className="text-2xl font-black text-slate-900">{t.sections.shopBy} <span className="text-[var(--bs-primary)] italic">{t.sections.collection}.</span></h2>
-              <p className="text-xs text-gray-500 mt-1">{t.sections.catalogDescription}</p>
+              <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--bs-text-muted)] mb-1">{t.sections.exploreCatalogLabel}</p>
+              <h2 className="text-2xl font-black text-[var(--bs-text)]">{t.sections.shopBy} <span className="text-[var(--bs-text-muted)] italic">{t.sections.collection}.</span></h2>
+              <p className="text-xs text-[var(--bs-text-muted)] mt-1">{t.sections.catalogDescription}</p>
             </div>
-            <Link href="/categories" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110 flex items-center gap-1.5">
+            <Link href="/categories" className="bg-[var(--bs-primary)] text-[var(--bs-on-primary)] text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110 flex items-center gap-1.5">
               View All
             </Link>
           </div>
@@ -373,7 +387,7 @@ export default function ExampleTemplate({
               <Link
                 key={cat._id}
                 href={`/categories?id=${cat._id}`}
-                className="group relative h-44 overflow-hidden rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                className="group relative h-44 overflow-hidden rounded-xl border border-[var(--bs-border)] shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
               >
                 <img
                   src={cat.image || logoUrl || undefined}
@@ -404,16 +418,16 @@ export default function ExampleTemplate({
       {/* ── Shop by Brands ────────────────────────────────────────────── */}
       {showBrands && brands.length > 0 && (
         <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">{t.sections.shopByBrands}</h2>
+          <h2 className="text-xl font-bold text-[var(--bs-text)] mb-6">{t.sections.shopByBrands}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             {brands.map((brand) => (
-              <div key={brand._id} className="bg-white border border-gray-200 rounded-md p-4 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow h-32">
+              <div key={brand._id} className="bg-[var(--bs-surface)] border border-[var(--bs-border)] rounded-md p-4 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow h-32">
                 {brand.logo ? (
                   <img src={brand.logo} alt={brand.name} className="max-h-14 max-w-full object-contain" />
                 ) : (
-                  <span className="font-extrabold text-sm text-slate-700 uppercase tracking-wider">{brand.name}</span>
+                  <span className="font-extrabold text-sm text-[var(--bs-text)] uppercase tracking-wider">{brand.name}</span>
                 )}
-                {brand.logo && <span className="text-sm font-bold text-slate-700 text-center line-clamp-1">{getLocalized(brand)}</span>}
+                {brand.logo && <span className="text-sm font-bold text-[var(--bs-text)] text-center line-clamp-1">{getLocalized(brand)}</span>}
               </div>
             ))}
           </div>
@@ -424,8 +438,8 @@ export default function ExampleTemplate({
       {showFeaturedProducts && filteredProducts.length > 0 && (
         <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
           <div className="flex items-center justify-between mb-6">
-                                    <h2 className={`text-3xl md:text-4xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-primary'}`}>{t.sections.featuredProductsHeading}</h2>
-            <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
+                                    <h2 className="text-3xl md:text-4xl font-black tracking-tight text-[var(--bs-text)]">{t.sections.featuredProductsHeading}</h2>
+            <Link href="/products" className="bg-[var(--bs-primary)] text-[var(--bs-on-primary)] text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
               {t.sections.seeAll}
             </Link>
           </div>
@@ -442,8 +456,8 @@ export default function ExampleTemplate({
       {showNewArrivals && newArrivals.length > 0 && (
         <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900">{t.sections.newArrivalsHeading}</h2>
-            <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
+            <h2 className="text-xl font-bold text-[var(--bs-text)]">{t.sections.newArrivalsHeading}</h2>
+            <Link href="/products" className="bg-[var(--bs-primary)] text-[var(--bs-on-primary)] text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
               {t.sections.seeAll}
             </Link>
           </div>
@@ -460,8 +474,8 @@ export default function ExampleTemplate({
       {showProducts && trendingProducts.length > 0 && (
         <section className="max-w-[1400px] mx-auto px-4 py-12 sm:px-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900">{t.sections.trendingProductsHeading}</h2>
-            <Link href="/products" className="bg-[var(--bs-primary)] text-white text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
+            <h2 className="text-xl font-bold text-[var(--bs-text)]">{t.sections.trendingProductsHeading}</h2>
+            <Link href="/products" className="bg-[var(--bs-primary)] text-[var(--bs-on-primary)] text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110">
               {t.sections.seeAll}
             </Link>
           </div>
@@ -479,18 +493,18 @@ export default function ExampleTemplate({
 
       {/* ── Footer ────────────────────────────────────────────────────── */}
       {showFooter && (
-        <footer className="bg-white border-t border-gray-200 pt-16 pb-8 text-xs text-slate-600 mt-16">
-          <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 pb-12 border-b border-gray-200">
+        <footer className="bg-[var(--bs-surface)] border-t border-[var(--bs-border)] pt-16 pb-8 text-xs text-[var(--bs-text-muted)] mt-16">
+          <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 pb-12 border-b border-[var(--bs-border)]">
             
             <div>
               {(footer.logo || logoUrl) && (
                 <img src={footer.logo || logoUrl || undefined} alt={storeName || 'Store logo'} className="h-10 w-auto object-contain mb-4" />
               )}
-              <h4 className="font-bold text-slate-900 text-sm mb-4">{t.sections.contactUs}</h4>
+              <h4 className="font-bold text-[var(--bs-text)] text-sm mb-4">{t.sections.contactUs}</h4>
               {contactInfo?.address && <p className="mb-2"><strong>{t.sections.contactAddress}</strong> {contactInfo.address}</p>}
               {contactInfo?.email && <p className="mb-2"><strong>{t.sections.emailLabel}</strong> {contactInfo.email}</p>}
               {contactInfo?.phone && <p className="mb-4"><strong>{t.sections.phoneLabel}</strong> {contactInfo.phone}</p>}
-              <div className="flex gap-3 text-slate-700">
+              <div className="flex gap-3 text-[var(--bs-text)]">
                 <a href={socialLinks.facebook || '#'} aria-label="Facebook"><Facebook size={16} /></a>
                 <a href={socialLinks.twitter || '#'} aria-label="Twitter"><Twitter size={16} /></a>
                 <a href={socialLinks.instagram || '#'} aria-label="Instagram"><Instagram size={16} /></a>
@@ -499,43 +513,43 @@ export default function ExampleTemplate({
             </div>
 
             <div>
-              <h4 className="font-bold text-slate-900 text-sm mb-4">{t.sections.quickLinks}</h4>
+              <h4 className="font-bold text-[var(--bs-text)] text-sm mb-4">{t.sections.quickLinks}</h4>
               <ul className="space-y-2">
-                <li><Link href="/privacy" className="hover:text-[var(--bs-primary)]">{t.sections.privacyPolicy}</Link></li>
-                <li><Link href="/terms" className="hover:text-[var(--bs-primary)]">{t.sections.termsConditions}</Link></li>
-                <li><Link href="/purchasing" className="hover:text-[var(--bs-primary)]">{t.sections.purchasingPolicy}</Link></li>
-                <li><Link href="/cookie" className="hover:text-[var(--bs-primary)]">{t.sections.cookiePolicy}</Link></li>
+                <li><Link href="/privacy" className="hover:opacity-70">{t.sections.privacyPolicy}</Link></li>
+                <li><Link href="/terms" className="hover:opacity-70">{t.sections.termsConditions}</Link></li>
+                <li><Link href="/purchasing" className="hover:opacity-70">{t.sections.purchasingPolicy}</Link></li>
+                <li><Link href="/cookie" className="hover:opacity-70">{t.sections.cookiePolicy}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-slate-900 text-sm mb-4">{t.sections.company}</h4>
+              <h4 className="font-bold text-[var(--bs-text)] text-sm mb-4">{t.sections.company}</h4>
               <ul className="space-y-2">
-                <li><Link href="/about" className="hover:text-[var(--bs-primary)]">{t.sections.aboutUs}</Link></li>
-                <li><Link href="/career" className="hover:text-[var(--bs-primary)]">{t.sections.career}</Link></li>
-                <li><Link href="/affiliate" className="hover:text-[var(--bs-primary)]">{t.sections.affiliate}</Link></li>
-                <li><Link href="/contact" className="hover:text-[var(--bs-primary)]">{t.sections.contactUsLower}</Link></li>
+                <li><Link href="/about" className="hover:opacity-70">{t.sections.aboutUs}</Link></li>
+                <li><Link href="/career" className="hover:opacity-70">{t.sections.career}</Link></li>
+                <li><Link href="/affiliate" className="hover:opacity-70">{t.sections.affiliate}</Link></li>
+                <li><Link href="/contact" className="hover:opacity-70">{t.sections.contactUsLower}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-slate-900 text-sm mb-4">{t.sections.subscribeNewsletter}</h4>
-              {footer.bio && <p className="mb-4 text-gray-500">{footer.bio}</p>}
+              <h4 className="font-bold text-[var(--bs-text)] text-sm mb-4">{t.sections.subscribeNewsletter}</h4>
+              {footer.bio && <p className="mb-4 text-[var(--bs-text-muted)]">{footer.bio}</p>}
               <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
                 <input
                   type="email"
                   placeholder={t.sections.emailAddressPlaceholder}
-                  className="w-full px-3 py-2 border border-gray-300 rounded text-xs outline-none focus:border-[var(--bs-primary)]"
+                  className="w-full px-3 py-2 border border-[var(--bs-border)] bg-transparent text-[var(--bs-text)] placeholder:text-[var(--bs-text-muted)] rounded text-xs outline-none focus:border-[var(--bs-text)]"
                 />
-                <button type="submit" className="w-full bg-[var(--bs-primary)] text-white font-bold text-xs uppercase py-2.5 rounded">
+                <button type="submit" className="w-full bg-[var(--bs-primary)] text-[var(--bs-on-primary)] font-bold text-xs uppercase py-2.5 rounded">
                   {t.sections.submit}
                 </button>
               </form>
             </div>
           </div>
 
-          <div className="max-w-[1400px] mx-auto px-6 pt-6 text-xs text-gray-500">
-            <p>{footer.copyright && `${footer.copyright} `}<span className="text-[var(--bs-primary)] font-bold">{storeName}</span></p>
+          <div className="max-w-[1400px] mx-auto px-6 pt-6 text-xs text-[var(--bs-text-muted)]">
+            <p>{footer.copyright && `${footer.copyright} `}<span className="text-[var(--bs-text)] font-bold">{storeName}</span></p>
           </div>
         </footer>
       )}
@@ -560,7 +574,7 @@ function FeatureBannersGrid({ banners, primaryColor }: { banners: Banner[]; prim
             <Link
               key={banner._id}
               href="/categories"
-              className="relative min-h-[240px] overflow-hidden rounded-2xl border border-gray-200 bg-[var(--bs-secondary)] p-6 text-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+              className="relative min-h-[240px] overflow-hidden rounded-2xl border border-[var(--bs-border)] bg-[var(--bs-secondary)] p-6 text-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
             >
               {image && (
                 <img src={image} alt={title || 'Banner'} className="absolute inset-0 h-full w-full object-cover opacity-60 transition-transform duration-500" />
@@ -569,7 +583,7 @@ function FeatureBannersGrid({ banners, primaryColor }: { banners: Banner[]; prim
               <div className="relative z-10 flex min-h-[190px] flex-col justify-end gap-2">
                 {title && <h3 className="text-xl font-black leading-tight">{title}</h3>}
                 {description && <p className="text-sm text-white/80">{description}</p>}
-                <span className="mt-2 inline-flex w-fit rounded-lg px-4 py-2 text-xs font-bold uppercase" style={{ backgroundColor: primaryColor }}>
+                <span className="mt-2 inline-flex w-fit rounded-lg px-4 py-2 text-xs font-bold uppercase" style={{ backgroundColor: primaryColor, color: 'var(--bs-on-primary)' }}>
                   {t.sections.viewCollection}
                 </span>
               </div>
@@ -615,8 +629,8 @@ function LegacyFeatureBannersGrid({ banners = [], primaryColor = '#d9232d' }: { 
         <div className="flex flex-col gap-6">
           <div className="bg-[#41c5ea] rounded-sm p-6 flex items-center justify-between min-h-[195px] relative overflow-hidden shadow-sm">
             <div className="z-10 space-y-1.5 max-w-[55%]">
-              <h3 className="text-2xl font-black text-slate-900 leading-none">{pickBannerTitle(b1, 'New')}</h3>
-              <p className="text-sm font-bold text-slate-900 mb-3">{pickBannerSubtitle(b1, 'Collection')}</p>
+              <h3 className="text-2xl font-black text-[var(--bs-text)] leading-none">{pickBannerTitle(b1, 'New')}</h3>
+              <p className="text-sm font-bold text-[var(--bs-text)] mb-3">{pickBannerSubtitle(b1, 'Collection')}</p>
               <Link href="/products" style={btnStyle} className="inline-block text-white text-[10px] font-extrabold uppercase px-4 py-2 rounded shadow hover:brightness-110 transition-all">
                 SHOP NOW
               </Link>
@@ -626,8 +640,8 @@ function LegacyFeatureBannersGrid({ banners = [], primaryColor = '#d9232d' }: { 
 
           <div className="bg-[#ff7ba9] rounded-sm p-6 flex items-center justify-between min-h-[195px] relative overflow-hidden shadow-sm">
             <div className="z-10 space-y-1.5 max-w-[55%]">
-              <h3 className="text-2xl font-black text-slate-900 leading-none">{pickBannerTitle(b2, 'Hot')}</h3>
-              <p className="text-sm font-bold text-slate-900 mb-3">{pickBannerSubtitle(b2, 'Collection')}</p>
+              <h3 className="text-2xl font-black text-[var(--bs-text)] leading-none">{pickBannerTitle(b2, 'Hot')}</h3>
+              <p className="text-sm font-bold text-[var(--bs-text)] mb-3">{pickBannerSubtitle(b2, 'Collection')}</p>
               <Link href="/products" style={btnStyle} className="inline-block text-white text-[10px] font-extrabold uppercase px-4 py-2 rounded shadow hover:brightness-110 transition-all">
                 SHOP NOW
               </Link>
@@ -654,8 +668,8 @@ function LegacyFeatureBannersGrid({ banners = [], primaryColor = '#d9232d' }: { 
         <div className="flex flex-col gap-6">
           <div className="bg-[#eaeaea] rounded-sm p-6 flex items-center justify-between min-h-[195px] relative overflow-hidden shadow-sm">
             <div className="z-10 space-y-1.5 max-w-[55%]">
-              <h3 className="text-2xl font-black text-slate-900 leading-none">{pickBannerTitle(b4, 'New')}</h3>
-              <p className="text-sm font-bold text-slate-900 mb-3">{pickBannerSubtitle(b4, 'Arrivals')}</p>
+              <h3 className="text-2xl font-black text-[var(--bs-text)] leading-none">{pickBannerTitle(b4, 'New')}</h3>
+              <p className="text-sm font-bold text-[var(--bs-text)] mb-3">{pickBannerSubtitle(b4, 'Arrivals')}</p>
               <Link href="/products" style={btnStyle} className="inline-block text-white text-[10px] font-extrabold uppercase px-4 py-2 rounded shadow hover:brightness-110 transition-all">
                 SHOP NOW
               </Link>
@@ -665,8 +679,8 @@ function LegacyFeatureBannersGrid({ banners = [], primaryColor = '#d9232d' }: { 
 
           <div className="bg-[#c48ceb] rounded-sm p-6 flex items-center justify-between min-h-[195px] relative overflow-hidden shadow-sm">
             <div className="z-10 space-y-1.5 max-w-[55%]">
-              <h3 className="text-2xl font-black text-slate-900 leading-none">{pickBannerTitle(b5, 'Hot')}</h3>
-              <p className="text-sm font-bold text-slate-900 mb-3">{pickBannerSubtitle(b5, 'Offer')}</p>
+              <h3 className="text-2xl font-black text-[var(--bs-text)] leading-none">{pickBannerTitle(b5, 'Hot')}</h3>
+              <p className="text-sm font-bold text-[var(--bs-text)] mb-3">{pickBannerSubtitle(b5, 'Offer')}</p>
               <Link href="/products" style={btnStyle} className="inline-block text-white text-[10px] font-extrabold uppercase px-4 py-2 rounded shadow hover:brightness-110 transition-all">
                 SHOP NOW
               </Link>
