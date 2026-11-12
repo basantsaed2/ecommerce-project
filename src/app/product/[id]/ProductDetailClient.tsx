@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useGet } from '@/hooks/useGet';
-import { Product, SingleApiResponse, Sku } from '@/types/api';
+import { Product, ProductOption, SingleApiResponse, Sku } from '@/types/api';
 import {
     Loader2, ArrowLeft, ShoppingCart, Zap, Plus, Minus, Heart,
     Share2, Shield, Truck, RotateCcw, Star, Package, Tag, Box, CheckCircle2, Calendar, Award, Ruler
@@ -106,10 +106,16 @@ export default function ProductDetailClient() {
         }) ?? null;
     }, [product, selectedOptions]);
 
-    // Pricing info via helper utility
+    const selectedOptionWithPrice = useMemo(() => {
+        return product?.variations
+            ?.map(variation => variation.options.find(option => option._id === selectedOptions[variation._id]))
+            .find((option): option is ProductOption => typeof option?.price === 'number') ?? null;
+    }, [product, selectedOptions]);
+
+    // Prefer a matching SKU price; otherwise use the selected option's price when provided.
     const priceInfo = useMemo(() => {
-        return getProductPriceInfo(product as Product, currentSkuObj);
-    }, [product, currentSkuObj]);
+        return getProductPriceInfo(product as Product, currentSkuObj ?? selectedOptionWithPrice);
+    }, [product, currentSkuObj, selectedOptionWithPrice]);
 
     // Stock state
     const isOutOfStock = !hasAvailableStock || (currentSkuObj ? getSkuStock(currentSkuObj) <= 0 : productQuantity <= 0);

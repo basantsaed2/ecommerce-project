@@ -35,6 +35,9 @@ export interface ProductOption {
     name: string;
     ar_name?: string;
     quantity?: number;
+    price?: number;
+    final_price?: number;
+    price_after_discount?: number;
 }
 
 export interface ProductVariation {

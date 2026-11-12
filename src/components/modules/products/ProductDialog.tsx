@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGet } from '@/hooks/useGet';
-import { Product, SingleApiResponse } from '@/types/api';
+import { Product, ProductOption, SingleApiResponse } from '@/types/api';
 import { Loader2, X, Plus, Minus, ShoppingCart, Zap, Tag, Box, Award, Star } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addItem, syncCart } from '@/store/slices/cartSlice';
@@ -37,8 +37,6 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         { enabled: isOpen }
     );
 
-    if (!isOpen) return null;
-
     const product = data?.data?.data;
 
     const productQuantity = product?.quantity ?? 0;
@@ -53,7 +51,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
     };
 
     useEffect(() => {
-        if (hasAvailableStock && product?.variations && product.variations.length > 0 && Object.keys(selectedOptions).length === 0) {
+        if (isOpen && hasAvailableStock && product?.variations && product.variations.length > 0 && Object.keys(selectedOptions).length === 0) {
             const inStockSku = product.skus?.find(sku => getSkuStock(sku) > 0);
             const initialOptions: Record<string, string> = {};
 
@@ -75,7 +73,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
             }
             setSelectedOptions(initialOptions);
         }
-    }, [hasAvailableStock, product, selectedOptions]);
+    }, [hasAvailableStock, isOpen, product, selectedOptions]);
 
     const currentSkuObj = useMemo(() => {
         if (!product?.skus) return null;
@@ -89,9 +87,15 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         }) ?? null;
     }, [product, selectedOptions]);
 
+    const selectedOptionWithPrice = useMemo(() => {
+        return product?.variations
+            ?.map(variation => variation.options.find(option => option._id === selectedOptions[variation._id]))
+            .find((option): option is ProductOption => typeof option?.price === 'number') ?? null;
+    }, [product, selectedOptions]);
+
     const priceInfo = useMemo(() => {
-        return getProductPriceInfo(product as Product, currentSkuObj);
-    }, [product, currentSkuObj]);
+        return getProductPriceInfo(product as Product, currentSkuObj ?? selectedOptionWithPrice);
+    }, [product, currentSkuObj, selectedOptionWithPrice]);
 
     const isOutOfStock = !hasAvailableStock || (currentSkuObj ? getSkuStock(currentSkuObj) <= 0 : productQuantity <= 0);
 
@@ -188,6 +192,8 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         onClose();
         router.push('/cart');
     };
+
+    if (!isOpen) return null;
 
     return (
         <div

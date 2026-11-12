@@ -9,7 +9,10 @@ export interface ParsedProductPrice {
   discountLabel?: string;
 }
 
-export function getProductPriceInfo(product: Product, sku?: Sku | null): ParsedProductPrice {
+export function getProductPriceInfo(
+  product: Product,
+  sku?: Partial<Pick<Sku, "price" | "final_price" | "price_after_discount">> | null,
+): ParsedProductPrice {
   if (!product) {
     return {
       mainPrice: 0,
@@ -21,8 +24,10 @@ export function getProductPriceInfo(product: Product, sku?: Sku | null): ParsedP
   }
 
   // 1. Base prices from SKU if provided, else from Product
-  let mainPrice = sku ? sku.price : (product.main_price ?? product.price ?? 0);
-  let finalPrice = sku ? (sku.final_price ?? sku.price_after_discount) : (product.final_price ?? product.price);
+  const mainPrice = sku?.price ?? product.main_price ?? product.price ?? 0;
+  let finalPrice = sku
+    ? (sku.final_price ?? sku.price_after_discount)
+    : (product.final_price ?? product.price);
 
   const discountObj = product.discount;
   const discountLabel = discountObj?.name;
