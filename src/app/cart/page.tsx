@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getCartItemVariations } from '@/utils/cartUtils';
+import { getProductAvailableStock } from '@/utils/productUtils';
 
 export default function CartPage() {
     const { logoUrl } = useStoreSettings();
@@ -61,6 +62,8 @@ export default function CartPage() {
 
     const currentShippingCost = orderType === 'pickup' ? 0 : (shippingCost || 0);
     const finalTotal = totalCartPrice + currentShippingCost + (taxAmount || 0) + (serviceFee || 0) - (couponDiscount || 0);
+    const getAvailableStock = (item: (typeof items)[number]) =>
+        getProductAvailableStock(item.product, item.variant);
 
     const handleApplyCoupon = async () => {
         if (!couponCode) return;
@@ -80,6 +83,15 @@ export default function CartPage() {
 
     const handleUpdateQuantity = async (productId: string, variantId: string | undefined, newQty: number) => {
         if (newQty < 1) return;
+        const item = items.find((cartItem) =>
+            cartItem.product._id === productId &&
+            (variantId ? cartItem.variant?._id === variantId : !cartItem.variant)
+        );
+        const availableStock = item ? getAvailableStock(item) : undefined;
+        if (availableStock !== undefined && newQty > availableStock) {
+            toast.error(`${t.product.onlyLeft} ${availableStock}`);
+            return;
+        }
         dispatch(updateQuantity({ productId, variantId, quantity: newQty }));
         dispatch(syncCart());
     };
@@ -101,7 +113,7 @@ export default function CartPage() {
 
     if (isLoading && items.length === 0) {
         return (
-            <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
+            <div className="store-themed-page min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
                 <Loader2 className="animate-spin text-primary w-12 h-12 mb-4" />
                 <p className="text-gray-500 font-bold">{t.common.loading}</p>
             </div>
@@ -110,7 +122,7 @@ export default function CartPage() {
 
     if (items.length === 0) {
         return (
-            <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
+            <div className="store-themed-page min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
                 <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 animate-bounce">
                     <ShoppingBasket size={48} className="text-gray-300" />
                 </div>
@@ -127,7 +139,7 @@ export default function CartPage() {
     }
 
     return (
-        <div className="w-full px-4 md:px-12 py-6">
+        <div className="store-themed-page w-full px-4 md:px-12 py-6">
             <div className="flex items-center justify-between mb-10">
                 <div>
                     <h1 className="text-4xl font-black text-primary tracking-tight">{t.cart.title}</h1>
@@ -195,7 +207,8 @@ export default function CartPage() {
                                         <span className="w-6 text-center font-black text-primary">{item.quantity}</span>
                                         <button
                                             onClick={() => handleUpdateQuantity(item.product._id, item.variant?._id, item.quantity + 1)}
-                                            className="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:text-secondary hover:shadow-sm transition-all"
+                                            disabled={getAvailableStock(item) !== undefined && item.quantity >= (getAvailableStock(item) ?? 0)}
+                                            className="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:text-secondary hover:shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-40"
                                         >
                                             <Plus size={14} />
                                         </button>
@@ -222,7 +235,7 @@ export default function CartPage() {
 
                 {/* Summary */}
                 <div className="lg:col-span-1">
-                    <div className="bg-[#111827] text-white rounded-[40px] p-10 sticky top-32 shadow-2xl shadow-black/30">
+                    <div className="theme-primary-surface bg-primary rounded-[40px] p-10 sticky top-32 shadow-2xl shadow-black/30">
                         <h2 className="text-2xl font-black mb-8 italic tracking-tighter">{t.cart.orderSummary}</h2>
 
                         {/* Order Type Selection in Cart */}

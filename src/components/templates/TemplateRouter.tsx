@@ -6,6 +6,7 @@ import DefaultTemplate from '@/components/templates/default/DefaultTemplate';
 import ExampleTemplate from '@/components/templates/example/ExampleTemplate';
 import MarwanTemplate from '@/components/templates/marwan/MarwanTemplate';
 import StoreLoader from '@/components/common/StoreLoader';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface TemplateRouterProps {
     searchQuery?: string;
@@ -19,11 +20,12 @@ export default function TemplateRouter({
     className = '',
 }: TemplateRouterProps) {
     const { templateSlug, logoUrl, isLoading } = useStoreSettings();
+    const { t } = useTranslation();
 
     if (isLoading && !templateSlug) {
         return (
             <div className="flex min-h-[40vh] items-center justify-center">
-                <StoreLoader logoUrl={logoUrl} label="Loading your store..." size="lg" />
+                <StoreLoader logoUrl={logoUrl} label={t.common.loadingStore} size="lg" />
             </div>
         );
     }

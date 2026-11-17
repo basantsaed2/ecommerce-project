@@ -4,6 +4,7 @@ import { CartItem, PopulatedCartItem, Cart, SyncCartItemRequest } from '@/types/
 import { RootState } from '../store';
 import { toast } from 'sonner';
 import { resolveCartVariantId } from '@/utils/cartUtils';
+import { getProductAvailableStock } from '@/utils/productUtils';
 
 interface CartState {
     items: PopulatedCartItem[];
@@ -175,13 +176,25 @@ export const cartSlice = createSlice({
         // Guest Reducers (Local Only)
         addItem: (state, action: PayloadAction<{ product: any; variant?: any; quantity: number }>) => {
             const { product, variant, quantity } = action.payload;
+            if (!Number.isFinite(quantity)) return;
+            const availableStock = getProductAvailableStock(product, variant);
+            if (availableStock === 0) return;
+            const requestedQuantity = Math.floor(quantity);
+            if (requestedQuantity < 1) return;
+            const quantityToAdd = availableStock === undefined
+                ? requestedQuantity
+                : Math.min(requestedQuantity, availableStock);
+            if (quantityToAdd <= 0) return;
+
             const existing = state.items.find(item => 
                 item.product._id === product._id && 
                 (variant ? (item.variant?._id === variant._id) : !item.variant)
             );
 
             if (existing) {
-                existing.quantity += quantity;
+                existing.quantity = availableStock === undefined
+                    ? existing.quantity + quantityToAdd
+                    : Math.min(availableStock, existing.quantity + quantityToAdd);
                 if (variant?.selectedVariations && !existing.variant?.selectedVariations) {
                     existing.variant = { ...(existing.variant || {}), ...variant };
                 }
@@ -189,7 +202,7 @@ export const cartSlice = createSlice({
                 state.items.push({
                     product,
                     variant,
-                    quantity,
+                    quantity: quantityToAdd,
                     price: variant ? (variant.final_price || variant.price_after_discount || variant.price) : (product.price_after_discount || product.price || 0)
                 } as any);
             }
@@ -197,12 +210,18 @@ export const cartSlice = createSlice({
         },
         updateQuantity: (state, action: PayloadAction<{ productId: string; variantId?: string; quantity: number }>) => {
             const { productId, variantId, quantity } = action.payload;
+            if (!Number.isFinite(quantity)) return;
             const item = state.items.find(item => 
                 item.product._id === productId && 
                 (variantId ? (item.variant?._id === variantId) : !item.variant)
             );
             if (item) {
-                item.quantity = quantity;
+                const availableStock = getProductAvailableStock(item.product, item.variant);
+                item.quantity = availableStock === undefined
+                    ? Math.max(1, Math.floor(quantity))
+                    : availableStock > 0
+                        ? Math.max(1, Math.min(availableStock, Math.floor(quantity)))
+                        : item.quantity;
             }
             state.totalCartPrice = state.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         },

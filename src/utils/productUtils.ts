@@ -9,6 +9,77 @@ export interface ParsedProductPrice {
   discountLabel?: string;
 }
 
+interface StockProduct {
+  _id?: string;
+  quantity?: number;
+  skus?: Array<Pick<Sku, "quantity" | "option_ids">>;
+  variations?: Array<{
+    options?: Array<{
+      _id: string;
+      quantity?: number;
+    }>;
+  }>;
+}
+
+interface StockVariant {
+  _id?: string;
+  quantity?: number;
+  option_ids?: string[];
+  selectedVariations?: Array<{ optionId?: string }>;
+}
+
+export function getProductAvailableStock(
+  product: StockProduct | null | undefined,
+  variant?: StockVariant | null,
+): number | undefined {
+  if (typeof variant?.quantity === "number" && Number.isFinite(variant.quantity)) {
+    return Math.max(0, variant.quantity);
+  }
+
+  const selectedOptionIds = variant?.option_ids?.length
+    ? variant.option_ids
+    : variant?.selectedVariations?.map((variation) => variation.optionId).filter((id): id is string => Boolean(id)) || [];
+  const productQuantity = typeof product?.quantity === "number" && Number.isFinite(product.quantity)
+    ? Math.max(0, product.quantity)
+    : undefined;
+
+  if (selectedOptionIds.length > 0) {
+    const matchingSku = product?.skus?.find((sku) =>
+      selectedOptionIds.every((optionId) => sku.option_ids.includes(optionId))
+    );
+    if (matchingSku) {
+      return Math.max(0, matchingSku.quantity);
+    }
+
+    const selectedOptionStocks = product?.variations
+      ?.flatMap((variation) => variation.options || [])
+      .filter((option) => selectedOptionIds.includes(option._id))
+      .map((option) => option.quantity)
+      .filter((quantity): quantity is number => typeof quantity === "number" && Number.isFinite(quantity))
+      .map((quantity) => Math.max(0, quantity)) || [];
+
+    if (selectedOptionStocks.length > 0) {
+      return Math.min(
+        ...selectedOptionStocks,
+        ...(productQuantity !== undefined && productQuantity > 0 ? [productQuantity] : []),
+      );
+    }
+  }
+
+  if (productQuantity !== undefined && productQuantity > 0) {
+    return productQuantity;
+  }
+
+  const availableSkuStocks = product?.skus
+    ?.map((sku) => Math.max(0, sku.quantity))
+    .filter((quantity) => quantity > 0 && Number.isFinite(quantity)) || [];
+  if (availableSkuStocks.length > 0) {
+    return Math.max(...availableSkuStocks);
+  }
+
+  return productQuantity;
+}
+
 export function getProductPriceInfo(
   product: Product,
   sku?: Partial<Pick<Sku, "price" | "final_price" | "price_after_discount">> | null,

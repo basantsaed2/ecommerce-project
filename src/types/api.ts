@@ -1,9 +1,14 @@
 export interface Banner {
     _id: string;
     name: string[];
+    ar_name?: string[] | string;
     images: string[];
     title?: string;
+    ar_title?: string;
+    title_ar?: string;
     description?: string;
+    ar_description?: string;
+    description_ar?: string;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;

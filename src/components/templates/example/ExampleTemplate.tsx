@@ -76,6 +76,10 @@ export default function ExampleTemplate({
   const footer = ecommerceData?.footer || {};
   const socialLinks = ecommerceData?.social_links || {};
   const contactInfo = ecommerceData || {};
+  const localizedContactAddress = getLocalized(contactInfo, 'address');
+  const localizedHeaderTitle = getLocalized(header, 'title');
+  const localizedFooterBio = getLocalized(footer, 'bio');
+  const localizedFooterCopyright = getLocalized(footer, 'copyright');
   const headerLinks = header.links || [];
   const headerLinkConfig: Record<string, { label: string; href: string }> = {
     home: { label: t.nav.home, href: '/' },
@@ -165,15 +169,19 @@ export default function ExampleTemplate({
   const trendingProducts = useMemo(() => filteredProducts.slice(4, 8), [filteredProducts]);
 
   const heroMainBanner = banners[0];
-  const heroTitle = heroMainBanner?.title || heroMainBanner?.name?.[0] || storeName;
-  const heroDescription = heroMainBanner?.description || '';
+  const heroTitle = ((heroMainBanner?.title || heroMainBanner?.ar_title || heroMainBanner?.title_ar) && getLocalized(heroMainBanner, 'title'))
+    || heroMainBanner?.name?.filter(Boolean).join(' ')
+    || storeName;
+  const heroDescription = (heroMainBanner?.description || heroMainBanner?.ar_description || heroMainBanner?.description_ar)
+    ? getLocalized(heroMainBanner, 'description')
+    : '';
 
   const isLoading = bannersLoading || categoriesLoading || productsLoading;
 
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-[var(--color-background)]">
-        <StoreLoader logoUrl={logoUrl} label="Loading your store..." size="lg" />
+        <StoreLoader logoUrl={logoUrl} label={t.common.loadingStore} size="lg" />
       </div>
     );
   }
@@ -191,7 +199,7 @@ export default function ExampleTemplate({
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1.5">
               <MapPin size={14} style={{ color: activeTextSecondary || '#9ca3af' }} />
-              {contactInfo?.address}
+              {localizedContactAddress}
             </span>
             <span className="flex items-center gap-1.5">
               <Phone size={14} style={{ color: activeTextSecondary || '#9ca3af' }} />
@@ -211,7 +219,7 @@ export default function ExampleTemplate({
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between gap-6">
           <Link href="/" className="flex items-center gap-2 text-3xl font-extrabold tracking-tight shrink-0">
               {header.logo || logoUrl ? (
-              <img src={header.logo || logoUrl || undefined} alt={header.title || storeName || 'Logo'} className="h-10 w-auto object-contain" />
+              <img src={header.logo || logoUrl || undefined} alt={localizedHeaderTitle || storeName || t.sections.storeLogo} className="h-10 w-auto object-contain" />
             ) : (
               <span className="text-[var(--bs-text)]">{storeName}</span>
             )}
@@ -241,8 +249,8 @@ export default function ExampleTemplate({
             <button
               type="button"
               onClick={toggleLanguage}
-              aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-              title={language === 'ar' ? 'English' : 'العربية'}
+              aria-label={language === 'ar' ? t.sections.switchToEnglish : t.sections.switchToArabic}
+              title={language === 'ar' ? t.sections.english : t.sections.arabic}
               className={`${headerActionClassName} text-xs font-black`}
               style={headerActionStyle}
             >
@@ -251,9 +259,9 @@ export default function ExampleTemplate({
             <button
               type="button"
               onClick={toggleTheme}
-              aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={themeMode === 'dark' ? t.sections.switchToLightMode : t.sections.switchToDarkMode}
               aria-pressed={themeMode === 'dark'}
-              title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
+              title={themeMode === 'dark' ? t.sections.lightMode : t.sections.darkMode}
               className={headerActionClassName}
               style={headerActionStyle}
             >
@@ -336,7 +344,7 @@ export default function ExampleTemplate({
                 <div className="w-full h-full relative grid grid-cols-1 md:grid-cols-2 items-center p-8" style={{ background: 'linear-gradient(90deg, var(--bs-primary), color-mix(in srgb, var(--bs-primary) 75%, var(--bs-bg)))', color: 'var(--bs-on-primary)' }}>
                   <div className="space-y-4 z-10">
                     <span className="text-xs font-bold tracking-widest uppercase border border-current px-3 py-1 rounded-full">
-                      Online Shop
+                      {t.sections.onlineShop}
                     </span>
                     <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-tight">
                       {heroTitle}
@@ -348,13 +356,13 @@ export default function ExampleTemplate({
                       href="/products"
                       className="inline-block bg-[var(--bs-on-primary)] text-[var(--bs-primary)] font-extrabold text-xs uppercase tracking-wider px-6 py-3 rounded-md shadow-md hover:opacity-90 transition-opacity"
                     >
-                      SHOP NOW
+                      {t.home.shopNow}
                     </Link>
                   </div>
                   <div className="relative flex justify-center items-center mt-6 md:mt-0">
                     <img
                       src={heroMainBanner.images?.[0] || undefined}
-                      alt="Hero Product"
+                      alt={t.sections.heroProductImage}
                       className="max-h-[300px] object-contain drop-shadow-2xl"
                     />
                   </div>
@@ -379,7 +387,7 @@ export default function ExampleTemplate({
               <p className="text-xs text-[var(--bs-text-muted)] mt-1">{t.sections.catalogDescription}</p>
             </div>
             <Link href="/categories" className="bg-[var(--bs-primary)] text-[var(--bs-on-primary)] text-xs font-bold uppercase px-4 py-2 rounded hover:brightness-110 flex items-center gap-1.5">
-              View All
+              {t.common.viewAll}
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -391,12 +399,12 @@ export default function ExampleTemplate({
               >
                 <img
                   src={cat.image || logoUrl || undefined}
-                  alt={cat.name}
+                  alt={getLocalized(cat, 'name')}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <h3 className="text-white font-black text-sm uppercase tracking-tight">{cat.name || cat.ar_name}</h3>
+                  <h3 className="text-white font-black text-sm uppercase tracking-tight">{getLocalized(cat, 'name')}</h3>
                   {cat.product_quantity !== undefined && (
                     <span className="text-white/70 text-[10px] font-medium">                    {cat.product_quantity} {t.sections.itemsLabel}</span>
                   )}
@@ -423,9 +431,9 @@ export default function ExampleTemplate({
             {brands.map((brand) => (
               <div key={brand._id} className="bg-[var(--bs-surface)] border border-[var(--bs-border)] rounded-md p-4 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow h-32">
                 {brand.logo ? (
-                  <img src={brand.logo} alt={brand.name} className="max-h-14 max-w-full object-contain" />
+                  <img src={brand.logo} alt={getLocalized(brand)} className="max-h-14 max-w-full object-contain" />
                 ) : (
-                  <span className="font-extrabold text-sm text-[var(--bs-text)] uppercase tracking-wider">{brand.name}</span>
+                  <span className="font-extrabold text-sm text-[var(--bs-text)] uppercase tracking-wider">{getLocalized(brand)}</span>
                 )}
                 {brand.logo && <span className="text-sm font-bold text-[var(--bs-text)] text-center line-clamp-1">{getLocalized(brand)}</span>}
               </div>
@@ -501,14 +509,14 @@ export default function ExampleTemplate({
                 <img src={footer.logo || logoUrl || undefined} alt={storeName || 'Store logo'} className="h-10 w-auto object-contain mb-4" />
               )}
               <h4 className="font-bold text-[var(--bs-text)] text-sm mb-4">{t.sections.contactUs}</h4>
-              {contactInfo?.address && <p className="mb-2"><strong>{t.sections.contactAddress}</strong> {contactInfo.address}</p>}
+              {localizedContactAddress && <p className="mb-2"><strong>{t.sections.contactAddress}</strong> {localizedContactAddress}</p>}
               {contactInfo?.email && <p className="mb-2"><strong>{t.sections.emailLabel}</strong> {contactInfo.email}</p>}
               {contactInfo?.phone && <p className="mb-4"><strong>{t.sections.phoneLabel}</strong> {contactInfo.phone}</p>}
               <div className="flex gap-3 text-[var(--bs-text)]">
-                <a href={socialLinks.facebook || '#'} aria-label="Facebook"><Facebook size={16} /></a>
-                <a href={socialLinks.twitter || '#'} aria-label="Twitter"><Twitter size={16} /></a>
-                <a href={socialLinks.instagram || '#'} aria-label="Instagram"><Instagram size={16} /></a>
-                <a href={socialLinks.youtube || '#'} aria-label="YouTube"><Youtube size={16} /></a>
+                <a href={socialLinks.facebook || '#'} aria-label={t.sections.facebook}><Facebook size={16} /></a>
+                <a href={socialLinks.twitter || '#'} aria-label={t.sections.twitter}><Twitter size={16} /></a>
+                <a href={socialLinks.instagram || '#'} aria-label={t.sections.instagram}><Instagram size={16} /></a>
+                <a href={socialLinks.youtube || '#'} aria-label={t.sections.youtube}><Youtube size={16} /></a>
               </div>
             </div>
 
@@ -534,7 +542,7 @@ export default function ExampleTemplate({
 
             <div>
               <h4 className="font-bold text-[var(--bs-text)] text-sm mb-4">{t.sections.subscribeNewsletter}</h4>
-              {footer.bio && <p className="mb-4 text-[var(--bs-text-muted)]">{footer.bio}</p>}
+              {localizedFooterBio && <p className="mb-4 text-[var(--bs-text-muted)]">{localizedFooterBio}</p>}
               <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
                 <input
                   type="email"
@@ -549,7 +557,7 @@ export default function ExampleTemplate({
           </div>
 
           <div className="max-w-[1400px] mx-auto px-6 pt-6 text-xs text-[var(--bs-text-muted)]">
-            <p>{footer.copyright && `${footer.copyright} `}<span className="text-[var(--bs-text)] font-bold">{storeName}</span></p>
+            <p>{localizedFooterCopyright && `${localizedFooterCopyright} `}<span className="text-[var(--bs-text)] font-bold">{storeName}</span></p>
           </div>
         </footer>
       )}
@@ -559,15 +567,19 @@ export default function ExampleTemplate({
 
 // ── 2. Dynamic Feature Banners Grid ─────────────────────────────────────
 function FeatureBannersGrid({ banners, primaryColor }: { banners: Banner[]; primaryColor: string }) {
-  const { t } = useTranslation();
+  const { t, getLocalized } = useTranslation();
   if (banners.length === 0) return null;
 
   return (
     <section className="max-w-[1400px] mx-auto px-6 pt-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {banners.map((banner) => {
-          const title = banner.title || banner.name?.filter(Boolean).join(' ');
-          const description = banner.description || '';
+          const title = (banner.title || banner.ar_title || banner.title_ar)
+            ? getLocalized(banner, 'title')
+            : banner.name?.filter(Boolean).join(' ');
+          const description = (banner.description || banner.ar_description || banner.description_ar)
+            ? getLocalized(banner, 'description')
+            : '';
           const image = banner.images?.[0];
 
           return (
@@ -577,7 +589,7 @@ function FeatureBannersGrid({ banners, primaryColor }: { banners: Banner[]; prim
               className="relative min-h-[240px] overflow-hidden rounded-2xl border border-[var(--bs-border)] bg-[var(--bs-secondary)] p-6 text-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
             >
               {image && (
-                <img src={image} alt={title || 'Banner'} className="absolute inset-0 h-full w-full object-cover opacity-60 transition-transform duration-500" />
+                <img src={image} alt={title || t.sections.storeLabel} className="absolute inset-0 h-full w-full object-cover opacity-60 transition-transform duration-500" />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
               <div className="relative z-10 flex min-h-[190px] flex-col justify-end gap-2">

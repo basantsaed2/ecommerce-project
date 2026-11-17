@@ -9,7 +9,7 @@ import { addItem, syncCart } from '@/store/slices/cartSlice';
 import { RootState, AppDispatch } from '@/store/store';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { getProductPriceInfo } from '@/utils/productUtils';
+import { getProductAvailableStock, getProductPriceInfo } from '@/utils/productUtils';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 import { resolveCartVariantId } from '@/utils/cartUtils';
@@ -42,12 +42,14 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
     const productQuantity = product?.quantity ?? 0;
 
     // Product has stock if product.quantity > 0 or if any SKU has stock
-    const hasAvailableStock = productQuantity > 0 || (product?.skus?.some(sku => (sku.quantity ?? 0) > 0) ?? false);
+    const hasAvailableStock = productQuantity > 0
+        || (product?.skus?.some(sku => (sku.quantity ?? 0) > 0) ?? false)
+        || (product?.variations?.some(variation => variation.options.some(option => (option.quantity ?? 0) > 0)) ?? false);
     const hasVariantStock = hasAvailableStock;
 
     const getSkuStock = (sku: any): number => {
         if (!sku) return productQuantity;
-        return (sku.quantity && sku.quantity > 0) ? sku.quantity : productQuantity;
+        return typeof sku.quantity === 'number' ? Math.max(0, sku.quantity) : productQuantity;
     };
 
     useEffect(() => {
@@ -66,8 +68,9 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                 });
             } else {
                 product.variations.forEach(v => {
-                    if (v.options.length > 0) {
-                        initialOptions[v._id] = v.options[0]._id;
+                    const firstInStockOption = v.options.find(option => (option.quantity ?? productQuantity) > 0);
+                    if (firstInStockOption) {
+                        initialOptions[v._id] = firstInStockOption._id;
                     }
                 });
             }
@@ -97,7 +100,11 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         return getProductPriceInfo(product as Product, currentSkuObj ?? selectedOptionWithPrice);
     }, [product, currentSkuObj, selectedOptionWithPrice]);
 
-    const isOutOfStock = !hasAvailableStock || (currentSkuObj ? getSkuStock(currentSkuObj) <= 0 : productQuantity <= 0);
+    const currentStock = getProductAvailableStock(product, {
+        quantity: currentSkuObj?.quantity,
+        selectedVariations: Object.values(selectedOptions).map(optionId => ({ optionId })),
+    }) ?? 0;
+    const isOutOfStock = !hasAvailableStock || currentStock <= 0;
 
     const isOptionInStock = (optionId: string): boolean => {
         const option = product?.variations?.flatMap(variation => variation.options).find(item => item._id === optionId);
@@ -108,11 +115,25 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         );
     };
 
+    const handleVariationSelect = (variationId: string, optionId: string) => {
+        const nextSelections = { ...selectedOptions, [variationId]: optionId };
+        const nextStock = getProductAvailableStock(product, {
+            selectedVariations: Object.values(nextSelections).map(selectedId => ({ optionId: selectedId })),
+        }) ?? 0;
+        setSelectedOptions(nextSelections);
+        setQuantity(currentQuantity => Math.min(currentQuantity, Math.max(1, nextStock)));
+    };
+
     const handleAddToCart = () => {
         if (!product) return;
 
         if (isOutOfStock) {
             toast.error(t.product.soldOutCombination);
+            return;
+        }
+        if (quantity > currentStock) {
+            setQuantity(currentStock);
+            toast.error(`${t.product.onlyLeft} ${currentStock}`);
             return;
         }
 
@@ -155,6 +176,11 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
 
         if (isOutOfStock) {
             toast.error(t.product.soldOutCombination);
+            return;
+        }
+        if (quantity > currentStock) {
+            setQuantity(currentStock);
+            toast.error(`${t.product.onlyLeft} ${currentStock}`);
             return;
         }
 
@@ -320,7 +346,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                                             <button
                                                                 key={option._id}
                                                                 disabled={!inStock}
-                                                                onClick={() => setSelectedOptions(prev => ({ ...prev, [variation._id]: option._id }))}
+                                                                onClick={() => handleVariationSelect(variation._id, option._id)}
                                                                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border-2 flex flex-col items-center gap-1 ${isSelected
                                                                     ? inStock
                                                                         ? 'bg-primary border-primary text-[var(--color-on-primary)] shadow-md'
@@ -363,7 +389,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                         </button>
                                         <span className="w-6 text-center font-black text-sm">{quantity}</span>
                                         <button
-                                            onClick={() => setQuantity(q => Math.min(product.quantity, q + 1))}
+                                            onClick={() => setQuantity(q => Math.min(currentStock, q + 1))}
                                             className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-primary hover:text-primary active:scale-90"
                                         >
                                             <Plus size={14} strokeWidth={2.5} />

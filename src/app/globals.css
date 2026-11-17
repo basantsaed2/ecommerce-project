@@ -57,6 +57,149 @@ html.dark select { background-color: #1f2937; color: #f3f4f6; border-color: #4b5
 html.dark input::placeholder,
 html.dark textarea::placeholder { color: #9ca3af; }
 
+.store-themed-page {
+    color: var(--color-text);
+    background-color: var(--color-background);
+}
+
+.store-themed-page .bg-white {
+    background-color: var(--color-surface) !important;
+}
+
+.store-themed-page .bg-gray-50,
+.store-themed-page .bg-gray-50\/30,
+.store-themed-page .bg-gray-50\/50 {
+    background-color: color-mix(in srgb, var(--color-surface) 92%, var(--color-text)) !important;
+}
+
+.store-themed-page .bg-gray-100 {
+    background-color: color-mix(in srgb, var(--color-surface) 86%, var(--color-text)) !important;
+}
+
+.store-themed-page .text-gray-900,
+.store-themed-page .text-gray-800,
+.store-themed-page .text-gray-700 {
+    color: var(--color-text) !important;
+}
+
+.store-themed-page .text-gray-600,
+.store-themed-page .text-gray-500,
+.store-themed-page .text-gray-400 {
+    color: var(--color-text-muted) !important;
+}
+
+.store-themed-page .border-gray-50,
+.store-themed-page .border-gray-100,
+.store-themed-page .border-gray-200 {
+    border-color: var(--color-border) !important;
+}
+
+.store-themed-page .bg-primary.text-white {
+    color: var(--color-on-primary);
+}
+
+.store-themed-chrome {
+    background-color: var(--store-header-bg);
+    color: var(--store-header-text);
+    border-color: var(--store-header-border);
+}
+
+.store-themed-chrome.bg-white\/80 {
+    background-color: var(--store-header-bg) !important;
+}
+
+.store-themed-chrome .bg-white {
+    background-color: var(--store-header-surface) !important;
+}
+
+.store-themed-chrome .bg-gray-50 {
+    background-color: var(--store-header-surface) !important;
+}
+
+.store-themed-chrome .text-primary,
+.store-themed-chrome .text-black {
+    color: var(--store-header-text) !important;
+}
+
+.store-themed-chrome .text-gray-900,
+.store-themed-chrome .text-gray-800,
+.store-themed-chrome .text-gray-700,
+.store-themed-chrome .text-gray-600,
+.store-themed-chrome .text-gray-500,
+.store-themed-chrome .text-gray-400 {
+    color: var(--store-header-muted) !important;
+}
+
+.store-themed-chrome .border-gray-100,
+.store-themed-chrome .border-gray-200 {
+    border-color: var(--store-header-border) !important;
+}
+
+.store-themed-chrome .bg-primary {
+    background-color: var(--store-header-primary) !important;
+}
+
+.store-themed-chrome .bg-primary\/10 {
+    background-color: color-mix(in srgb, var(--store-header-primary) 10%, transparent) !important;
+}
+
+.store-themed-chrome .bg-primary.text-white,
+.store-themed-chrome .bg-primary .text-white {
+    color: var(--store-header-primary-on) !important;
+}
+
+.theme-primary-surface {
+    color: var(--color-on-primary);
+}
+
+.theme-primary-surface .text-white {
+    color: var(--color-on-primary);
+}
+
+.theme-primary-surface .text-white\/70 {
+    color: color-mix(in srgb, var(--color-on-primary) 70%, transparent);
+}
+
+.theme-primary-surface .text-white\/60 {
+    color: color-mix(in srgb, var(--color-on-primary) 60%, transparent);
+}
+
+.theme-primary-surface .text-white\/50 {
+    color: color-mix(in srgb, var(--color-on-primary) 50%, transparent);
+}
+
+.theme-primary-surface .text-white\/40 {
+    color: color-mix(in srgb, var(--color-on-primary) 40%, transparent);
+}
+
+.theme-primary-surface .text-white\/30 {
+    color: color-mix(in srgb, var(--color-on-primary) 30%, transparent);
+}
+
+.theme-primary-surface .text-white\/20 {
+    color: color-mix(in srgb, var(--color-on-primary) 20%, transparent);
+}
+
+.theme-primary-surface .bg-white\/5 {
+    background-color: color-mix(in srgb, var(--color-on-primary) 5%, var(--color-primary));
+}
+
+.theme-primary-surface .border-white\/5 {
+    border-color: color-mix(in srgb, var(--color-on-primary) 5%, transparent);
+}
+
+.theme-primary-surface .bg-white\/10 {
+    background-color: color-mix(in srgb, var(--color-on-primary) 10%, var(--color-primary));
+}
+
+.theme-primary-surface .bg-white\/20 {
+    background-color: color-mix(in srgb, var(--color-on-primary) 20%, var(--color-primary));
+}
+
+.theme-primary-surface .border-white\/10 {
+    border-color: color-mix(in srgb, var(--color-on-primary) 10%, transparent);
+}
+
 @layer components {
     .container {
         @apply w-full px-6 md:px-12 xl:px-16 py-5;

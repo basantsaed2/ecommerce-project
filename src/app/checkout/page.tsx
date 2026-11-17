@@ -664,7 +664,7 @@ export default function CheckoutPage() {
 
     if (isSuccess) {
         return (
-            <div className="w-full px-4 md:px-12 min-h-[70vh] flex flex-col items-center justify-center text-center py-20">
+            <div className="store-themed-page w-full px-4 md:px-12 min-h-[70vh] flex flex-col items-center justify-center text-center py-20">
                 <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6 animate-bounce">
                     <CheckCircle2 size={48} className="text-green-500" />
                 </div>
@@ -754,7 +754,7 @@ export default function CheckoutPage() {
 
     if (isFetchingCart && items.length === 0) {
         return (
-            <div className="w-full min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
+            <div className="store-themed-page w-full min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
                 <StoreLoader logoUrl={logoUrl} label={t.checkout.secureCheckoutLoading} size="lg" />
             </div>
         );
@@ -763,7 +763,7 @@ export default function CheckoutPage() {
     if (items.length === 0 && !isSuccess) return null;
 
     return (
-        <div className="w-full px-4 md:px-12 py-6 pb-24">
+        <div className="store-themed-page w-full px-4 md:px-12 py-6 pb-24">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
                 <h1 className="text-4xl font-black text-primary tracking-tight">{t.checkout.secureCheckoutTitle}</h1>
                 {token ? (
@@ -1412,7 +1412,7 @@ export default function CheckoutPage() {
 
                 {/* Summary Sidebar */}
                 <div className="lg:col-span-1">
-                    <div className="bg-primary text-white rounded-[40px] p-8 md:p-10 sticky top-32 shadow-2xl shadow-primary/30">
+                    <div className="theme-primary-surface bg-primary rounded-[40px] p-8 md:p-10 sticky top-32 shadow-2xl shadow-primary/30">
                         <h2 className="text-2xl font-black mb-8 italic tracking-tighter">{t.checkout.orderSummary}</h2>
 
                         <div className="space-y-4 mb-8 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">

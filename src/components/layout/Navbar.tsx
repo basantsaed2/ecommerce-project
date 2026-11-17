@@ -12,8 +12,19 @@ import { logout } from '@/store/slices/authSlice';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CART_COUNT_BADGE_CLASS, HEADER_ACTION_BASE_CLASS } from '@/components/layout/headerStyles';
+import MarwanHeader from '@/components/layout/MarwanHeader';
 
 const headerActionClassName = `${HEADER_ACTION_BASE_CLASS} border-gray-200 bg-white text-primary hover:border-gray-400 hover:bg-gray-50 hover:text-black`;
+
+type HeaderThemeStyle = React.CSSProperties & {
+    '--store-header-bg': string;
+    '--store-header-surface': string;
+    '--store-header-text': string;
+    '--store-header-muted': string;
+    '--store-header-border': string;
+    '--store-header-primary': string;
+    '--store-header-primary-on': string;
+};
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -22,12 +33,33 @@ export default function Navbar() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    const { settings, storeName, logoUrl, templateSlug, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings();
+    const { settings, storeName, logoUrl, colors, templateSlug, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings();
     const { t } = useTranslation();
 
     const token = useSelector((state: RootState) => state.auth.token);
     const user = useSelector((state: RootState) => state.auth.user);
     const cartCount = useSelector((state: RootState) => state.cart.items.length);
+    const isDarkMode = themeMode === 'dark';
+    const activePrimary = isDarkMode ? colors.primaryDark || colors.primary : colors.primary;
+    const activeSecondary = isDarkMode ? colors.secondaryDark || colors.secondary : colors.secondary;
+    const activeBackground = isDarkMode ? colors.backgroundDark || colors.background : colors.background;
+    const activeTextPrimary = isDarkMode ? colors.textPrimaryDark || colors.textPrimary : colors.textPrimary;
+    const activeTextSecondary = isDarkMode ? colors.textSecondaryDark || colors.textSecondary : colors.textSecondary;
+    const headerThemeStyle: HeaderThemeStyle = {
+        '--store-header-bg': isDarkMode
+            ? `color-mix(in srgb, ${activeBackground || '#111827'} 86%, white 14%)`
+            : activeSecondary || activeBackground || '#ffffff',
+        '--store-header-surface': isDarkMode
+            ? activeBackground || '#111827'
+            : `color-mix(in srgb, ${activeBackground || '#ffffff'} 92%, ${activeTextPrimary || '#111827'} 8%)`,
+        '--store-header-text': activeTextPrimary || '#111827',
+        '--store-header-muted': activeTextSecondary || '#6b7280',
+        '--store-header-border': isDarkMode
+            ? 'color-mix(in srgb, white 18%, transparent)'
+            : `color-mix(in srgb, ${activeTextPrimary || '#111827'} 14%, transparent)`,
+        '--store-header-primary': activePrimary || '#1a1a1a',
+        '--store-header-primary-on': activeSecondary || '#ffffff',
+    };
 
     // التأكد من تحميل المكون على الكلاينت لحل مشكلة الـ Hydration و null data
     useEffect(() => {
@@ -75,14 +107,15 @@ export default function Navbar() {
     if (authRoutes.includes(pathname)) return null;
     const hasHomePageHeader = templateSlug === 'marwan' || templateSlug === 'example';
     if (hasHomePageHeader && pathname === '/') return null;
+    if (templateSlug === 'marwan') return <MarwanHeader />;
 
     // منع الرندر غير المتوافق مع السيرفر حتى يكتمل التحميل
-    if (!mounted) return <nav className="h-20 bg-white border-b border-gray-100" />;
+    if (!mounted) return <nav style={headerThemeStyle} className="store-themed-chrome h-20 border-b border-gray-100" />;
 
     return (
         <>
             {/* --- 1. Top Navbar (Desktop) --- */}
-            <nav className="sticky top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 h-20 flex items-center justify-between">
+            <nav style={headerThemeStyle} className="store-themed-chrome sticky top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 h-20 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-2">
                     {logoUrl ? (
                         <img
@@ -115,8 +148,8 @@ export default function Navbar() {
                     <button
                         type="button"
                         onClick={toggleLanguage}
-                        aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-                        title={language === 'ar' ? 'English' : 'العربية'}
+                        aria-label={language === 'ar' ? t.sections.switchToEnglish : t.sections.switchToArabic}
+                        title={language === 'ar' ? t.sections.english : t.sections.arabic}
                         className={`${headerActionClassName} text-xs font-black`}
                     >
                         {language.toUpperCase()}
@@ -124,9 +157,9 @@ export default function Navbar() {
                     <button
                         type="button"
                         onClick={toggleTheme}
-                        aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                        aria-label={themeMode === 'dark' ? t.sections.switchToLightMode : t.sections.switchToDarkMode}
                         aria-pressed={themeMode === 'dark'}
-                        title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
+                        title={themeMode === 'dark' ? t.sections.lightMode : t.sections.darkMode}
                         className={headerActionClassName}
                     >
                         {themeMode === 'dark' ? (
@@ -160,7 +193,7 @@ export default function Navbar() {
                                     <LogIn size={17} aria-hidden="true" />
                                     {t.nav.login}
                                 </Link>
-                                <Link href="/signup" className="px-5 py-2.5 text-sm font-bold bg-primary text-white rounded-xl hover:shadow-lg transition">{t.nav.register}</Link>
+                                <Link href="/signup" className="px-5 py-2.5 text-sm font-bold bg-primary text-[var(--store-header-primary-on)] rounded-xl hover:shadow-lg transition">{t.nav.register}</Link>
                             </>
                         ) : (
                             <div className="flex items-center gap-3">
@@ -190,16 +223,16 @@ export default function Navbar() {
             </nav>
 
             {/* --- 2. Mobile Bottom Navigation (PWA Style) --- */}
-            <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 px-4 py-3 z-50 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                <Link href="/" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/') ? 'text-secondary' : 'text-gray-400'}`}>
+            <div style={headerThemeStyle} className="store-themed-chrome lg:hidden fixed bottom-0 left-0 w-full border-t border-gray-100 px-4 py-3 z-50 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                <Link href="/" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/') ? 'text-primary' : 'text-gray-400'}`}>
                     <Home size={22} />
                     <span className="text-[10px] font-bold">{t.nav.home}</span>
                 </Link>
-                <Link href="/categories" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/categories') ? 'text-secondary' : 'text-gray-400'}`}>
+                <Link href="/categories" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/categories') ? 'text-primary' : 'text-gray-400'}`}>
                     <Grid size={22} />
                     <span className="text-[10px] font-bold">{t.nav.categories}</span>
                 </Link>
-                <Link href="/cart" className={`relative flex flex-col items-center gap-1 transition-colors ${isActive('/cart') || isActive('/checkout') ? 'text-secondary' : 'text-gray-400'}`}>
+                <Link href="/cart" className={`relative flex flex-col items-center gap-1 transition-colors ${isActive('/cart') || isActive('/checkout') ? 'text-primary' : 'text-gray-400'}`}>
                     <ShoppingCart size={22} />
                     <span className="text-[10px] font-bold">{t.nav.cart}</span>
                     {cartCount > 0 && (
@@ -209,19 +242,19 @@ export default function Navbar() {
                     )}
                 </Link>
                 {isLoggedIn && (
-                    <Link href="/favourite" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/favourite') ? 'text-secondary' : 'text-gray-400'}`}>
+                    <Link href="/favourite" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/favourite') ? 'text-primary' : 'text-gray-400'}`}>
                         <Heart size={22} />
                         <span className="text-[10px] font-bold">{t.nav.wishlist}</span>
                     </Link>
                 )}
-                <Link href={isLoggedIn ? "/profile" : "/login"} className={`flex flex-col items-center gap-1 transition-colors ${isActive('/profile') || isActive('/login') ? 'text-secondary' : 'text-gray-400'}`}>
+                <Link href={isLoggedIn ? "/profile" : "/login"} className={`flex flex-col items-center gap-1 transition-colors ${isActive('/profile') || isActive('/login') ? 'text-primary' : 'text-gray-400'}`}>
                     <User size={22} />
                     <span className="text-[10px] font-bold">{isLoggedIn ? t.nav.profile : t.nav.account}</span>
                 </Link>
             </div>
 
             {/* --- 3. Sidebar (Mobile/Tablet) --- */}
-            <aside className={`fixed top-0 left-0 h-full w-72 bg-white z-[60] shadow-2xl transform transition-transform duration-500 lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <aside style={headerThemeStyle} className={`store-themed-chrome fixed top-0 left-0 h-full w-72 z-[60] shadow-2xl transform transition-transform duration-500 lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="p-8 flex flex-col h-full">
                     <div className="flex justify-between items-center mb-10">
                         {logoUrl ? (
@@ -236,9 +269,9 @@ export default function Navbar() {
 
                     <div className="flex flex-col gap-6">
                         {navLinks.map((link) => (
-                            <Link key={link.href} href={link.href} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 text-lg font-bold transition group ${isActive(link.href) ? 'text-secondary' : 'text-gray-700 hover:text-secondary'}`}>
-                                <div className={`p-2 rounded-xl transition-colors ${isActive(link.href) ? 'bg-secondary/10' : 'bg-gray-50 group-hover:bg-secondary/10'}`}>
-                                    <link.icon size={20} className={`${isActive(link.href) ? 'text-secondary' : 'text-gray-400 group-hover:text-secondary'}`} />
+                            <Link key={link.href} href={link.href} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 text-lg font-bold transition group ${isActive(link.href) ? 'text-primary' : 'text-gray-700 hover:text-primary'}`}>
+                                <div className={`p-2 rounded-xl transition-colors ${isActive(link.href) ? 'bg-primary/10' : 'bg-gray-50 group-hover:bg-primary/10'}`}>
+                                    <link.icon size={20} className={`${isActive(link.href) ? 'text-primary' : 'text-gray-400 group-hover:text-primary'}`} />
                                 </div>
                                 {link.name}
                             </Link>
@@ -251,7 +284,7 @@ export default function Navbar() {
                                 <Link href="/login" onClick={() => setSidebarOpen(false)} className="w-full py-4 text-center font-bold border border-gray-200 rounded-2xl flex items-center justify-center gap-2 hover:bg-gray-50 transition">
                                     <LogIn size={18} /> {t.nav.login}
                                 </Link>
-                                <Link href="/signup" onClick={() => setSidebarOpen(false)} className="w-full py-4 text-center font-bold bg-primary text-white rounded-2xl">{t.auth.signUpButton}</Link>
+                                <Link href="/signup" onClick={() => setSidebarOpen(false)} className="w-full py-4 text-center font-bold bg-primary text-[var(--store-header-primary-on)] rounded-2xl">{t.auth.signUpButton}</Link>
                             </div>
                         ) : (
                             <div className="space-y-3">

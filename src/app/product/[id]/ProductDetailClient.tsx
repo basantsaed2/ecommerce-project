@@ -14,7 +14,7 @@ import { RootState, AppDispatch } from '@/store/store';
 import { toast } from 'sonner';
 import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 import Link from 'next/link';
-import { getProductPriceInfo } from '@/utils/productUtils';
+import { getProductAvailableStock, getProductPriceInfo } from '@/utils/productUtils';
 import SizeGuideDialog from '@/components/modules/products/SizeGuideDialog';
 import ProductTabsInfo from '@/components/modules/products/ProductTabsInfo';
 import FrequentlyBoughtTogether from '@/components/modules/products/FrequentlyBoughtTogether';
@@ -59,12 +59,14 @@ export default function ProductDetailClient() {
     const productQuantity = product?.quantity ?? 0;
 
     // Product has stock if product.quantity > 0 or if any SKU has stock
-    const hasAvailableStock = productQuantity > 0 || (product?.skus?.some(sku => (sku.quantity ?? 0) > 0) ?? false);
+    const hasAvailableStock = productQuantity > 0
+        || (product?.skus?.some(sku => (sku.quantity ?? 0) > 0) ?? false)
+        || (product?.variations?.some(variation => variation.options.some(option => (option.quantity ?? 0) > 0)) ?? false);
     const hasVariantStock = hasAvailableStock;
 
     const getSkuStock = (sku: any): number => {
         if (!sku) return productQuantity;
-        return (sku.quantity && sku.quantity > 0) ? sku.quantity : productQuantity;
+        return typeof sku.quantity === 'number' ? Math.max(0, sku.quantity) : productQuantity;
     };
 
     // Initialize selected options from the first in-stock SKU
@@ -84,8 +86,9 @@ export default function ProductDetailClient() {
                 });
             } else {
                 product.variations.forEach(v => {
-                    if (v.options.length > 0) {
-                        initialOptions[v._id] = v.options[0]._id;
+                    const firstInStockOption = v.options.find(option => (option.quantity ?? productQuantity) > 0);
+                    if (firstInStockOption) {
+                        initialOptions[v._id] = firstInStockOption._id;
                     }
                 });
             }
@@ -118,7 +121,11 @@ export default function ProductDetailClient() {
     }, [product, currentSkuObj, selectedOptionWithPrice]);
 
     // Stock state
-    const isOutOfStock = !hasAvailableStock || (currentSkuObj ? getSkuStock(currentSkuObj) <= 0 : productQuantity <= 0);
+    const currentStock = getProductAvailableStock(product, {
+        quantity: currentSkuObj?.quantity,
+        selectedVariations: Object.values(selectedOptions).map(optionId => ({ optionId })),
+    }) ?? 0;
+    const isOutOfStock = !hasAvailableStock || currentStock <= 0;
 
     const isOptionInStock = (optionId: string): boolean => {
         const option = product?.variations?.flatMap(variation => variation.options).find(item => item._id === optionId);
@@ -129,6 +136,15 @@ export default function ProductDetailClient() {
         );
     };
 
+    const handleVariationSelect = (variationId: string, optionId: string) => {
+        const nextSelections = { ...selectedOptions, [variationId]: optionId };
+        const nextStock = getProductAvailableStock(product, {
+            selectedVariations: Object.values(nextSelections).map(selectedId => ({ optionId: selectedId })),
+        }) ?? 0;
+        setSelectedOptions(nextSelections);
+        setQuantity(currentQuantity => Math.min(currentQuantity, Math.max(1, nextStock)));
+    };
+
     const handleWishlistToggle = () => {
         if (!token) { toast.error(t.product.wishlistLogin); return; }
         toggleWishlist({ productId: product!._id });
@@ -137,6 +153,11 @@ export default function ProductDetailClient() {
     const handleAddToCart = async () => {
         if (!product || isOutOfStock) {
             if (isOutOfStock) toast.error(t.product.soldOutCombination);
+            return;
+        }
+        if (quantity > currentStock) {
+            setQuantity(currentStock);
+            toast.error(`${t.product.onlyLeft} ${currentStock}`);
             return;
         }
         const selectedVariationDetails = product?.variations?.map(v => {
@@ -175,6 +196,11 @@ export default function ProductDetailClient() {
     const handleBuyNow = async () => {
         if (!product || isOutOfStock) {
             if (isOutOfStock) toast.error(t.product.soldOutCombination);
+            return;
+        }
+        if (quantity > currentStock) {
+            setQuantity(currentStock);
+            toast.error(`${t.product.onlyLeft} ${currentStock}`);
             return;
         }
         const selectedVariationDetails = product?.variations?.map(v => {
@@ -221,7 +247,7 @@ export default function ProductDetailClient() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
+            <div className="store-themed-page min-h-screen flex items-center justify-center bg-gray-50/50">
                 <div className="text-center">
                     <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
                         <Loader2 className="animate-spin text-primary" size={36} />
@@ -234,7 +260,7 @@ export default function ProductDetailClient() {
 
     if (error || !product) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50/50">
+            <div className="store-themed-page min-h-screen flex items-center justify-center p-6 bg-gray-50/50">
                 <div className="text-center max-w-sm">
                     <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Package size={40} className="text-red-300" />
@@ -256,12 +282,11 @@ export default function ProductDetailClient() {
         .filter((image): image is string => Boolean(image));
 
     const displayedImage = selectedImage || product.image || galleryImages[0] || logoUrl || undefined;
-    const currentStock = getSkuStock(currentSkuObj);
     const inStock = currentStock > 0;
     const totalPrice = (priceInfo.finalPrice * quantity).toLocaleString();
 
     return (
-        <div className="w-full min-h-screen bg-gray-50/30">
+        <div className="store-themed-page w-full min-h-screen bg-gray-50/30">
             {/* Breadcrumbs */}
             <div className="w-full px-4 md:px-12 py-4 border-b border-gray-100/60 bg-white">
                 <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 flex-wrap max-w-7xl mx-auto">
@@ -496,7 +521,7 @@ export default function ProductDetailClient() {
                                                     <button
                                                         key={option._id}
                                                         disabled={!optionInStock}
-                                                        onClick={() => setSelectedOptions(prev => ({ ...prev, [variation._id]: option._id }))}
+                                                        onClick={() => handleVariationSelect(variation._id, option._id)}
                                                         className={`px-3 py-2 rounded-xl text-xs font-black transition-all border-2 flex flex-col items-center gap-1 ${isSelected
                                                             ? optionInStock
                                                                 ? 'bg-primary border-primary text-[var(--color-on-primary)] shadow-md'

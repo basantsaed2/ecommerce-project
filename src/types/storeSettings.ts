@@ -52,7 +52,11 @@ export interface StoreSection {
     templateSlug?: string;
     order?: number;
     title?: string;
+    ar_title?: string;
+    title_ar?: string;
     subtitle?: string;
+    ar_subtitle?: string;
+    subtitle_ar?: string;
     config?: Record<string, any>;
 }
 

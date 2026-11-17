@@ -2,22 +2,18 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
 import {
-  ArrowRight, CheckCircle2, Layers, Mail, MapPin, MessageCircle, Moon, Package,
-  PackageCheck, Phone, ShieldCheck, ShoppingCart, Sparkles, Sun, Truck,
-  Undo2, UserRound,
+  ArrowRight, CheckCircle2, Layers, Mail, MapPin, Package,
+  PackageCheck, Phone, ShieldCheck, Sparkles, Truck, Undo2,
 } from 'lucide-react';
 import { useGet } from '@/hooks/useGet';
 import { useStoreSettings } from '@/components/providers/StoreThemeProvider';
-import { CART_COUNT_BADGE_CLASS, HEADER_ACTION_BASE_CLASS } from '@/components/layout/headerStyles';
+import MarwanHeader from '@/components/layout/MarwanHeader';
 import DynamicSectionRenderer from '@/components/sections/DynamicSectionRenderer';
 import { ApiResponse, Banner, Brand, Category, Product } from '@/types/api';
 import StoreLoader from '@/components/common/StoreLoader';
 import { useTranslation } from '@/hooks/useTranslation';
 import ProductCard from '@/components/modules/products/ProductCard';
-import { RootState } from '@/store/store';
 
 interface MarwanTemplateProps {
   searchQuery?: string;
@@ -45,20 +41,14 @@ export default function MarwanTemplate({
   excludeKeys = [],
   className = '',
 }: MarwanTemplateProps) {
-  const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode, toggleTheme, language, toggleLanguage } = useStoreSettings() as any;
+  const { colors, sections, storeName, logoUrl, fontStyle, settings, themeMode } = useStoreSettings() as any;
   const { t, isRtl, getLocalized } = useTranslation();
-  const router = useRouter();
-  const token = useSelector((state: RootState) => state.auth.token);
-  const cartCount = useSelector((state: RootState) => state.cart.items.length);
-
   // Real backend API calls
   const { data: bannersData, isLoading: bannersLoading } = useGet<ApiResponse<Banner>>(['banners'], '/banner');
   const { data: categoriesData, isLoading: categoriesLoading } = useGet<ApiResponse<Category>>(['categories'], '/category');
   const { data: productsData, isLoading: productsLoading } = useGet<ApiResponse<Product>>(['products'], '/product');
   const { data: brandsData, isLoading: brandsLoading } = useGet<ApiResponse<Brand>>(['brands'], '/brand');
 
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('');
   const [searchText, setSearchText] = useState(searchQuery || '');
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>('all');
@@ -104,11 +94,13 @@ export default function MarwanTemplate({
   const contactLinks = ecomData.social_links || {};
   const headerData = ecomData.header || {};
   const footerData = ecomData.footer || {};
-  const hasContactInfo = Boolean(ecomData.name || ecomData.email || ecomData.phone || ecomData.address || Object.keys(contactLinks).length);
+  const localizedContactName = getLocalized(ecomData, 'name');
+  const localizedContactAddress = getLocalized(ecomData, 'address');
+  const hasContactInfo = Boolean(localizedContactName || ecomData.email || ecomData.phone || localizedContactAddress || Object.keys(contactLinks).length);
 
-  const displayStoreName = storeName || headerData.title || 'STORE';
+  const displayStoreName = storeName || getLocalized(headerData, 'title') || 'STORE';
   const displayLogo = footerData.logo || logoUrl || headerData.logo || '';
-  const announcementText: string = headerData.announcement || '';
+  const announcementText: string = getLocalized(headerData, 'announcement');
 
   // Dynamic nav links from backend
   const headerLinks: string[] = headerData?.links || [];
@@ -163,7 +155,6 @@ export default function MarwanTemplate({
   /* ── Fixed header + scroll-spy ── */
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 30);
       const ids = ['categories', 'featured-products', 'all-products', 'brands', 'why-us', 'store-connect'];
       let current = 'home';
       for (const id of ids) {
@@ -203,6 +194,15 @@ export default function MarwanTemplate({
   const heroBanner = useMemo(() => {
     return allBanners.find((b) => b.name?.some((n) => /home|hero|main/i.test(String(n)))) || allBanners[0];
   }, [allBanners]);
+  const heroBannerTitle = heroBanner
+    ? (heroBanner.title || heroBanner.ar_title || heroBanner.title_ar)
+      ? getLocalized(heroBanner, 'title')
+      : heroBanner.name?.filter(Boolean).join(' ')
+    : '';
+  const heroBannerDescription = heroBanner
+    && (heroBanner.description || heroBanner.ar_description || heroBanner.description_ar)
+    ? getLocalized(heroBanner, 'description')
+    : '';
 
   const secondaryBanner = useMemo(() => {
     return allBanners.find((b) => b._id !== heroBanner?._id && b.isActive !== false) || null;
@@ -258,13 +258,6 @@ export default function MarwanTemplate({
     ) || brands.find(matches);
   }, [brands, activeSearch]);
 
-  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (matchingBrand) {
-      router.push(`/brands#${matchingBrand._id}`);
-    }
-  };
-
   useEffect(() => {
     if (!activeSearch) return;
     if (showCategories && categories.length > 0) {
@@ -303,219 +296,55 @@ export default function MarwanTemplate({
     : [
         { key: 'categories', label: t?.nav?.categories || 'Categories', href: '#categories', enabled: showCategories && categories.length > 0 },
         { key: 'featured-products', label: t?.nav?.products || 'Featured', href: '#featured-products', enabled: showFeaturedProducts && featuredProducts.length > 0 },
-        { key: 'all-products', label: 'All Products', href: '#all-products', enabled: showProducts && allProductsList.length > 0 },
+        { key: 'all-products', label: t.sections.allProducts, href: '#all-products', enabled: showProducts && allProductsList.length > 0 },
         { key: 'brands', label: t?.nav?.brands || 'Brands', href: '#brands', enabled: showBrands && brands.length > 0 },
         { key: 'why-us', label: t?.nav?.whyUs || 'Why Us', href: '#why-us', enabled: showFeatures },
         { key: 'store-connect', label: t?.nav?.contact || 'Contact', href: '#store-connect', enabled: hasContactInfo },
       ].filter((item: any) => item.enabled !== false);
 
-  const navLinkCls = (active: boolean) =>
-    `text-[13px] font-bold uppercase tracking-wider pb-1 border-b-2 transition-colors ${
-      active
-        ? 'border-[var(--mw-primary)] text-[var(--mw-header-text)]'
-        : 'border-transparent text-[var(--mw-header-muted)] hover:text-[var(--mw-header-text)]'
-    }`;
-
   const dynamicTrustPerks = [
     {
       icon: Truck,
-      title: announcementText ? (t?.home?.fastDelivery || 'Fast Delivery') : 'Express Shipping',
-      desc: announcementText || (t?.sections?.fastDeliveryWhyUs || 'Nationwide secure delivery directly to your doorstep.'),
+      title: t.home.fastDelivery,
+      desc: announcementText || t.sections.fastDeliveryWhyUs,
     },
     {
       icon: ShieldCheck,
-      title: t?.home?.securePayment || '100% Authentic Brands',
-      desc: brands.length > 0 ? `Official partner for ${brands.map((b) => b.name).filter(Boolean).slice(0, 3).join(', ')}` : (t?.sections?.securePaymentsWhyUs || 'Sourced directly from authorized distributors.'),
+      title: t.home.securePayment,
+      desc: brands.length > 0
+        ? `${t.sections.officialPartners}: ${brands.map((brand) => getLocalized(brand)).filter(Boolean).slice(0, 3).join(', ')}`
+        : t.sections.securePaymentsWhyUs,
     },
     {
       icon: Undo2,
-      title: t?.home?.easyReturns || 'Hassle-Free Returns',
-      desc: t?.sections?.easyReturnsWhyUs || '14 days easy return guarantee on eligible products.',
+      title: t.home.easyReturns,
+      desc: t.sections.easyReturnsWhyUs,
     },
     {
       icon: PackageCheck,
-      title: t?.home?.qualityGuaranteed || 'Dedicated Support',
-      desc: ecomData.phone ? `Call us at ${ecomData.phone} or chat directly via WhatsApp.` : (t?.sections?.curatedQualityWhyUs || 'Reliable customer care and assistance.'),
+      title: t.home.support247,
+      desc: ecomData.phone
+        ? t.sections.phoneWhatsappPrompt.replace('{phone}', ecomData.phone)
+        : t.sections.curatedQualityWhyUs,
     },
   ];
 
   return (
-    <div className={`mw-tpl w-full max-w-full overflow-x-hidden m-0 p-0 ${className}`} style={themeVars}>
+    <div className={`mw-tpl -mt-2 w-full max-w-full overflow-x-hidden m-0 p-0 ${className}`} style={themeVars}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=${fontQuery}:wght@300;400;500;600;700;800;900&display=swap');
         @keyframes mwGlow { from { opacity: .5; transform: scale(1); } to { opacity: 1; transform: scale(1.12); } }
         @keyframes mwFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
       `}</style>
 
-      <div style={{ fontFamily: 'var(--mw-font)', background: 'var(--mw-bg)', color: 'var(--mw-text)' }} className="w-full pt-[72px]">
-        {/* ── Top Announcement Bar ── */}
-        {announcementText && (
-          <div
-            className="fixed inset-x-0 top-0 z-[55] text-xs font-bold py-1.5 px-4 text-center transition-all flex items-center justify-center gap-2"
-            style={isDarkMode
-              ? { background: 'var(--mw-header-bg)', color: 'var(--mw-header-text)', borderBottom: '1px solid var(--mw-header-border)' }
-              : { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
-          >
-            <Sparkles size={13} />
-            <span>{announcementText}</span>
-          </div>
-        )}
-
-        {/* ── Header ── */}
-        <header
-          className={`fixed inset-x-0 ${announcementText ? 'top-[28px]' : 'top-0'} z-50 transition-all duration-300 ${scrolled ? 'shadow-lg backdrop-blur-md' : ''}`}
-          style={{
-            background: 'var(--mw-header-bg)',
-            color: 'var(--mw-header-text)',
-            borderBottom: '1px solid var(--mw-header-border)',
-          }}
-        >
-          <div className="max-w-[1460px] mx-auto px-4 flex items-center justify-between h-[72px] gap-4">
-            <Link href="/" className="flex h-14 w-[150px] md:w-[220px] items-center shrink-0" aria-label={displayStoreName}>
-              {displayLogo ? (
-                <img src={displayLogo} alt={displayStoreName} className="max-h-14 max-w-full object-contain object-left" />
-              ) : (
-                <span className="text-[28px] md:text-[36px] font-black uppercase tracking-tight leading-none" style={{ color: 'var(--mw-text)' }}>
-                  {displayStoreName}
-                </span>
-              )}
-            </Link>
-
-            <div className="hidden md:flex flex-1 justify-center px-3">
-              <form onSubmit={handleSearchSubmit} className="relative flex w-full max-w-[460px] items-center gap-3 rounded-full border px-4 py-2 transition-colors" style={{ background: 'transparent', borderColor: 'var(--mw-header-border)' }}>
-                <span style={{ color: 'var(--mw-header-muted)' }}>⌕</span>
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder={t?.common?.searchPlaceholder || 'Search products, categories, or brands...'}
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-header-muted)]"
-                  style={{ color: 'var(--mw-header-text)', backgroundColor: 'transparent' }}
-                />
-                {matchingBrand && (
-                  <Link href={`/brands#${matchingBrand._id}`} className="absolute inset-x-0 top-full z-50 mt-2 rounded-xl border px-4 py-3 text-sm font-bold shadow-lg" style={{ background: 'var(--mw-header-bg)', color: 'var(--mw-header-text)', borderColor: 'var(--mw-header-border)' }}>
-                    {getLocalized ? getLocalized(matchingBrand) : matchingBrand.name} <span className="font-normal" style={{ color: 'var(--mw-header-muted)' }}>— {t?.nav?.brands || 'Brands'}</span>
-                  </Link>
-                )}
-              </form>
-            </div>
-
-            <nav className="hidden lg:flex items-center justify-center gap-6 shrink-0">
-              {navItems.map((item) => (
-                <Link key={item.key} href={item.href} className={navLinkCls(activeSection === item.key)}>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={toggleLanguage}
-                aria-label={language === 'ar' ? t.sections.switchToEnglish : t.sections.switchToArabic}
-                title={language === 'ar' ? t.sections.english : t.sections.arabic}
-              className={`${HEADER_ACTION_BASE_CLASS} text-xs font-black`}
-              style={{
-                backgroundColor: 'var(--mw-header-surface)',
-                borderColor: 'var(--mw-header-border)',
-                color: 'var(--mw-header-text)',
-              }}
-              >
-                {language.toUpperCase()}
-              </button>
-              <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label={themeMode === 'dark' ? t.sections.switchToLightMode : t.sections.switchToDarkMode}
-                aria-pressed={themeMode === 'dark'}
-                title={themeMode === 'dark' ? t.sections.lightMode : t.sections.darkMode}
-                className={HEADER_ACTION_BASE_CLASS}
-                style={{
-                  backgroundColor: 'var(--mw-header-surface)',
-                  borderColor: 'var(--mw-header-border)',
-                  color: 'var(--mw-header-text)',
-                }}
-              >
-                {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              </button>
-              <Link
-                href="/cart"
-                title={t.nav.cart}
-                aria-label={`${t.nav.cart}${cartCount > 0 ? ` (${cartCount})` : ''}`}
-                className={HEADER_ACTION_BASE_CLASS}
-                style={{
-                  backgroundColor: 'var(--mw-header-surface)',
-                  borderColor: 'var(--mw-header-border)',
-                  color: 'var(--mw-header-text)',
-                }}
-              >
-                <ShoppingCart size={20} />
-                {cartCount > 0 && (
-                  <span className={CART_COUNT_BADGE_CLASS}>
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-              <Link
-                href={token ? '/profile' : '/login'}
-                aria-label={token ? t.nav.profile : t.nav.login}
-                title={token ? t.nav.profile : t.nav.login}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:opacity-80"
-                style={{ borderColor: 'var(--mw-header-border)', color: 'var(--mw-header-text)' }}
-              >
-                <UserRound size={17} />
-              </Link>
-              {contactLinks.whatsapp && (
-                <a
-                  href={contactLinks.whatsapp}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="WhatsApp"
-                  className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white transition-colors hover:bg-emerald-700"
-                >
-                  <MessageCircle size={16} />
-                </a>
-              )}
-              <Link
-                href="/categories"
-                className="hidden md:inline-flex items-center justify-center px-5 py-2.5 rounded-full text-[12px] font-extrabold uppercase tracking-wider transition-transform hover:-translate-y-0.5"
-                style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
-              >
-                {t?.home?.shopNow || 'Shop Now'} →
-              </Link>
-            </div>
-
-            <button
-              className="lg:hidden text-2xl leading-none"
-              aria-label="Toggle menu"
-              onClick={() => setMenuOpen((v) => !v)}
-              style={{ color: 'var(--mw-text)' }}
-            >
-              {menuOpen ? '✕' : '☰'}
-            </button>
-          </div>
-
-          {menuOpen && (
-            <div className="lg:hidden max-w-[1240px] mx-auto px-5 pb-4 flex flex-col gap-3">
-              <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 rounded-full border px-3 py-2" style={{ background: 'transparent', borderColor: 'var(--mw-header-border)' }}>
-                <span style={{ color: 'var(--mw-header-muted)' }}>⌕</span>
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder={t?.common?.search || 'Search...'}
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--mw-header-muted)]"
-                  style={{ color: 'var(--mw-header-text)', backgroundColor: 'transparent' }}
-                />
-              </form>
-              {navItems.map((item) => (
-                <Link key={item.key} href={item.href} onClick={() => setMenuOpen(false)} className="text-sm font-bold uppercase py-1" style={{ color: 'var(--mw-header-text)' }}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </header>
+      <MarwanHeader
+        activeSection={activeSection}
+        homeNavItems={navItems}
+        searchText={searchText}
+        onSearchTextChange={setSearchText}
+        matchingBrand={matchingBrand}
+      />
+      <div style={{ fontFamily: 'var(--mw-font)', background: 'var(--mw-bg)', color: 'var(--mw-text)' }} className="w-full">
 
         {/* ── Section 1: Hero Banner ── */}
         {showHero && (
@@ -524,7 +353,7 @@ export default function MarwanTemplate({
               <div className="absolute inset-0 z-0">
                 <img
                   src={heroImages[0]}
-                  alt={heroBanner?.title || displayStoreName}
+                  alt={heroBannerTitle || displayStoreName}
                   className="w-full h-full object-cover brightness-[.45] saturate-[1.1]"
                 />
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(100deg, color-mix(in srgb, var(--mw-secondary) 85%, black) 10%, color-mix(in srgb, var(--mw-secondary) 30%, transparent) 60%, transparent 100%)' }} />
@@ -542,26 +371,27 @@ export default function MarwanTemplate({
                   </div>
 
                   <h1 className="text-[2.6rem] md:text-[3.8rem] lg:text-[4.8rem] font-black leading-[1.0] uppercase tracking-tight mb-5" style={{ color: 'var(--mw-text)' }}>
-                    {heroBanner?.title ? (
+                    {heroBannerTitle ? (
                       <>
-                        Discover The{' '}
+                        {t.home.heroTitlePart1}{' '}
                         <span style={{ color: 'var(--mw-text-muted)' }}>
-                          {heroBanner.title}
+                          {heroBannerTitle}
                         </span>{' '}
-                        Lineup
+                        {t.home.heroTitlePart2}
                       </>
                     ) : (
                       <>
-                        Shop Premium{' '}
+                        {t.home.heroTitlePart1}{' '}
                         <span style={{ color: 'var(--mw-text-muted)' }}>
-                          Collections
+                          {t.home.heroTitleHighlight}
                         </span>
+                        {' '}{t.home.heroTitlePart2}
                       </>
                     )}
                   </h1>
 
                   <p className="max-w-[480px] text-base leading-[1.8] mb-8" style={{ color: 'var(--mw-text-muted)' }}>
-                    {heroBanner?.description || footerData.bio || (t?.home?.heroSubtitle || 'Curated high-quality products directly from verified official distributors.')}
+                    {heroBannerDescription || getLocalized(footerData, 'bio') || t.home.heroSubtitle}
                   </p>
 
                   <div className="flex flex-wrap gap-4 mb-10">
@@ -587,7 +417,7 @@ export default function MarwanTemplate({
                     {brands.length > 0 && (
                       <div>
                         <b className="block text-3xl font-black" style={{ color: 'var(--mw-text)' }}>{brands.length}</b>
-                        <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase" style={{ color: 'var(--mw-text-muted)' }}>{t?.nav?.brands || 'Official Brands'}</span>
+                        <span className="block mt-1 text-[11px] font-semibold tracking-wider uppercase" style={{ color: 'var(--mw-text-muted)' }}>{t.nav.brands}</span>
                       </div>
                     )}
                   </div>
@@ -619,8 +449,8 @@ export default function MarwanTemplate({
           {[
             { v: categories.length, l: t?.sections?.categoryCountLabel || 'Categories' },
             { v: allProductsList.length, l: t?.sections?.productCountLabel || 'Products' },
-            { v: brands.length > 0 ? `${brands.length} Brands` : 'Authentic', l: 'Verified Quality' },
-            { v: '14 Days', l: t?.home?.easyReturns || 'Free Return' },
+            { v: brands.length > 0 ? `${brands.length} ${t.nav.brands}` : t.sections.authenticBrands, l: t.sections.verifiedQuality },
+            { v: t.sections.fourteenDays, l: t.home.easyReturns },
           ].map((s, i) => (
             <div key={s.l} className={`text-center py-6 px-4 border-black/10 hover:bg-black/5 transition-colors ${i < 3 ? 'border-r' : ''}`}>
               <b className="block text-2xl md:text-3xl font-black">{s.v}</b>
@@ -687,7 +517,7 @@ export default function MarwanTemplate({
                   className="inline-flex items-center gap-2 rounded-full border-2 px-8 py-3 font-bold transition-all hover:opacity-90 shadow-sm hover:shadow cursor-pointer"
                   style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-text)' }}
                 >
-                  Show More <ArrowRight size={16} className={isRtl ? 'rotate-180' : ''} />
+                  {t.common.viewMore} <ArrowRight size={16} className={isRtl ? 'rotate-180' : ''} />
                 </button>
               </div>
             )}
@@ -700,26 +530,29 @@ export default function MarwanTemplate({
             <div className="relative rounded-[2rem] overflow-hidden shadow-2xl p-8 md:p-12 text-white border" style={{ borderColor: 'var(--mw-border)', background: 'linear-gradient(135deg, color-mix(in srgb, var(--mw-secondary) 95%, black), color-mix(in srgb, var(--mw-secondary) 85%, var(--mw-primary)))' }}>
               {(secondaryBanner?.images?.[0] || featuredCategoryBanner?.banner) && (
                 <div className="absolute inset-0 z-0">
-                  <img src={secondaryBanner?.images?.[0] || featuredCategoryBanner?.banner} alt={secondaryBanner?.title || featuredCategoryBanner?.name || 'Promotional Banner'} className="w-full h-full object-cover brightness-[.35]" />
+                  <img src={secondaryBanner?.images?.[0] || featuredCategoryBanner?.banner} alt={secondaryBanner ? getLocalized(secondaryBanner, 'title') : getLocalized(featuredCategoryBanner)} className="w-full h-full object-cover brightness-[.35]" />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
                 </div>
               )}
               <div className="relative z-10 max-w-xl">
                 <span className="text-[11px] font-black uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5 mb-4" style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}>
-                  <Sparkles size={14} /> Official Spotlight Deal
+                  <Sparkles size={14} /> {t.sections.officialSpotlightDeal}
                 </span>
                 <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tight mb-4">
-                  {secondaryBanner?.title || featuredCategoryBanner?.name}
+                  {(secondaryBanner?.title && getLocalized(secondaryBanner, 'title')) || getLocalized(featuredCategoryBanner)}
                 </h3>
                 <p className="text-sm md:text-base text-gray-200 leading-relaxed mb-6 font-medium">
-                  {secondaryBanner?.description || (featuredCategoryBanner?.ar_name ? `Explore all official products in ${featuredCategoryBanner.name} (${featuredCategoryBanner.ar_name}) with exclusive store rates.` : 'Explore verified store collections with full warranty and express shipping.')}
+                  {(secondaryBanner?.description && getLocalized(secondaryBanner, 'description'))
+                    || (featuredCategoryBanner
+                      ? `${t.sections.exploreCatalogLabel}: ${getLocalized(featuredCategoryBanner)}`
+                      : t.sections.catalogDescription)}
                 </p>
                 <Link
                   href={featuredCategoryBanner ? `/categories?id=${featuredCategoryBanner._id}` : showFeaturedProducts ? '#featured-products' : '#all-products'}
                   className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-xs font-black uppercase tracking-wider text-white transition-transform hover:-translate-y-0.5"
                   style={{ background: 'var(--mw-primary)', color: 'var(--mw-secondary)' }}
                 >
-                  Explore Spotlight <ArrowRight size={15} />
+                  {t.sections.exploreCatalogLabel} <ArrowRight size={15} />
                 </Link>
               </div>
             </div>
@@ -739,7 +572,7 @@ export default function MarwanTemplate({
                 </h2>
               </div>
               <Link href="/product" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full border text-[11px] font-extrabold uppercase tracking-wider hover:border-black transition-colors" style={{ borderColor: 'var(--mw-border)' }}>
-                {t?.sections?.seeMore || 'All Products'} <ArrowRight size={14} />
+                {t.sections.allProducts} <ArrowRight size={14} />
               </Link>
             </div>
 
@@ -765,10 +598,10 @@ export default function MarwanTemplate({
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
                 <div>
                   <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-text-muted)' }}>
-                    <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Full Store Inventory
+                    <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> {t.sections.allProducts}
                   </div>
                                           <h2 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: 'var(--mw-text)' }}>
-                    Explore All <span style={{ color: 'var(--mw-text-muted)' }}>Products</span>
+                    {t.sections.exploreCatalogLabel} <span style={{ color: 'var(--mw-text-muted)' }}>{t.sections.allProducts}</span>
                   </h2>
                 </div>
 
@@ -781,7 +614,7 @@ export default function MarwanTemplate({
                     className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${selectedCategoryTab === 'all' ? 'shadow-md scale-105' : 'border hover:opacity-80'}`}
                     style={selectedCategoryTab === 'all' ? { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' } : { color: 'var(--mw-text-muted)', borderColor: 'var(--mw-border)' }}
                   >
-                    All ({allProductsList.length})
+                    {t.common.all} ({allProductsList.length})
                   </button>
                   {categories.map((cat) => (
                     <button
@@ -793,7 +626,7 @@ export default function MarwanTemplate({
                       className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${selectedCategoryTab === cat._id ? 'shadow-md scale-105' : 'border hover:opacity-80'}`}
                       style={selectedCategoryTab === cat._id ? { background: 'var(--mw-primary)', color: 'var(--mw-secondary)' } : { color: 'var(--mw-text-muted)', borderColor: 'var(--mw-border)' }}
                     >
-                      {cat.name}
+                      {getLocalized(cat)}
                     </button>
                   ))}
                 </div>
@@ -816,7 +649,7 @@ export default function MarwanTemplate({
                     className="inline-flex items-center gap-2 rounded-full border-2 px-8 py-3 font-bold transition-all hover:opacity-90 shadow-sm hover:shadow cursor-pointer"
                     style={{ borderColor: 'var(--mw-primary)', color: 'var(--mw-text)' }}
                   >
-                    Show More <ArrowRight size={16} className={isRtl ? 'rotate-180' : ''} />
+                    {t.common.viewMore} <ArrowRight size={16} className={isRtl ? 'rotate-180' : ''} />
                   </button>
                 </div>
               )}
@@ -829,20 +662,20 @@ export default function MarwanTemplate({
           <section className="py-12 md:py-16 border-y" style={{ background: 'var(--mw-surface)', borderColor: 'var(--mw-border)' }} id="brands">
             <div className="max-w-[1240px] mx-auto px-5">
               <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} text-center mb-10`}>
-                <span className="text-[11px] font-extrabold tracking-[0.25em] uppercase mb-2 block" style={{ color: 'var(--mw-text-muted)' }}>Certified Partners</span>
+                <span className="text-[11px] font-extrabold tracking-[0.25em] uppercase mb-2 block" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.officialPartners}</span>
                                         <h2 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: 'var(--mw-text)' }}>
-                  Official Brand <span style={{ color: 'var(--mw-text-muted)' }}>Distributors</span>
+                  {t.sections.officialBrandDistributors}
                 </h2>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 items-center">
                 {brands.map((brand) => (
                   <Link key={brand._id} href={`/brands#${brand._id}`} className="p-5 rounded-2xl border flex flex-col items-center justify-center gap-2 hover:shadow-lg transition-all group aspect-square text-center" style={{ borderColor: 'var(--mw-border)', background: 'var(--mw-bg)' }}>
                     {brand.logo ? (
-                      <img src={brand.logo} alt={brand.name || brand.ar_name} className="max-h-16 max-w-full object-contain transition-transform duration-300 group-hover:scale-110" />
+                      <img src={brand.logo} alt={getLocalized(brand)} className="max-h-16 max-w-full object-contain transition-transform duration-300 group-hover:scale-110" />
                     ) : (
-                      <span className="text-lg font-black" style={{ color: 'var(--mw-text)' }}>{brand.name}</span>
+                      <span className="text-lg font-black" style={{ color: 'var(--mw-text)' }}>{getLocalized(brand)}</span>
                     )}
-                    <span className="text-xs font-extrabold mt-1" style={{ color: 'var(--mw-text)' }}>{brand.name}</span>
+                    <span className="text-xs font-extrabold mt-1" style={{ color: 'var(--mw-text)' }}>{getLocalized(brand)}</span>
                     {brand.ar_name && <span className="text-[10px] font-medium" style={{ color: 'var(--mw-text-muted)' }}>{brand.ar_name}</span>}
                   </Link>
                 ))}
@@ -856,7 +689,7 @@ export default function MarwanTemplate({
           <section className="py-12 md:py-16 max-w-[1240px] mx-auto px-5" id="why-us">
             <div data-reveal className={`${REVEAL_BASE} ${REVEAL_SHOWN} mb-10 text-center max-w-2xl mx-auto`}>
               <div className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--mw-text-muted)' }}>
-                <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> Our Commitment
+                <span className="w-[22px] h-0.5" style={{ background: 'var(--mw-primary)' }} /> {t.sections.trustTitle}
               </div>
                                       <h2 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: 'var(--mw-text)' }}>
                 {t?.sections?.trustTitle || `Why Shop with ${displayStoreName}`}
@@ -888,18 +721,18 @@ export default function MarwanTemplate({
               <div className="rounded-[2.5rem] p-8 md:p-12 border shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center" style={{ borderColor: 'var(--mw-border)', background: 'var(--mw-bg)' }}>
                 <div className="lg:col-span-7 flex flex-col gap-4">
                   <span className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5" style={{ color: 'var(--mw-text-muted)' }}>
-                    <CheckCircle2 size={16} /> Official Store Support
+                    <CheckCircle2 size={16} /> {t.sections.supportLabel}
                   </span>
-                  <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tight" style={{ color: 'var(--mw-text)' }}>Have Questions? We Are Ready to Help</h3>
+                  <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tight" style={{ color: 'var(--mw-text)' }}>{t.sections.contactUs}</h3>
                   <p className="text-sm leading-relaxed max-w-xl" style={{ color: 'var(--mw-text-muted)' }}>
-                    Reach out to our customer care team for direct order assistance, product availability, wholesale requests, or delivery tracking.
+                    {t.sections.contactSupportDescription}
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     {ecomData.phone && (
                       <div className="flex items-center gap-3 p-3.5 rounded-2xl border" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)' }}>
                         <Phone size={18} style={{ color: 'var(--mw-primary)' }} />
                         <div>
-                          <span className="text-[10px] font-bold uppercase block" style={{ color: 'var(--mw-text-muted)' }}>Phone Hotline</span>
+                          <span className="text-[10px] font-bold uppercase block" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.phoneHotline}</span>
                           <a href={`tel:${ecomData.phone}`} className="text-sm font-black hover:underline" style={{ color: 'var(--mw-text)' }}>{ecomData.phone}</a>
                         </div>
                       </div>
@@ -908,7 +741,7 @@ export default function MarwanTemplate({
                       <div className="flex items-center gap-3 p-3.5 rounded-2xl border" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)' }}>
                         <Mail size={18} style={{ color: 'var(--mw-primary)' }} />
                         <div>
-                          <span className="text-[10px] font-bold uppercase block" style={{ color: 'var(--mw-text-muted)' }}>Support Email</span>
+                          <span className="text-[10px] font-bold uppercase block" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.supportEmail}</span>
                           <a href={`mailto:${ecomData.email}`} className="text-sm font-black hover:underline" style={{ color: 'var(--mw-text)' }}>{ecomData.email}</a>
                         </div>
                       </div>
@@ -917,8 +750,8 @@ export default function MarwanTemplate({
                       <div className="flex items-start gap-3 p-3.5 rounded-2xl border sm:col-span-2" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)' }}>
                         <MapPin size={18} style={{ color: 'var(--mw-primary)' }} className="mt-0.5" />
                         <div>
-                          <span className="text-[10px] font-bold uppercase block" style={{ color: 'var(--mw-text-muted)' }}>Address</span>
-                          <span className="text-sm font-bold" style={{ color: 'var(--mw-text)' }}>{ecomData.address}</span>
+                          <span className="text-[10px] font-bold uppercase block" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.contactAddress.replace(/:$/, '')}</span>
+                          <span className="text-sm font-bold" style={{ color: 'var(--mw-text)' }}>{localizedContactAddress}</span>
                         </div>
                       </div>
                     )}
@@ -927,12 +760,12 @@ export default function MarwanTemplate({
                 <div className="lg:col-span-5 flex flex-col gap-4">
                   {Object.keys(contactLinks).length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {contactLinks.facebook && <a href={contactLinks.facebook} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>Facebook</a>}
-                      {contactLinks.instagram && <a href={contactLinks.instagram} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>Instagram</a>}
-                      {contactLinks.whatsapp && <a href={contactLinks.whatsapp} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>WhatsApp</a>}
-                      {contactLinks.twitter && <a href={contactLinks.twitter} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>Twitter / X</a>}
-                      {contactLinks.tiktok && <a href={contactLinks.tiktok} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>TikTok</a>}
-                      {contactLinks.linkedin && <a href={contactLinks.linkedin} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>LinkedIn</a>}
+                      {contactLinks.facebook && <a href={contactLinks.facebook} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>{t.sections.facebook}</a>}
+                      {contactLinks.instagram && <a href={contactLinks.instagram} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>{t.sections.instagram}</a>}
+                      {contactLinks.whatsapp && <a href={contactLinks.whatsapp} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>{t.sections.whatsapp}</a>}
+                      {contactLinks.twitter && <a href={contactLinks.twitter} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>{t.sections.twitter}</a>}
+                      {contactLinks.tiktok && <a href={contactLinks.tiktok} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>{t.sections.tiktok}</a>}
+                      {contactLinks.linkedin && <a href={contactLinks.linkedin} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-xl border hover:opacity-80 transition-opacity" style={{ background: 'var(--mw-surface-2)', borderColor: 'var(--mw-border)', color: 'var(--mw-text)' }}>{t.sections.linkedin}</a>}
                     </div>
                   )}
                 </div>
@@ -959,13 +792,13 @@ export default function MarwanTemplate({
                     <span>{displayStoreName}</span>
                   </div>
                   <p className="text-sm leading-relaxed max-w-[320px]" style={{ color: 'var(--mw-text-muted)' }}>
-                    {footerData.bio || t?.sections?.qualityProductsFooter || 'Quality products, nationwide fast delivery, and a shopping experience built around you.'}
+                    {getLocalized(footerData, 'bio') || t.sections.qualityProductsFooter}
                   </p>
                 </div>
 
                 {showCategories && categories.length > 0 && (
                   <div>
-                    <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t?.sections?.categoriesLabel || 'Categories'}</h5>
+                    <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t.sections.categoriesLabel}</h5>
                     <ul className="space-y-2.5">
                       {categories.slice(0, 6).map((category) => (
                         <li key={category._id}>
@@ -979,11 +812,11 @@ export default function MarwanTemplate({
                 )}
 
                 <div>
-                  <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t?.sections?.supportLabel || 'Navigation'}</h5>
+                  <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t.sections.supportLabel}</h5>
                   <ul className="space-y-2.5">
                     <li><Link href="/categories" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t?.nav?.categories || 'All Categories'}</Link></li>
                     <li><Link href="/product" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t?.sections?.allProducts || 'All Products'}</Link></li>
-                    {brands.length > 0 && <li><Link href="#brands" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>Brand Partners</Link></li>}
+                    {brands.length > 0 && <li><Link href="#brands" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t.sections.officialPartners}</Link></li>}
                     <li><Link href="#why-us" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t?.nav?.whyUs || 'Why Choose Us'}</Link></li>
                     <li><Link href="/order-tracking" className="text-sm hover:underline transition-colors" style={{ color: 'var(--mw-text-muted)' }}>{t?.nav?.trackOrder || 'Track Order'}</Link></li>
                   </ul>
@@ -991,19 +824,19 @@ export default function MarwanTemplate({
 
                 {hasContactInfo && (
                   <div>
-                    <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t?.sections?.contact || 'Contact Info'}</h5>
+                    <h5 className="text-[11px] font-extrabold tracking-[0.14em] uppercase mb-4">{t.sections.contact}</h5>
                     <ul className="space-y-2.5 text-sm" style={{ color: 'var(--mw-text-muted)' }}>
-                      {ecomData.name && <li className="font-bold" style={{ color: 'var(--mw-text)' }}>{ecomData.name}</li>}
+                      {localizedContactName && <li className="font-bold" style={{ color: 'var(--mw-text)' }}>{localizedContactName}</li>}
                       {ecomData.phone && <li><a href={`tel:${ecomData.phone}`} className="hover:underline">{ecomData.phone}</a></li>}
                       {ecomData.email && <li><a href={`mailto:${ecomData.email}`} className="hover:underline">{ecomData.email}</a></li>}
-                      {ecomData.address && <li className="text-xs">{ecomData.address}</li>}
+                      {localizedContactAddress && <li className="text-xs">{localizedContactAddress}</li>}
                     </ul>
                   </div>
                 )}
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-2 py-6 text-xs" style={{ color: 'var(--mw-text-muted)' }}>
-                <span>© {new Date().getFullYear()} {displayStoreName}. {footerData.copyright || t?.sections?.allRightsReserved || 'All rights reserved.'}</span>
+                <span>© {new Date().getFullYear()} {displayStoreName}. {getLocalized(footerData, 'copyright') || t.sections.allRightsReserved}</span>
                 <span>{t?.sections?.madeWithCare || 'Verified E-Commerce Store'}</span>
               </div>
             </div>

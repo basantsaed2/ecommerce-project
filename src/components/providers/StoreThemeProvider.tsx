@@ -75,20 +75,22 @@ const StoreThemeContext = createContext<StoreThemeContextType>({
     isUpdating: false,
     themeMode: 'light',
     toggleTheme: () => {},
-    language: 'en',
+    language: 'ar',
     toggleLanguage: () => {},
 });
 
 export function StoreThemeProvider({
     children,
     initialSettings,
+    initialLanguage = 'ar',
 }: {
     children: React.ReactNode;
     initialSettings?: StoreSettings;
+    initialLanguage?: StoreLanguage;
 }) {
     const queryClient = useQueryClient();
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
-    const [language, setLanguage] = useState<StoreLanguage>('en');
+    const [language, setLanguage] = useState<StoreLanguage>(initialLanguage);
 
     useEffect(() => {
         const savedTheme = window.localStorage.getItem('store-theme-mode');

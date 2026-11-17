@@ -30,6 +30,7 @@ import InstagramFeed from './social/InstagramFeed';
 import ShoppingGuides from './blog/ShoppingGuides';
 import FAQSection from './faq/FAQSection';
 import DefaultNewsletter from './newsletter/DefaultNewsletter';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import DefaultFooter from './footer/DefaultFooter';
 import ModernFooter from './footer/ModernFooter';
@@ -48,6 +49,7 @@ export default function DynamicSectionRenderer({
     className = "",
 }: DynamicSectionRendererProps) {
     const { sections: contextSections, templateSlug: globalTemplateSlug } = useStoreSettings();
+    const { t, getLocalized } = useTranslation();
 
     const sectionsToRender = propSections || contextSections || [];
     const featuresSection = sectionsToRender.find((section) => section?.key?.toLowerCase() === 'features');
@@ -87,8 +89,8 @@ export default function DynamicSectionRenderer({
         // فصل الـ key عن بقية الـ props
         const componentKey = `${section.key}-${index}`;
         const sectionProps = {
-            title: section.title,
-            subtitle: section.subtitle,
+            title: getLocalized(section, 'title') || section.title,
+            subtitle: getLocalized(section, 'subtitle') || section.subtitle,
             config: section.config,
             searchQuery,
         };
@@ -126,11 +128,11 @@ export default function DynamicSectionRenderer({
             case 'best-sellers':
             case 'bestsellers':
             case 'best-seller':
-                return <BestSellersSection key={componentKey} {...sectionProps} title={section.title || "Best Sellers"} />;
+                return <BestSellersSection key={componentKey} {...sectionProps} title={section.title || t.sections.bestSellers} />;
 
             case 'new-arrivals':
             case 'newarrivals':
-                return <DefaultProducts key={componentKey} {...sectionProps} title={section.title || "New Arrivals"} />;
+                return <DefaultProducts key={componentKey} {...sectionProps} title={section.title || t.sections.newArrivalsHeading} />;
 
             case 'promo-banner':
             case 'offer':

@@ -10,6 +10,8 @@ import type { StoreSettings } from '@/types/storeSettings';
 import "./globals.css";
 import { Toaster } from 'sonner';
 import axiosInstance from "@/api/axiosInstance";
+import { cookies } from 'next/headers';
+import { DEFAULT_LANGUAGE, LANGUAGE_COOKIE } from '@/utils/language';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,14 +28,18 @@ const getInitialStoreSettings = async (): Promise<StoreSettings | undefined> => 
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-    const initialSettings = await getInitialStoreSettings();
+    const [initialSettings, cookieStore] = await Promise.all([
+        getInitialStoreSettings(),
+        cookies(),
+    ]);
+    const initialLanguage = cookieStore.get(LANGUAGE_COOKIE)?.value === 'en' ? 'en' : DEFAULT_LANGUAGE;
 
     return (
-        <html lang="en" suppressHydrationWarning>
+        <html lang={initialLanguage} dir={initialLanguage === 'ar' ? 'rtl' : 'ltr'} suppressHydrationWarning>
             <body suppressHydrationWarning>
                 <StoreProvider>
                     <QueryProvider>
-                        <StoreThemeProvider initialSettings={initialSettings}>
+                        <StoreThemeProvider initialSettings={initialSettings} initialLanguage={initialLanguage}>
                             <TenantGuard>
                                 <CartInitializer>
                                     <Toaster position="top-right" richColors closeButton duration={1500} />

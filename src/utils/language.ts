@@ -1,7 +1,7 @@
 import { getCookie, setCookie } from 'cookies-next';
 import type { StoreLanguage } from '@/types/storeSettings';
 
-export const DEFAULT_LANGUAGE: StoreLanguage = 'en';
+export const DEFAULT_LANGUAGE: StoreLanguage = 'ar';
 export const LANGUAGE_COOKIE = 'store-language';
 
 export const getCurrentLanguage = (): StoreLanguage => {
