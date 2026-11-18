@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useGet } from '@/hooks/useGet';
 import { Product, ProductOption, SingleApiResponse } from '@/types/api';
 import { Loader2, X, Plus, Minus, ShoppingCart, Zap, Tag, Box, Award, Star } from 'lucide-react';
@@ -219,9 +220,9 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         router.push('/cart');
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || typeof document === 'undefined') return null;
 
-    return (
+    return createPortal(
         <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
             onClick={onClose}
@@ -433,6 +434,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                     </>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

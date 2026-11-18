@@ -439,21 +439,21 @@ export default function ProductDetailClient() {
                                 )}
                             </div>
 
-                            <h1 className="text-3xl md:text-4xl font-black text-primary leading-tight mb-2">
+                            <h1 className="text-3xl md:text-4xl font-black text-[var(--color-text)] leading-tight mb-2">
                                 {getLocalized(product)}
                             </h1>
                             {product.ar_name && product.name !== product.ar_name && (
-                                <p className="text-gray-700 font-semibold text-sm mb-3">
+                                <p className="text-[var(--color-text-muted)] font-semibold text-sm mb-3">
                                     {getLocalized(product)}
                                 </p>
                             )}
 
                             {/* Ratings & Status */}
-                            <div className="flex items-center gap-4 text-xs font-bold text-gray-500">
+                            <div className="flex items-center gap-4 text-xs font-bold text-[var(--color-text-muted)]">
                                 <div className="flex items-center gap-1 text-amber-500">
                                     <Star size={16} className="fill-current" />
-                                    <span className="text-gray-900 font-black">4.8</span>
-                                    <span className="text-gray-600">({t.product.verifiedProduct})</span>
+                                    <span className="text-[var(--color-text)] font-black">4.8</span>
+                                    <span className="text-[var(--color-text-muted)]">({t.product.verifiedProduct})</span>
                                 </div>
                                 <span>•</span>
                                 <div className="flex items-center gap-1 text-emerald-600">
@@ -466,12 +466,12 @@ export default function ProductDetailClient() {
                         {/* Price Card */}
                         <div className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-sm">
                             <div className="flex items-baseline gap-3 mb-2 flex-wrap">
-                                <span className="text-4xl md:text-5xl font-black text-primary tracking-tight">
+                                <span className="text-4xl md:text-5xl font-black text-[var(--color-text)] tracking-tight">
                                     {formatPrice(priceInfo.finalPrice)}
                                 </span>
 
                                 {priceInfo.hasDiscount && (
-                                    <span className="text-xl font-bold text-gray-600 line-through">
+                                    <span className="text-xl font-bold text-[var(--color-text-muted)] line-through">
                                         {formatPrice(priceInfo.mainPrice)}
                                     </span>
                                 )}

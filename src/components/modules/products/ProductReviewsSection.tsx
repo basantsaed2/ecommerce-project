@@ -109,7 +109,7 @@ export default function ProductReviewsSection() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 py-8 items-center border-b border-gray-100">
                 {/* Average Score */}
                 <div className="md:col-span-4 flex flex-col items-center justify-center p-6 bg-gray-50 rounded-2xl text-center">
-                    <span className="text-5xl font-black text-primary mb-2">4.8</span>
+                    <span className="text-5xl font-black text-[var(--color-text)] mb-2">4.8</span>
                     <div className="flex items-center gap-1 text-amber-400 mb-2">
                         {[...Array(5)].map((_, i) => (
                             <Star key={i} size={18} fill="currentColor" />
@@ -221,7 +221,7 @@ export default function ProductReviewsSection() {
                     <div key={rev.id} className="py-6 space-y-2">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <span className="font-black text-sm text-primary">{rev.author}</span>
+                                <span className="font-black text-sm text-[var(--color-text)]">{rev.author}</span>
                                 {rev.verified && (
                                     <span className="flex items-center gap-1 text-[11px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
                                         <CheckCircle2 size={12} /> {t.sections.verifiedBuyer}
