@@ -32,12 +32,6 @@ export default function TenantGuard({ children }: { children: React.ReactNode })
                     <p className="text-gray-600 mb-6">
                         {t.sections.ecommerceUnavailableDesc}
                     </p>
-                    <a
-                        href={process.env.NEXT_PUBLIC_ADMIN_LOGIN_URL || '#'}
-                        className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                        {t.sections.goToAdminLogin}
-                    </a>
                 </div>
             </div>
         );
