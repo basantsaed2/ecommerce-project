@@ -43,6 +43,11 @@ export interface ProductOption {
     price?: number;
     final_price?: number;
     price_after_discount?: number;
+    image?: string;
+    images?: string[];
+    gallery?: string[];
+    color?: string;
+    hex?: string;
 }
 
 export interface ProductVariation {
@@ -73,6 +78,7 @@ export interface Sku {
     quantity: number;
     option_ids: string[];
     gallery?: string[];
+    image?: string;
 }
 
 export interface ProductBrand {

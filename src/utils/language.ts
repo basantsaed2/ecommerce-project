@@ -8,7 +8,20 @@ export const getCurrentLanguage = (): StoreLanguage => {
     if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
 
     const language = getCookie(LANGUAGE_COOKIE);
-    return language === 'ar' ? 'ar' : DEFAULT_LANGUAGE;
+    if (language === 'en' || language === 'ar') {
+        return language;
+    }
+
+    try {
+        const localLang = window.localStorage?.getItem(LANGUAGE_COOKIE);
+        if (localLang === 'en' || localLang === 'ar') {
+            return localLang;
+        }
+    } catch {
+        // Ignore localStorage errors
+    }
+
+    return DEFAULT_LANGUAGE;
 };
 
 export const setCurrentLanguage = (language: StoreLanguage) => {

@@ -14,7 +14,14 @@ import { RootState, AppDispatch } from '@/store/store';
 import { toast } from 'sonner';
 import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 import Link from 'next/link';
-import { getProductAvailableStock, getProductPriceInfo } from '@/utils/productUtils';
+import {
+    getProductAvailableStock,
+    getProductPriceInfo,
+    findImageForOption,
+    isColorVariation,
+    getColorHex,
+    preloadProductImageColors
+} from '@/utils/productUtils';
 import SizeGuideDialog from '@/components/modules/products/SizeGuideDialog';
 import ProductTabsInfo from '@/components/modules/products/ProductTabsInfo';
 import FrequentlyBoughtTogether from '@/components/modules/products/FrequentlyBoughtTogether';
@@ -69,19 +76,36 @@ export default function ProductDetailClient() {
         return typeof sku.quantity === 'number' ? Math.max(0, sku.quantity) : productQuantity;
     };
 
+    // Preload image colors for smart color-matching
+    useEffect(() => {
+        if (product) {
+            preloadProductImageColors(product);
+        }
+    }, [product]);
+
     // Initialize selected options from the first in-stock SKU
     useEffect(() => {
         if (hasAvailableStock && product?.variations && product.variations.length > 0 && Object.keys(selectedOptions).length === 0) {
             const inStockSku = product.skus?.find(sku => getSkuStock(sku) > 0);
             const initialOptions: Record<string, string> = {};
+            let initialMatchedOption: ProductOption | null = null;
+            let initialMatchedVariation: any = null;
             
             if (inStockSku) {
                 product.variations.forEach(v => {
                     const matchedOption = v.options.find(opt => inStockSku.option_ids.includes(opt._id));
                     if (matchedOption) {
                         initialOptions[v._id] = matchedOption._id;
+                        if (!initialMatchedOption || isColorVariation(v)) {
+                            initialMatchedOption = matchedOption;
+                            initialMatchedVariation = v;
+                        }
                     } else if (v.options.length > 0) {
                         initialOptions[v._id] = v.options[0]._id;
+                        if (!initialMatchedOption) {
+                            initialMatchedOption = v.options[0];
+                            initialMatchedVariation = v;
+                        }
                     }
                 });
             } else {
@@ -89,12 +113,24 @@ export default function ProductDetailClient() {
                     const firstInStockOption = v.options.find(option => (option.quantity ?? productQuantity) > 0);
                     if (firstInStockOption) {
                         initialOptions[v._id] = firstInStockOption._id;
+                        if (!initialMatchedOption || isColorVariation(v)) {
+                            initialMatchedOption = firstInStockOption;
+                            initialMatchedVariation = v;
+                        }
                     }
                 });
             }
             setSelectedOptions(initialOptions);
+
+            // Automatically display the image matching the initial color/option
+            if (initialMatchedOption) {
+                const initialImg = findImageForOption(product, initialMatchedOption, initialMatchedVariation, inStockSku);
+                if (initialImg) {
+                    setSelectedImage(initialImg);
+                }
+            }
         }
-    }, [hasAvailableStock, product, selectedOptions]);
+    }, [hasAvailableStock, product, selectedOptions, productQuantity]);
 
     // Match selected options to active SKU
     const currentSkuObj = useMemo(() => {
@@ -143,6 +179,18 @@ export default function ProductDetailClient() {
         }) ?? 0;
         setSelectedOptions(nextSelections);
         setQuantity(currentQuantity => Math.min(currentQuantity, Math.max(1, nextStock)));
+
+        // Automatically switch the product image to match the clicked option/color
+        const variation = product?.variations?.find(v => v._id === variationId);
+        const option = variation?.options?.find(o => o._id === optionId);
+        if (option) {
+            const selectedOptionIds = Object.values(nextSelections);
+            const matchingSku = product?.skus?.find(s => selectedOptionIds.every(id => s.option_ids.includes(id))) ?? null;
+            const matchedImg = findImageForOption(product, option, variation, matchingSku);
+            if (matchedImg) {
+                setSelectedImage(matchedImg);
+            }
+        }
     };
 
     const handleWishlistToggle = () => {
@@ -517,6 +565,8 @@ export default function ProductDetailClient() {
                                             {variation.options.map(option => {
                                                 const optionInStock = isOptionInStock(option._id);
                                                 const isSelected = selectedOptions[variation._id] === option._id;
+                                                const isColor = isColorVariation(variation);
+                                                const colorHex = isColor ? getColorHex(option.name, option.ar_name, option.color || option.hex) : null;
                                                 return (
                                                     <button
                                                         key={option._id}
@@ -539,7 +589,16 @@ export default function ProductDetailClient() {
                                                                 {option.quantity}
                                                             </span>
                                                         )}
-                                                        <span className={!optionInStock ? 'line-through' : undefined}>{getLocalized(option)}</span>
+                                                        <div className="flex items-center gap-1.5">
+                                                            {colorHex && (
+                                                                <span
+                                                                    className={`w-3.5 h-3.5 rounded-full border shadow-xs shrink-0 ${isSelected ? 'border-white ring-1 ring-white/60' : 'border-black/20'}`}
+                                                                    style={{ backgroundColor: colorHex }}
+                                                                    aria-hidden="true"
+                                                                />
+                                                            )}
+                                                            <span className={!optionInStock ? 'line-through' : undefined}>{getLocalized(option)}</span>
+                                                        </div>
                                                         {!optionInStock && <span className="text-[9px] opacity-70">{t.product.soldOut}</span>}
                                                     </button>
                                                 );

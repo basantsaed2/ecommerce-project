@@ -15,7 +15,7 @@ async function fetchTenantInfo() {
 export default function TenantGuard({ children }: { children: React.ReactNode }) {
     const { t } = useTranslation();
     const { data, isLoading } = useQuery({
-        queryKey: ['tenant-info'],
+        queryKey: ['tenant-info', getCurrentLanguage()],
         queryFn: fetchTenantInfo,
         staleTime: Infinity,
     });

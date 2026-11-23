@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Product } from '@/types/api';
 import { ShoppingCart, Heart, Eye, Zap, Tag, Sparkles, Box } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -10,7 +10,7 @@ import ProductDialog from './ProductDialog';
 import { toast } from 'sonner';
 import { useGetWishlist, useToggleWishlist } from '@/hooks/useWishlist';
 import { useRouter } from 'next/navigation';
-import { getProductPriceInfo } from '@/utils/productUtils';
+import { getProductPriceInfo, isColorVariation, getColorHex, findImageForOption } from '@/utils/productUtils';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -26,8 +26,21 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
     const router = useRouter();
     const token = useSelector((state: RootState) => state.auth.token);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [selectedColorOptionId, setSelectedColorOptionId] = useState<string | null>(null);
 
     const hasVariations = product.variations && product.variations.length > 0;
+    const colorVariation = product.variations?.find(v => isColorVariation(v));
+
+    const cardImage = useMemo(() => {
+        if (selectedColorOptionId && colorVariation) {
+            const option = colorVariation.options.find(o => o._id === selectedColorOptionId);
+            if (option) {
+                const matchedImg = findImageForOption(product, option, colorVariation);
+                if (matchedImg) return matchedImg;
+            }
+        }
+        return product.image || product.gallery_product?.[0] || logoUrl || undefined;
+    }, [selectedColorOptionId, colorVariation, product, logoUrl]);
 
     const { data: wishlistData } = useGetWishlist(!!token);
     const { mutate: toggleWishlist, isPending: isTogglingWishlist } = useToggleWishlist();
@@ -183,7 +196,7 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
                     </div>
 
                     <img
-                        src={product.image || product.gallery_product?.[0] || logoUrl || undefined}
+                        src={cardImage}
                         alt={getLocalized(product) || t.nav.product}
                         loading="lazy"
                         className={`max-w-full max-h-full object-contain transition-transform duration-700 ease-out group-hover:scale-110 ${
@@ -232,15 +245,43 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
                         </p>
                     )}
 
-                    {/* Variation Info Badges */}
+                    {/* Variation Info Badges & Color Swatches */}
                     {hasVariations && (
-                        <div className="mt-1 mb-3 flex flex-wrap gap-1">
-                            {product.variations!.map((v) => (
-                                <span key={v._id} className="text-[9px] font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface)] px-2 py-0.5 rounded border border-[var(--color-border)] flex items-center gap-1">
-                                    <Box size={10} className="text-[var(--color-text-muted)]" />
-                                    {getLocalized(v)}: {v.options?.length || 0}
-                                </span>
-                            ))}
+                        <div className="mt-1 mb-3 flex flex-col gap-1.5">
+                            {colorVariation && colorVariation.options && colorVariation.options.length > 0 && (
+                                <div className="flex items-center gap-1.5 flex-wrap py-0.5">
+                                    {colorVariation.options.map(option => {
+                                        const colorHex = getColorHex(option.name, option.ar_name, option.color || option.hex);
+                                        if (!colorHex) return null;
+                                        const isSelected = selectedColorOptionId === option._id;
+                                        return (
+                                            <button
+                                                key={option._id}
+                                                type="button"
+                                                title={getLocalized(option)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedColorOptionId(option._id);
+                                                }}
+                                                className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                                                    isSelected
+                                                        ? 'ring-2 ring-primary ring-offset-1 scale-110 border-black/30'
+                                                        : 'border-black/20 hover:scale-110 opacity-75 hover:opacity-100'
+                                                }`}
+                                                style={{ backgroundColor: colorHex }}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            <div className="flex flex-wrap gap-1">
+                                {product.variations!.map((v) => (
+                                    <span key={v._id} className="text-[9px] font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface)] px-2 py-0.5 rounded border border-[var(--color-border)] flex items-center gap-1">
+                                        <Box size={10} className="text-[var(--color-text-muted)]" />
+                                        {getLocalized(v)}: {v.options?.length || 0}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     )}
 

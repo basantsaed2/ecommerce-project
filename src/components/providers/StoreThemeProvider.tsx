@@ -130,7 +130,7 @@ export function StoreThemeProvider({
         isError,
         refetch,
     } = useQuery({
-        queryKey: ['store-settings'],
+        queryKey: ['store-settings', language],
         queryFn: getStoreSettingsApi,
         initialData: initialSettings
             ? {
