@@ -74,7 +74,6 @@ export default function ProductCard({ product, badge }: ProductCardProps) {
         dispatch(addItem({ product, quantity: 1 }));
         await dispatch(syncCart());
         toast.success(`${getLocalized(product)} ${t.product.addedToCartNamed}`);
-        router.push('/cart');
     };
 
     const handleBuyNow = async (e: React.MouseEvent) => {

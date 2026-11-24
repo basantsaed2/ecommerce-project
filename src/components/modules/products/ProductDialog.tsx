@@ -217,7 +217,6 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         dispatch(syncCart());
         toast.success(t.product.addedToCartSimple);
         onClose();
-        router.push('/cart');
     };
 
     const handleBuyNow = async () => {
