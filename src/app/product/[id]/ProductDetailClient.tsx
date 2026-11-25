@@ -30,6 +30,7 @@ import RelatedProducts from '@/components/modules/products/RelatedProducts';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 import { resolveCartVariantId } from '@/utils/cartUtils';
+import axiosInstance from '@/api/axiosInstance';
 
 export default function ProductDetailClient() {
     const params = useParams<{ id?: string }>();
@@ -44,6 +45,8 @@ export default function ProductDetailClient() {
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [optionGallery, setOptionGallery] = useState<string[]>([]);
+    const [isFetchingGallery, setIsFetchingGallery] = useState(false);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [isBuyingNow, setIsBuyingNow] = useState(false);
     const [isSizeGuideOpen, setSizeGuideOpen] = useState(false);
@@ -82,6 +85,45 @@ export default function ProductDetailClient() {
             preloadProductImageColors(product);
         }
     }, [product]);
+
+    // Fetch matching gallery images whenever options change
+    useEffect(() => {
+        const optionIds = Object.values(selectedOptions).filter(Boolean);
+        if (!product?._id || optionIds.length === 0) {
+            setOptionGallery([]);
+            return;
+        }
+
+        let isCancelled = false;
+        setIsFetchingGallery(true);
+
+        axiosInstance.post('/product/gallery', {
+            options: optionIds,
+            productId: product._id
+        }).then((response) => {
+            if (isCancelled) return;
+            const gallery = response?.data?.data?.gallery;
+            if (Array.isArray(gallery) && gallery.length > 0) {
+                setOptionGallery(gallery);
+                setSelectedImage(gallery[0]);
+            } else {
+                setOptionGallery([]);
+            }
+        }).catch((err) => {
+            // Silently ignore or fallback
+            if (!isCancelled) {
+                console.debug('No specific gallery for options:', err);
+            }
+        }).finally(() => {
+            if (!isCancelled) {
+                setIsFetchingGallery(false);
+            }
+        });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [product?._id, selectedOptions]);
 
     // Initialize selected options from the first in-stock SKU
     useEffect(() => {
@@ -323,13 +365,37 @@ export default function ProductDetailClient() {
         );
     }
 
-    const galleryImages = (product.gallery_product && product.gallery_product.length > 0)
-        ? product.gallery_product
-        : [];
-    const allImages = [product.image, ...galleryImages, logoUrl]
-        .filter((image): image is string => Boolean(image));
+    // Combine base product images with option-specific gallery images, removing duplicates
+    const baseGallery = Array.isArray(product.gallery_product) ? product.gallery_product : [];
+    const allImages = useMemo(() => {
+        const list: string[] = [];
+        
+        // If option-specific gallery returned images, prioritize them at the beginning
+        if (optionGallery.length > 0) {
+            optionGallery.forEach(img => {
+                if (img && !list.includes(img)) list.push(img);
+            });
+        }
+        
+        // Add main product image
+        if (product.image && !list.includes(product.image)) {
+            list.push(product.image);
+        }
+        
+        // Add base product gallery
+        baseGallery.forEach(img => {
+            if (img && !list.includes(img)) list.push(img);
+        });
+        
+        // Fallback to logo if completely empty
+        if (list.length === 0 && logoUrl) {
+            list.push(logoUrl);
+        }
+        
+        return list;
+    }, [optionGallery, product.image, baseGallery, logoUrl]);
 
-    const displayedImage = selectedImage || product.image || galleryImages[0] || logoUrl || undefined;
+    const displayedImage = selectedImage || allImages[0] || product.image || logoUrl || undefined;
     const inStock = currentStock > 0;
     const totalPrice = (priceInfo.finalPrice * quantity).toLocaleString();
 
@@ -451,19 +517,27 @@ export default function ProductDetailClient() {
 
                         {/* Thumbnails */}
                         {allImages.length > 1 && (
-                            <div className="flex gap-3 flex-wrap">
-                                {allImages.map((img, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => setSelectedImage(img)}
-                                        className={`w-16 h-16 rounded-2xl border-2 overflow-hidden bg-white p-1.5 transition-all ${(selectedImage === img || (!selectedImage && img === product.image))
-                                            ? 'border-primary shadow-md scale-105'
-                                            : 'border-transparent hover:border-gray-200'
+                            <div className="flex gap-3 flex-wrap items-center pt-1">
+                                {allImages.map((img, idx) => {
+                                    const isCurrentActive = selectedImage === img || (!selectedImage && img === allImages[0]);
+                                    return (
+                                        <button
+                                            key={`${img}-${idx}`}
+                                            onClick={() => setSelectedImage(img)}
+                                            className={`relative w-18 h-18 sm:w-20 sm:h-20 rounded-2xl border-2 overflow-hidden bg-white p-1.5 transition-all cursor-pointer ${
+                                                isCurrentActive
+                                                    ? 'border-primary shadow-lg ring-2 ring-primary/20 scale-105'
+                                                    : 'border-gray-200/80 hover:border-gray-300 opacity-80 hover:opacity-100 hover:scale-102'
                                             }`}
-                                    >
-                                        <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-contain" />
-                                    </button>
-                                ))}
+                                        >
+                                            <img
+                                                src={img}
+                                                alt={`Product thumbnail ${idx + 1}`}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

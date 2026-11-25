@@ -16,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import StoreLoader from '@/components/common/StoreLoader';
 import { useTranslation } from '@/hooks/useTranslation';
+import GuestInfoDialog from '@/components/modules/checkout/GuestInfoDialog';
 import { getCartItemVariations } from '@/utils/cartUtils';
 
 interface BostaCityOption {
@@ -160,8 +161,14 @@ export default function CheckoutPage() {
     const [installmentResult, setInstallmentResult] = useState<any>(null);
     const [orderReference, setOrderReference] = useState<string>('');
 
-    // Add Address Dialog state
-    const [showAddAddressDialog, setShowAddAddressDialog] = useState(false);
+      // State for guest info dialog
+  const [showGuestInfoDialog, setShowGuestInfoDialog] = useState(false);
+  const [guestInfo, setGuestInfo] = useState({ name: '', phone: '' });
+  // Add Address Dialog state
+  const [showAddAddressDialog, setShowAddAddressDialog] = useState(false);
+
+
+
     const [newAddrCountry, setNewAddrCountry] = useState('');
     const [newAddrCity, setNewAddrCity] = useState('');
     const [newAddrZone, setNewAddrZone] = useState('');
@@ -544,7 +551,14 @@ export default function CheckoutPage() {
         });
     };
 
-    const handleCheckout = () => {
+    const handleCheckout = (overrideGuest?: { name: string; phone: string }) => {
+    // إذا كان الزائر (guest) ولم يتم توفير اسم أو هاتف، افتح حوار المعلومات
+    const resolvedGuest = overrideGuest || guestInfo;
+    if (!token && (!resolvedGuest.name.trim() || !resolvedGuest.phone.trim())) {
+      setShowGuestInfoDialog(true);
+      return;
+    }
+
         if (selectedOrderType === 'pickup') {
             if (!selectedWarehouse) {
                 toast.error(t.checkout.orderTypePickupError);
@@ -593,6 +607,12 @@ export default function CheckoutPage() {
             paymentType: paymentType === 'installment' ? 'installment' : 'full',
             shippingCost: shippingCost,
         };
+
+        // Add guest customer info to payload
+        if (!token) {
+            payload.customer_name = resolvedGuest.name.trim();
+            payload.customer_phone = resolvedGuest.phone.trim();
+        }
 
         if (paymentType === 'installment') {
             payload.installment = {
@@ -763,6 +783,7 @@ export default function CheckoutPage() {
     if (items.length === 0 && !isSuccess) return null;
 
     return (
+        <>
         <div className="store-themed-page w-full px-4 md:px-12 py-6 pb-24">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
                 <h1 className="text-4xl font-black text-primary tracking-tight">{t.checkout.secureCheckoutTitle}</h1>
@@ -1416,8 +1437,8 @@ export default function CheckoutPage() {
                         <h2 className="text-2xl font-black mb-8 italic tracking-tighter">{t.checkout.orderSummary}</h2>
 
                         <div className="space-y-4 mb-8 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
-                            {items.map((item: any) => (
-                                <div key={`${item.product._id}-${item.variant?._id || 'no-variant'}`} className="flex gap-4 items-center bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+                            {items.map((item: any, i: number) => (
+                                <div key={`${item.product._id}-${item.variant?._id || 'no-variant'}-${i}`} className="flex gap-4 items-center bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
                                     <div className="w-16 h-16 bg-white rounded-xl p-2 shrink-0">
                                         <img src={item.product.image || item.product.gallery_product?.[0] || logoUrl || undefined} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply" />
                                     </div>
@@ -1517,7 +1538,7 @@ export default function CheckoutPage() {
                         </div>
 
                         <button
-                            onClick={handleCheckout}
+                            onClick={() => handleCheckout()}
                             disabled={isPlacingOrder || installmentBlocked || (selectedOrderType === 'pickup' ? !selectedWarehouse : (isLoadingShippingMethod || isShippingMethodError || (isBostaShipping ? (!guestCity || !guestZone || !guestDistrict || !guestStreet || !guestBuildingNumber) : (token ? !selectedAddress : (!guestCountry || !guestCity || !guestZone || !guestStreet || !guestBuildingNumber)))))}
                             className="w-full bg-primary text-[var(--color-on-primary)] py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:brightness-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20 border-2 border-primary"
                         >
@@ -1536,5 +1557,20 @@ export default function CheckoutPage() {
                 </div>
             </div>
         </div>
+
+        {/* ── Guest Info Dialog ── */}
+        {showGuestInfoDialog && (
+            <GuestInfoDialog
+                isOpen={showGuestInfoDialog}
+                onClose={() => setShowGuestInfoDialog(false)}
+                onConfirm={(name, phone) => {
+                    setGuestInfo({ name, phone });
+                    setShowGuestInfoDialog(false);
+                    // pass values directly to avoid stale closure
+                    handleCheckout({ name, phone });
+                }}
+            />
+        )}
+        </>
     );
 }
