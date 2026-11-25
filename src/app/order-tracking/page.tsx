@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, Package, MapPin, Truck, CheckCircle, Clock, ShoppingBag, CreditCard, Calendar, Store } from 'lucide-react';
+import { Search, Package, MapPin, Truck, CheckCircle, Clock, ShoppingBag, CreditCard, Calendar, Store, AlertCircle, RotateCcw, XCircle } from 'lucide-react';
 import axiosInstance from '@/api/axiosInstance';
 import { toast } from 'sonner';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getOrderStatusLabel } from '@/utils/shipping/bostaStatus';
 
 export default function OrderTrackingPage() {
     const [referenceId, setReferenceId] = useState('');
@@ -52,10 +53,17 @@ export default function OrderTrackingPage() {
     }, []);
 
     // نظام المراحل الجمالي المتطور (Stepper)
-    const steps = ['pending', 'processing', 'shipped', 'delivered'];
+    // يدعم الحالات المعتمدة من بوسطة والباك إند: pending -> processing -> out_for_delivery / shipped -> delivered
+    const steps = ['pending', 'processing', 'out_for_delivery', 'delivered'];
     
     const getCurrentStepIndex = (currentStatus: string) => {
-        return steps.indexOf(currentStatus?.toLowerCase() || 'pending');
+        const s = currentStatus?.toLowerCase() || 'pending';
+        if (s === 'shipped') return 2; // mapped to out_for_delivery step
+        if (s === 'out_for_delivery') return 2;
+        if (s === 'delivered') return 3;
+        if (s === 'processing') return 1;
+        if (s === 'pending') return 0;
+        return -1;
     };
 
     const getStatusLabel = (status: string) => {
@@ -63,9 +71,13 @@ export default function OrderTrackingPage() {
             case 'pending': return t.tracking.orderPlaced;
             case 'processing': return t.tracking.processing;
             case 'shipped': return t.tracking.shipped;
+            case 'out_for_delivery': return t.tracking.outForDelivery || (language === 'ar' ? 'خرج مع المندوب للتوصيل' : 'Out for Delivery');
             case 'delivered': return t.tracking.delivered;
+            case 'returned': return t.tracking.returned || (language === 'ar' ? 'مرتجع' : 'Returned');
+            case 'failed_to_deliver': return t.tracking.failedToDeliver || (language === 'ar' ? 'تعذر التوصيل' : 'Delivery Failed');
+            case 'canceled':
             case 'cancelled': return t.tracking.cancelled;
-            default: return status;
+            default: return getOrderStatusLabel(status, language === 'ar');
         }
     };
 
@@ -73,8 +85,13 @@ export default function OrderTrackingPage() {
         switch (status?.toLowerCase()) {
             case 'pending': return { bg: 'bg-amber-50 text-amber-700 border-amber-200', icon: <Clock className="text-amber-500" size={20} /> };
             case 'processing': return { bg: 'bg-blue-50 text-blue-700 border-blue-200', icon: <Package className="text-blue-500" size={20} /> };
-            case 'shipped': return { bg: 'bg-purple-50 text-purple-700 border-purple-200', icon: <Truck className="text-purple-500" size={20} /> };
+            case 'shipped':
+            case 'out_for_delivery': return { bg: 'bg-purple-50 text-purple-700 border-purple-200', icon: <Truck className="text-purple-500" size={20} /> };
             case 'delivered': return { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: <CheckCircle className="text-emerald-500" size={20} /> };
+            case 'returned': return { bg: 'bg-orange-50 text-orange-700 border-orange-200', icon: <RotateCcw className="text-orange-500" size={20} /> };
+            case 'failed_to_deliver': return { bg: 'bg-rose-50 text-rose-700 border-rose-200', icon: <AlertCircle className="text-rose-500" size={20} /> };
+            case 'canceled':
+            case 'cancelled': return { bg: 'bg-red-50 text-red-700 border-red-200', icon: <XCircle className="text-red-500" size={20} /> };
             default: return { bg: 'bg-gray-50 text-gray-700 border-gray-200', icon: <Package className="text-gray-500" size={20} /> };
         }
     };
@@ -287,6 +304,48 @@ export default function OrderTrackingPage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Status History / Timeline from Bosta & Store */}
+                        {Array.isArray(orderData.statusHistory) && orderData.statusHistory.length > 0 && (
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-4">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                    <Clock size={14} /> {language === 'ar' ? 'سجل تحديثات الشحنة' : 'Shipment Timeline'}
+                                </h3>
+                                <div className="relative pl-6 sm:pl-8 border-l-2 border-slate-100 space-y-6 pt-2">
+                                    {orderData.statusHistory.map((entry: any, hIdx: number) => {
+                                        const theme = getStatusTheme(entry.status);
+                                        return (
+                                            <div key={entry._id || hIdx} className="relative group">
+                                                {/* Bullet dot */}
+                                                <div className="absolute -left-[31px] sm:-left-[39px] top-1 w-4 h-4 rounded-full border-2 border-white bg-slate-900 shadow-sm flex items-center justify-center" />
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${theme.bg}`}>
+                                                            {getStatusLabel(entry.status)}
+                                                        </span>
+                                                        {entry.source && (
+                                                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600">
+                                                                {entry.source}
+                                                            </span>
+                                                        )}
+                                                        {entry.timestamp && (
+                                                            <span className="text-xs text-slate-400 font-medium">
+                                                                {new Date(entry.timestamp).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {entry.description && (
+                                                        <p className="text-xs text-slate-600 font-medium leading-relaxed pt-1">
+                                                            {entry.description}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Order Items Summary Card */}
                         {orderData.cartItems && orderData.cartItems.length > 0 && (

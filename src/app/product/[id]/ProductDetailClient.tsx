@@ -335,6 +335,36 @@ export default function ProductDetailClient() {
         }
     };
 
+    // Combine base product images with option-specific gallery images, removing duplicates
+    const baseGallery = Array.isArray(product?.gallery_product) ? product.gallery_product : [];
+    const allImages = useMemo(() => {
+        const list: string[] = [];
+        
+        // If option-specific gallery returned images, prioritize them at the beginning
+        if (optionGallery.length > 0) {
+            optionGallery.forEach(img => {
+                if (img && !list.includes(img)) list.push(img);
+            });
+        }
+        
+        // Add main product image
+        if (product?.image && !list.includes(product.image)) {
+            list.push(product.image);
+        }
+        
+        // Add base product gallery
+        baseGallery.forEach(img => {
+            if (img && !list.includes(img)) list.push(img);
+        });
+        
+        // Fallback to logo if completely empty
+        if (list.length === 0 && logoUrl) {
+            list.push(logoUrl);
+        }
+        
+        return list;
+    }, [optionGallery, product?.image, baseGallery, logoUrl]);
+
     if (isLoading) {
         return (
             <div className="store-themed-page min-h-screen flex items-center justify-center bg-gray-50/50">
@@ -364,36 +394,6 @@ export default function ProductDetailClient() {
             </div>
         );
     }
-
-    // Combine base product images with option-specific gallery images, removing duplicates
-    const baseGallery = Array.isArray(product.gallery_product) ? product.gallery_product : [];
-    const allImages = useMemo(() => {
-        const list: string[] = [];
-        
-        // If option-specific gallery returned images, prioritize them at the beginning
-        if (optionGallery.length > 0) {
-            optionGallery.forEach(img => {
-                if (img && !list.includes(img)) list.push(img);
-            });
-        }
-        
-        // Add main product image
-        if (product.image && !list.includes(product.image)) {
-            list.push(product.image);
-        }
-        
-        // Add base product gallery
-        baseGallery.forEach(img => {
-            if (img && !list.includes(img)) list.push(img);
-        });
-        
-        // Fallback to logo if completely empty
-        if (list.length === 0 && logoUrl) {
-            list.push(logoUrl);
-        }
-        
-        return list;
-    }, [optionGallery, product.image, baseGallery, logoUrl]);
 
     const displayedImage = selectedImage || allImages[0] || product.image || logoUrl || undefined;
     const inStock = currentStock > 0;

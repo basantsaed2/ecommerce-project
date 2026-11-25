@@ -6,6 +6,7 @@ import { Loader2, Package, ChevronRight, FileText, X, CheckCircle2, Clock, MapPi
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getOrderStatusLabel } from '@/utils/shipping/bostaStatus';
 
 export default function OrdersManager() {
     const { logoUrl } = useStoreSettings();
@@ -74,18 +75,26 @@ export default function OrdersManager() {
                                 <p className="font-black text-secondary text-lg">{formatPrice(order.totalOrderPrice || order.totalPrice || order.totalAmount || 0)}</p>
                                 <div className="mt-1 flex items-center gap-2">
                                     <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center gap-1 ${
-                                        order.status === 'delivered' ? 'bg-green-100 text-green-600' :
-                                        ['cancelled', 'rejected'].includes(order.status) ? 'bg-red-100 text-red-600' :
-                                        'bg-blue-100 text-blue-600'
+                                        order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                                        ['cancelled', 'canceled', 'rejected'].includes(order.status) ? 'bg-red-100 text-red-700' :
+                                        order.status === 'out_for_delivery' || order.status === 'shipped' ? 'bg-purple-100 text-purple-700' :
+                                        order.status === 'returned' ? 'bg-orange-100 text-orange-700' :
+                                        order.status === 'failed_to_deliver' ? 'bg-rose-100 text-rose-700' :
+                                        order.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-amber-100 text-amber-700'
                                     }`}>
                                         {order.status === 'pending' && <Clock size={10} />}
                                         {order.status === 'delivered' && <CheckCircle2 size={10} />}
+                                        {order.status === 'out_for_delivery' && <Truck size={10} />}
                                         {order.status === 'pending' ? t.profile.pendingStatus
                                             : order.status === 'delivered' ? t.tracking.delivered
-                                            : order.status === 'cancelled' || order.status === 'rejected' ? t.tracking.cancelled
+                                            : ['cancelled', 'canceled', 'rejected'].includes(order.status) ? t.tracking.cancelled
                                             : order.status === 'shipped' ? t.tracking.shipped
+                                            : order.status === 'out_for_delivery' ? (t.tracking.outForDelivery || (language === 'ar' ? 'خرج للتوصيل' : 'Out for Delivery'))
+                                            : order.status === 'returned' ? (t.tracking.returned || (language === 'ar' ? 'مرتجع' : 'Returned'))
+                                            : order.status === 'failed_to_deliver' ? (t.tracking.failedToDeliver || (language === 'ar' ? 'تعذر التوصيل' : 'Failed to deliver'))
                                             : order.status === 'processing' ? t.profile.processingStatus
-                                            : order.status || t.profile.processingStatus}
+                                            : getOrderStatusLabel(order.status, language === 'ar')}
                                     </span>
                                     <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg ${
                                         order.paymentStatus === 'paid' ? 'bg-green-100 text-green-600' :
@@ -147,6 +156,14 @@ export default function OrdersManager() {
                                             </p>
                                         </div>
                                     </div>
+
+                                    {/* Status & Live Description */}
+                                    {orderDetails.statusDescription && (
+                                        <div className="mb-6 px-4 py-3 bg-amber-50/80 border border-amber-200/60 rounded-2xl flex items-center gap-2.5 text-xs text-amber-800 font-bold">
+                                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                                            <span>{orderDetails.statusDescription}</span>
+                                        </div>
+                                    )}
 
                                     {/* Products List */}
                                     <div className="space-y-4 mb-10">
