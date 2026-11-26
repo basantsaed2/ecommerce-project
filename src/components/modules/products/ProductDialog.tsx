@@ -21,6 +21,7 @@ import {
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 import { resolveCartVariantId } from '@/utils/cartUtils';
+import axiosInstance from '@/api/axiosInstance';
 
 interface ProductDialogProps {
     productId: string;
@@ -37,6 +38,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [optionGallery, setOptionGallery] = useState<string[]>([]);
     const [isBuyingNow, setIsBuyingNow] = useState(false);
 
     const { data, isLoading, error } = useGet<SingleApiResponse<Product>>(
@@ -66,6 +68,48 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
             preloadProductImageColors(product);
         }
     }, [isOpen, product]);
+
+    // Fetch matching gallery images whenever options change
+    useEffect(() => {
+        if (!isOpen || !product?._id) return;
+        const optionIds = Object.values(selectedOptions).filter(Boolean);
+        if (optionIds.length === 0) {
+            setOptionGallery([]);
+            return;
+        }
+
+        let isCancelled = false;
+        axiosInstance.post('/product/gallery', {
+            options: optionIds,
+            productId: product._id
+        }).then((response) => {
+            if (isCancelled) return;
+            const gallery = response?.data?.data?.gallery;
+            if (Array.isArray(gallery) && gallery.length > 0) {
+                setOptionGallery(gallery);
+                setSelectedImage(gallery[0]);
+            } else {
+                setOptionGallery([]);
+            }
+        }).catch((err) => {
+            if (!isCancelled) {
+                console.debug('No specific gallery for options in dialog:', err);
+            }
+        });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [isOpen, product?._id, selectedOptions]);
+
+    // Reset optionGallery when dialog closes or productId changes
+    useEffect(() => {
+        if (!isOpen) {
+            setOptionGallery([]);
+            setSelectedOptions({});
+            setSelectedImage(null);
+        }
+    }, [isOpen, productId]);
 
     useEffect(() => {
         if (isOpen && hasAvailableStock && product?.variations && product.variations.length > 0 && Object.keys(selectedOptions).length === 0) {
@@ -267,6 +311,36 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
         router.push('/cart');
     };
 
+    // Combine base product images with option-specific gallery images, removing duplicates
+    const baseGallery = Array.isArray(product?.gallery_product) ? product.gallery_product : [];
+    const allImages = useMemo(() => {
+        const list: string[] = [];
+        
+        // If option-specific gallery returned images, prioritize them at the beginning
+        if (optionGallery.length > 0) {
+            optionGallery.forEach(img => {
+                if (img && !list.includes(img)) list.push(img);
+            });
+        }
+        
+        // Add main product image
+        if (product?.image && !list.includes(product.image)) {
+            list.push(product.image);
+        }
+        
+        // Add base product gallery
+        baseGallery.forEach(img => {
+            if (img && !list.includes(img)) list.push(img);
+        });
+        
+        // Fallback to logo if completely empty
+        if (list.length === 0 && logoUrl) {
+            list.push(logoUrl);
+        }
+        
+        return list;
+    }, [optionGallery, product?.image, baseGallery, logoUrl]);
+
     if (!isOpen || typeof document === 'undefined') return null;
 
     return createPortal(
@@ -304,7 +378,7 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                                 )}
 
                                 <img
-                                    src={selectedImage || product.image || product.gallery_product?.[0] || logoUrl || undefined}
+                                    src={selectedImage || allImages[0] || product.image || logoUrl || undefined}
                                     alt={getLocalized(product)}
                                     className={`max-w-full max-h-full object-contain drop-shadow-xl transition-all duration-500 ${product.quantity > 0 ? 'hover:scale-105' : 'grayscale opacity-60'}`}
                                 />
@@ -318,22 +392,24 @@ export default function ProductDialog({ productId, isOpen, onClose }: ProductDia
                             </div>
 
                             {/* Gallery Thumbnails */}
-                            {(product.image || product.gallery_product?.length || logoUrl) && (
-                                <div className="flex flex-wrap justify-center gap-2 mt-auto w-full">
-                                    {[product.image, ...(product.gallery_product || []), logoUrl]
-                                        .filter((image): image is string => Boolean(image))
-                                        .map((img, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setSelectedImage(img)}
-                                            className={`w-12 h-12 rounded-xl border-2 transition-all overflow-hidden bg-white p-1 ${(selectedImage === img || (!selectedImage && img === product.image))
-                                                ? 'border-secondary shadow-md scale-105'
-                                                : 'border-transparent hover:border-gray-200'
+                            {allImages.length > 1 && (
+                                <div className="flex flex-wrap justify-center gap-2 mt-auto w-full pt-1">
+                                    {allImages.map((img, idx) => {
+                                        const isCurrentActive = selectedImage === img || (!selectedImage && img === allImages[0]);
+                                        return (
+                                            <button
+                                                key={`${img}-${idx}`}
+                                                onClick={() => setSelectedImage(img)}
+                                                className={`w-12 h-12 rounded-xl border-2 transition-all overflow-hidden bg-white p-1 cursor-pointer ${
+                                                    isCurrentActive
+                                                        ? 'border-secondary shadow-md ring-2 ring-secondary/20 scale-105'
+                                                        : 'border-gray-200/80 hover:border-gray-300 opacity-80 hover:opacity-100 hover:scale-102'
                                                 }`}
-                                        >
-                                            <img src={img} alt={`${product.name} ${idx}`} className="w-full h-full object-contain" />
-                                        </button>
-                                    ))}
+                                            >
+                                                <img src={img} alt={`${product.name} ${idx}`} className="w-full h-full object-contain" />
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
